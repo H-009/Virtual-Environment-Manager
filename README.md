@@ -1,0 +1,2 @@
+# Virtual-Environment-Manager
+基于QFluentWidgets实现的可视化半自动Python虚拟环境管理器
