@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="18%" align="center" src="https://raw.githubusercontent.com/H-009/Virtual-Environment-Manager/V.png" alt="logo">
+  <img width="18%" align="center" src="https://raw.githubusercontent.com/H-009/Virtual-Environment-Manager/main/V.png" alt="logo">
 </p>
   <h1 align="center">
   Virtual-Environment-Manager
