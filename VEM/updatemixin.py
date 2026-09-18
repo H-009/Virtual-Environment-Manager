@@ -22,7 +22,7 @@ import tool
 from Dialog import DetailsConfigDialog, DetailsPresetScriptsDialog, DetailsPinDialog, DetailsPythonDialog, \
     DetailsEmbDialog, DetailsVenvDialog
 
-from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import DangerCountdownDialog
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import DangerCountdownDialog, TextEditDialog
 
 if TYPE_CHECKING:
     from VEM import MainUI
@@ -1468,3 +1468,49 @@ class UpdateMixin(_MixinBase):
         # 确认
         if w.exec():
             sys.exit()
+
+    # 打开配置池
+    def open_jcp_pool(self):
+        w = TextEditDialog(
+            title='配置池',
+            content="查看在内存中的配置池",
+            parent=self
+        )
+
+        w.line.setText(str(JCP.all()))
+        w.line.setReadOnly(True)
+        w.cancelButton.hide()
+        w.line.setFixedSize(800,500)
+
+        w.exec()
+
+    # 打开音效池
+    def open_sip_pool(self):
+        w = TextEditDialog(
+            title='矢量池',
+            content="查看在内存中的矢量池",
+            parent=self
+        )
+
+        w.line.setText(str(SIP.older()))
+        w.line.setReadOnly(True)
+        w.cancelButton.hide()
+        w.line.setFixedSize(800,500)
+
+        w.exec()
+
+    # 打开音效池
+    def open_bsp_pool(self):
+        w = TextEditDialog(
+            title='音效池',
+            content="查看在内存中的音效池",
+            parent=self
+        )
+
+        w.line.setText(str(BSP.older()))
+        w.line.setReadOnly(True)
+        w.cancelButton.hide()
+        w.line.setFixedSize(800,500)
+
+        w.exec()
+

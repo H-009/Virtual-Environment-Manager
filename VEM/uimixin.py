@@ -4,8 +4,9 @@ from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MCard import HorizontalFoldCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MColorPickerButton import NoMaskColorPickerButton
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import TextEditDialog
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MLayoutSettingCard import LayoutSettingCard, LayoutSwitchButtonSettingCard, \
-    LayoutHyperlinkSettingCard, LayoutDangerButtonSettingCard
+    LayoutHyperlinkButtonSettingCard, LayoutDangerButtonSettingCard, LayoutHyperlinkLabelSettingCard, LayoutButtonSettingCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTableWidget import RoundedTableListWidget
 from MetaverseSDK.MetaverseUI.MWidgets.MStackedWidget import PopUpAniUpDownStackedWidget, PageUpDownStackedWidget, \
     PageLeftRightStackedWidget
@@ -1180,150 +1181,6 @@ class UiMixin(_MixinBase):
         card_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))# 底部弹簧
         vBoxLayout.addWidget(card) # 添加现有页
 
-    # 初始化链接
-    def init_link(self):
-        # 嵌入垂直布局
-        link_vlayout = QVBoxLayout(self.Link)
-
-        # 内容卡片
-        card = SimpleCardWidget()  # 简单卡片
-        vBoxLayout = QVBoxLayout()  # 水平布局
-        card.setLayout(vBoxLayout)  # 设置卡片布局
-        link_vlayout.addWidget(card)  # 嵌入到布局
-
-        # 标题间隔弹簧
-        vBoxLayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
-        title_layout = QHBoxLayout()  # 标题布局
-        title_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中弹簧
-        ico_widget = IconWidget()  # 图标
-        ico_widget.setIcon(MetaverseFluentIcon.Link)
-        ico_widget.setFixedSize(24, 24)
-        title_layout.addWidget(ico_widget)
-        title_layout.addWidget(TitleLabel("链接"))
-        title_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中弹簧
-        vBoxLayout.addLayout(title_layout)  # 添加标题布局
-        # 标题间隔弹簧
-        vBoxLayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
-
-        # 分段导航栏
-        segmented = SegmentedWidget()
-        segmented.addItem("直链", "直链")
-        segmented.addItem("索引", "索引")
-        segmented.addItem("网站", "网站")
-        segmented.setCurrentItem("直链")  # 默认选中
-        segmented.currentItemChanged.connect(self.segmented_stacked_update)
-        vBoxLayout.addWidget(segmented, alignment=Qt.AlignHCenter)
-
-        # 子堆叠窗口
-        self.segmented_download_stacked = PopUpAniStackedWidget()
-        vBoxLayout.addWidget(self.segmented_download_stacked)
-
-        # 现有卡片
-        existence_card = SimpleCardWidget()
-        existence_card_layout = QVBoxLayout()
-        existence_card.setLayout(existence_card_layout)
-        venv_dir_layout = QHBoxLayout()  # 环境目录布局
-        venv_dir_layout.addWidget(BodyLabel("环境文件:"))
-        self.venv_dir_line = LineEdit()  # 行输入框
-        self.venv_dir_line.setPlaceholderText("pyvenv.cfg")
-        self.venv_dir_line.textChanged.connect(self.update_existence_start_parameter)
-        venv_dir_layout.addWidget(self.venv_dir_line)
-        self.venv_dir_button = ToolButton(FluentIcon.FOLDER)  # 图标按钮
-        self.venv_dir_button.clicked.connect(self.open_add_venv_window)
-        venv_dir_layout.addWidget(self.venv_dir_button)
-        existence_card_layout.addLayout(venv_dir_layout)  # 添加子布局到父布局
-        start_parameter_layout = QHBoxLayout()  # 启动参数布局
-        start_parameter_layout.addWidget(BodyLabel("启动参数:"))
-        self.start_parameter_line = LineEdit()  # 行输入框
-        start_parameter_layout.addWidget(self.start_parameter_line)
-        existence_card_layout.addLayout(start_parameter_layout)  # 添加子布局到父布局
-        button_layout = QHBoxLayout()  # 按钮布局
-        self.add_existence_venv = PrimaryPushButton("添加")  # 添加现有按钮
-        self.add_existence_venv.setFixedSize(100, 30)
-        self.add_existence_venv.clicked.connect(self.add_venv)
-        self.reset_existence_venv = PushButton("重置")  # 重置现有按钮
-        self.reset_existence_venv.setFixedSize(100, 30)
-        self.reset_existence_venv.clicked.connect(
-            lambda: (self.venv_dir_line.setText(""), self.start_parameter_line.setText("")))  # 复合表达式
-        button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 水平居中弹簧
-        button_layout.addWidget(self.add_existence_venv)
-        button_layout.addWidget(self.reset_existence_venv)
-        button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 水平居中弹簧
-        existence_card_layout.addLayout(button_layout)
-        existence_card_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))  # 底部弹簧
-        self.segmented_download_stacked.addWidget(existence_card)  # 添加现有页
-
-    # 初始化安装
-    def init_installation(self):
-        # 嵌入垂直布局
-        installation_vlayout = QVBoxLayout(self.Installation)
-
-        # 内容卡片
-        card = SimpleCardWidget()  # 简单卡片
-        vBoxLayout = QVBoxLayout()  # 水平布局
-        card.setLayout(vBoxLayout)  # 设置卡片布局
-        installation_vlayout.addWidget(card)  # 嵌入到布局
-
-        # 标题间隔弹簧
-        vBoxLayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
-        title_layout = QHBoxLayout()  # 标题布局
-        title_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中弹簧
-        ico_widget = IconWidget()  # 图标
-        ico_widget.setIcon(MetaverseFluentIcon.Installation)
-        ico_widget.setFixedSize(24, 24)
-        title_layout.addWidget(ico_widget)
-        title_layout.addWidget(TitleLabel("安装"))
-        title_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中弹簧
-        vBoxLayout.addLayout(title_layout)  # 添加标题布局
-        # 标题间隔弹簧
-        vBoxLayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
-
-        # 分段导航栏
-        segmented = SegmentedWidget()
-        segmented.addItem("静默安装", "静默安装")
-        segmented.addItem("批量安装", "批量安装")
-        segmented.setCurrentItem("静默安装")  # 默认选中
-        segmented.currentItemChanged.connect(self.segmented_stacked_update)
-        vBoxLayout.addWidget(segmented, alignment=Qt.AlignHCenter)
-
-        # 子堆叠窗口
-        self.segmented_download_stacked = PopUpAniStackedWidget()
-        vBoxLayout.addWidget(self.segmented_download_stacked)
-
-        # 现有卡片
-        existence_card = SimpleCardWidget()
-        existence_card_layout = QVBoxLayout()
-        existence_card.setLayout(existence_card_layout)
-        venv_dir_layout = QHBoxLayout()  # 环境目录布局
-        venv_dir_layout.addWidget(BodyLabel("环境文件:"))
-        self.venv_dir_line = LineEdit()  # 行输入框
-        self.venv_dir_line.setPlaceholderText("pyvenv.cfg")
-        self.venv_dir_line.textChanged.connect(self.update_existence_start_parameter)
-        venv_dir_layout.addWidget(self.venv_dir_line)
-        self.venv_dir_button = ToolButton(FluentIcon.FOLDER)  # 图标按钮
-        self.venv_dir_button.clicked.connect(self.open_add_venv_window)
-        venv_dir_layout.addWidget(self.venv_dir_button)
-        existence_card_layout.addLayout(venv_dir_layout)  # 添加子布局到父布局
-        start_parameter_layout = QHBoxLayout()  # 启动参数布局
-        start_parameter_layout.addWidget(BodyLabel("启动参数:"))
-        self.start_parameter_line = LineEdit()  # 行输入框
-        start_parameter_layout.addWidget(self.start_parameter_line)
-        existence_card_layout.addLayout(start_parameter_layout)  # 添加子布局到父布局
-        button_layout = QHBoxLayout()  # 按钮布局
-        self.add_existence_venv = PrimaryPushButton("添加")  # 添加现有按钮
-        self.add_existence_venv.setFixedSize(100, 30)
-        self.add_existence_venv.clicked.connect(self.add_venv)
-        self.reset_existence_venv = PushButton("重置")  # 重置现有按钮
-        self.reset_existence_venv.setFixedSize(100, 30)
-        self.reset_existence_venv.clicked.connect(lambda: (self.venv_dir_line.setText(""), self.start_parameter_line.setText("")))  # 复合表达式
-        button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 水平居中弹簧
-        button_layout.addWidget(self.add_existence_venv)
-        button_layout.addWidget(self.reset_existence_venv)
-        button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 水平居中弹簧
-        existence_card_layout.addLayout(button_layout)
-        existence_card_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))  # 底部弹簧
-        self.segmented_download_stacked.addWidget(existence_card)  # 添加现有页
-
     # 初始化设置
     def init_setting(self):
         # 嵌入垂直布局
@@ -2262,7 +2119,7 @@ class UiMixin(_MixinBase):
         card = LayoutSettingCard(FluentIcon.INFO,"归属于","STD Studio Metaverse 4")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # Github卡片
-        card = LayoutHyperlinkSettingCard(FluentIcon.GITHUB,"GitHub","前往VEM仓库","前往","https://github.com/H-009/Virtual-Environment-Manager")
+        card = LayoutHyperlinkButtonSettingCard(FluentIcon.GITHUB,"GitHub","前往VEM仓库","前往","https://github.com/H-009/Virtual-Environment-Manager")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
 
         # 间隔弹簧
@@ -2295,6 +2152,44 @@ class UiMixin(_MixinBase):
         card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"强制退出","放弃本次保存强制退出程序","强制退出")
         card.clickedChanged.connect(self.force_quit)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+
+        # 间隔弹簧
+        self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+        # 配置标题
+        self.setting_view_layout.addWidget(BodyLabel("文件"))
+
+        # 自述文件卡片
+        card = LayoutHyperlinkLabelSettingCard(FluentIcon.INFO,"自述文件","打开 README.md")
+        card.setFileUrl("README.md")
+        self.setting_view_layout.addWidget(card)
+
+        # 更新日志卡片
+        card = LayoutHyperlinkLabelSettingCard(FluentIcon.HISTORY,"更新日志","打开 CHANGELOG.md")
+        card.setFileUrl("CHANGELOG.md")
+        self.setting_view_layout.addWidget(card)
+
+        # Git忽略文件卡片
+        card = LayoutHyperlinkLabelSettingCard(FluentIcon.DICTIONARY,"Git 忽略文件","打开 .gitignore")
+        card.setFileUrl(".gitignore")
+        self.setting_view_layout.addWidget(card)
+
+        # 间隔弹簧
+        self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+        # 配置标题
+        self.setting_view_layout.addWidget(BodyLabel("池"))
+
+
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"配置池","打开配置池","打开")
+        card.clickedChanged.connect(self.open_jcp_pool)
+        self.setting_view_layout.addWidget(card)
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"矢量池","打开矢量池","打开")
+        card.clickedChanged.connect(self.open_sip_pool)
+        self.setting_view_layout.addWidget(card)
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"音效池","打开音效池","打开")
+        card.clickedChanged.connect(self.open_bsp_pool)
+        self.setting_view_layout.addWidget(card)
 
         # 底部弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
