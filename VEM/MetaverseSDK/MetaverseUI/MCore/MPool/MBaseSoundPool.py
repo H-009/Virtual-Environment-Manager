@@ -1,5 +1,7 @@
 import base64
 import io
+import json
+
 from pygame import mixer
 
 
@@ -52,12 +54,18 @@ class BaseSoundPool:
             return None
 
     def unload(self, name: str):
+        """卸载池 unload(name)"""
         self.pool.pop(name, None)
         self._raw.pop(name, None)
 
     def clear(self):
+        """清空池与缓存池 clear()"""
         self.pool.clear()
         self._raw.clear()
+
+    def older(self):
+        """获取原始池 older()"""
+        return self.pool
 
 # 单例
 BSP = BaseSoundPool()

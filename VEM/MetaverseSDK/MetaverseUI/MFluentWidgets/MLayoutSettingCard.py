@@ -1,7 +1,7 @@
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt,QUrl,Signal
 from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
-from qtpy.QtCore import Signal
-from qfluentwidgets import SimpleCardWidget, IconWidget, BodyLabel, CaptionLabel, SwitchButton, HyperlinkButton
+from qfluentwidgets import SimpleCardWidget, IconWidget, BodyLabel, CaptionLabel, SwitchButton, HyperlinkButton, \
+    HyperlinkLabel, PushButton
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MButton import DangerButton
 
 
@@ -15,14 +15,14 @@ class LayoutSettingCard(SimpleCardWidget):
         self.hBoxLayout.setSpacing(15)
         self.iconWidget = IconWidget(ico)  # 图标界面
         self.iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel(title))  # 文字标签
-        contentLabel = CaptionLabel(content)  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
+        self.vBoxLayout = QVBoxLayout()  # 垂直布局
+        self.vBoxLayout.setSpacing(0)
+        self.vBoxLayout.addWidget(BodyLabel(title))  # 文字标签
+        self.contentLabel = CaptionLabel(content)  # 字幕标签
+        self.contentLabel.setTextColor("#606060", "#d2d2d2")
+        self.vBoxLayout.addWidget(self.contentLabel)
         self.hBoxLayout.addWidget(self.iconWidget)  # 添加到布局
-        self.hBoxLayout.addLayout(vBoxLayout)
+        self.hBoxLayout.addLayout(self.vBoxLayout)
         self.setLayout(self.hBoxLayout)  # 设置卡片布局
         self.setFixedHeight(70)
 
@@ -45,8 +45,24 @@ class LayoutSwitchButtonSettingCard(LayoutSettingCard):
     def setChecked(self,isChecked):
         self.switch.setChecked(isChecked)
 
+# 布局式按钮设置卡片
+class LayoutButtonSettingCard(LayoutSettingCard):
+
+    clickedChanged = Signal(bool)
+
+    def __init__(self, ico, title, content, text):
+        super().__init__(ico, title, content)
+
+        self.btn = PushButton(text)
+        self.btn.setFixedWidth(120)
+        self.btn.clicked.connect(self.onClickedChanged)
+        self.hBoxLayout.addWidget(self.btn)
+
+    def onClickedChanged(self,isChanged):
+        self.clickedChanged.emit(isChanged)
+
 # 布局式超链接按钮设置卡片
-class LayoutHyperlinkSettingCard(LayoutSettingCard):
+class LayoutHyperlinkButtonSettingCard(LayoutSettingCard):
     def __init__(self, ico, title, content, text, url=""):
         super().__init__(ico, title, content)
 
@@ -70,3 +86,28 @@ class LayoutDangerButtonSettingCard(LayoutSettingCard):
 
     def onClickedChanged(self,isChecked):
         self.clickedChanged.emit(isChecked)
+
+# 布局式超链接标签设置卡片
+class LayoutHyperlinkLabelSettingCard(LayoutSettingCard):
+
+    clickedChanged = Signal(bool)
+
+    def __init__(self, ico, title, content,):
+        super().__init__(ico, title, content)
+
+        self.contentLabel.hide()
+
+        self.label = HyperlinkLabel(content)
+        self.vBoxLayout.addWidget(self.label)
+
+    def setUrl(self,url):
+        self.label.setUrl(url)
+
+    def setFileUrl(self,file):
+        self.setUrl(QUrl.fromLocalFile(file))
+
+    def setFolderUrl(self,folder):
+        self.label.setUrl(QUrl.fromLocalFile(folder))
+
+    def setUnderlineVisible(self,v):
+        self.label.setUnderlineVisible(v)

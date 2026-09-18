@@ -24,6 +24,14 @@ class JsonConfigPool:
         """清空池 clear()"""
         self.pool.clear()
 
+    def all(self):
+        """获取格式化后的整个池 all()"""
+        return json.dumps(self.pool, indent=4, ensure_ascii=False, sort_keys=True)
+
+    def older(self):
+        """获取原始池 older()"""
+        return self.pool
+
     def get(self, file_path: str, path: str, default = None):
         """获取Json get("data.json",["key","value"],None)"""
         if not path:

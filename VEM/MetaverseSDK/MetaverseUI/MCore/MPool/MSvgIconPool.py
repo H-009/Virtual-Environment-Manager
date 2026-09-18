@@ -3,7 +3,7 @@ from qtpy.QtGui import QPixmap, QIcon, QPainter
 from qtpy.QtSvg import QSvgRenderer
 
 
-# Svg图标池
+# 矢量图标池
 class SvgIconPool:
     def __init__(self, w=128, h=128):
         self.pool = {}
@@ -46,6 +46,10 @@ class SvgIconPool:
         if pix and not pix.isNull():
             return QIcon(pix)
         return QIcon()
+
+    def older(self):
+        """获取原始池 older()"""
+        return self.pool
 
 # 单例初始化
 SIP = SvgIconPool()
