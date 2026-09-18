@@ -1,14 +1,17 @@
 # Changelog
 
-所有 notable changes 将记录在此文件中。
-
-格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/){target="_blank"}，
-版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/){target="_blank"}。
 
 ## [Unreleased]
 
 
 ## [1.15.2] - 2026-09-18
+
+### 新增
+- 自述文件超链接卡片
+- 更新日志超链接卡片
+- Git忽略文件超链接卡片
+- 配置池卡片
+- 音效池卡片
 
 ### 变更
 - 修复部分音效播放失败导致的崩溃
