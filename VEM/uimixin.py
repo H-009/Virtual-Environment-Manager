@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
+from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MCard import HorizontalFoldCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MColorPickerButton import NoMaskColorPickerButton
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MLayoutSettingCard import LayoutSettingCard, LayoutSwitchButtonSettingCard, \
-    LayoutHyperlinkSettingCard
+    LayoutHyperlinkSettingCard, LayoutDangerButtonSettingCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTableWidget import RoundedTableListWidget
 from MetaverseSDK.MetaverseUI.MWidgets.MStackedWidget import PopUpAniUpDownStackedWidget, PageUpDownStackedWidget, \
     PageLeftRightStackedWidget
@@ -135,7 +136,7 @@ class UiMixin(_MixinBase):
         # 添加关机-基础环境页面
         card = SimpleCardWidget()
         card_vlayout = QVBoxLayout()
-        icon_widget = IconWidget(self.resource_python)
+        icon_widget = IconWidget(SIP.get("Python"))
         icon_widget.setFixedSize(150, 150)
         self.power_python_label_text = BodyLabel("没有选中的基础环境")
         self.power_python_path_label_text = BodyLabel("")
@@ -169,6 +170,8 @@ class UiMixin(_MixinBase):
         self.pin_card.setLayout(pin_card_vlayout)
         # 创建图钉列表
         self.pin_list = ListWidget()
+        self.pin_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.pin_list.customContextMenuRequested.connect(self.show_pin_list_menu)
         # 添加列表
         label = BodyLabel("图钉")
         label.setAlignment(Qt.AlignCenter)
@@ -892,7 +895,7 @@ class UiMixin(_MixinBase):
         title_layout = QHBoxLayout() # 标题布局
         title_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed)) # 居中弹簧
         ico_widget = IconWidget() # 图标
-        ico_widget.setIcon(self.resource_python)
+        ico_widget.setIcon(SIP.get("Python"))
         ico_widget.setFixedSize(24,24)
         title_layout.addWidget(ico_widget)
         title_layout.addWidget(TitleLabel("添加基础环境"))
@@ -2035,6 +2038,37 @@ class UiMixin(_MixinBase):
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
 
+        # 提示标题
+        self.setting_view_layout.addWidget(BodyLabel("提示"))
+        # 关闭虚拟环境开机提示
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.Tip, "关闭虚拟环境开机提示", "关闭虚拟环境开机时的提示")
+        card.setChecked(self.close_venv_power_on_tip_switch)
+        card.checkedChanged.connect(self.close_venv_power_on_tip)
+        self.setting_view_layout.addWidget(card)
+        # 关闭虚拟环境关机提示
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.Tip, "关闭虚拟环境关机提示", "关闭虚拟环境关机时的提示")
+        card.setChecked(self.close_venv_power_out_tip_switch)
+        card.checkedChanged.connect(self.close_venv_power_out_tip)
+        self.setting_view_layout.addWidget(card)
+        # 关闭控制台激活提示
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.Tip, "关闭控制台激活提示", "关闭控制台激活时的提示")
+        card.setChecked(self.close_console_activation_tip_switch)
+        card.checkedChanged.connect(self.close_console_activation_tip)
+        self.setting_view_layout.addWidget(card)
+        # 关闭控制台销毁提示
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.Tip, "关闭控制台销毁提示", "关闭控制台销毁时的提示")
+        card.setChecked(self.close_console_destroy_tip_switch)
+        card.checkedChanged.connect(self.close_console_destroy_tip)
+        self.setting_view_layout.addWidget(card)
+        # 关闭控制台切换提示
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.Tip, "关闭控制台切换提示", "关闭控制台切换时的提示")
+        card.setChecked(self.close_console_switch_tip_switch)
+        card.checkedChanged.connect(self.close_console_switch_tip)
+        self.setting_view_layout.addWidget(card)
+
+        # 间隔弹簧
+        self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+
         # 音效标题
         self.setting_view_layout.addWidget(BodyLabel("音效"))
         # 开启音效卡片
@@ -2216,7 +2250,7 @@ class UiMixin(_MixinBase):
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # Python卡片
-        card = LayoutSettingCard(self.resource_python, "Python", f"版本 v{self.Python__version__}")
+        card = LayoutSettingCard(SIP.get("Python"), "Python", f"版本 v{self.Python__version__}")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 工具包卡片
         card = LayoutSettingCard(FluentIcon.INFO, "MetaverseSDK", f"版本 v{SDK__version__}")
@@ -2255,6 +2289,11 @@ class UiMixin(_MixinBase):
         hBoxLayout.addLayout(vBoxLayout)
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
+        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+
+        # 强制退出卡片
+        card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"强制退出","放弃本次保存强制退出程序","强制退出")
+        card.clickedChanged.connect(self.force_quit)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
 
         # 底部弹簧

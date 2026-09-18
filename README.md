@@ -5,5 +5,5 @@
   Virtual-Environment-Manager
 </h1>
 <p align="center">
-  基于QFluentWidgets实现的可视化半自动Python虚拟环境管理器PyQt5
+  基于QFluentWidgets实现的可视化半自动Python虚拟环境管理器
 </p>

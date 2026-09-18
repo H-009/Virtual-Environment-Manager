@@ -10,6 +10,7 @@ class MetaverseFluentIcon(FluentIconBase, Enum):
     List = "List"
     PaperClip = "PaperClip"
     Qt = "Qt"
+    Tip = "Tip"
 
     def path(self, theme=Theme.AUTO):
         return f":/MetaverseFluentIcon/{self.value}_{getIconColor(theme)}.svg"

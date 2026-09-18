@@ -14,7 +14,7 @@ from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, Unz
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
 from PyQt5.QtGui import QIcon, QPixmap, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QStackedWidget, \
-    QFileDialog
+    QFileDialog, QDialog
 from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject
 from pathvalidate import is_valid_filepath
 from pygame import mixer
@@ -50,6 +50,158 @@ from MetaverseSDK.MetaverseResource.MetaverseFluentIcon import MetaverseFluentIc
 from uimixin import UiMixin
 from updatemixin import UpdateMixin
 
+
+# 第一时间设置全局配置，开启硬件加速开关，锁定动画帧率为60fps，设置合理的组件缓存上限
+# config.ENABLE_HARDWARE_ACCELERATION = True
+# config.ANIMATION_FRAME_RATE = 60
+# config.MAX_CACHE_SIZE = 100
+
+# 全局配置OpenGL渲染参数
+# 额外开启Qt的OpenGL硬件渲染后端，将所有UI绘制任务直接交给GPU处理，大幅降低CPU渲染负载
+# 部分老旧集成显卡可能不支持OpenGL 3.3核心模式，可以降级到setVersion(2, 0)保证兼容性
+# 不要和Qt的软件渲染后端同时启用，避免出现渲染冲突导致界面闪烁
+# fmt = QSurfaceFormat()
+# fmt.setVersion(3, 3)  # 指定OpenGL 3.3版本，兼容性和性能平衡最优
+# fmt.setProfile(QSurfaceFormat.CoreProfile)  # 使用核心模式，移除废弃API
+# fmt.setSamples(4)  # 开启4倍抗锯齿，提升画面质感
+# QSurfaceFormat.setDefaultFormat(fmt)
+
+
+# # 跨工作目录
+# # 获取当前脚本所在目录
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# # 将当前目录添加到Python模块搜索路径
+# if current_dir not in sys.path:
+#     sys.path.append(current_dir)
+
+# 导航栏徽章管理器
+@InfoBadgeManager.register("StableHiddenNav")
+class StableHiddenNavBadgeManager(InfoBadgeManager):
+
+    def eventFilter(self, obj, e):
+        if obj is not self.target:
+            return super().eventFilter(obj, e)
+
+        # 1️⃣ 如果徽章逻辑上是隐藏的，直接吃掉 Show 事件
+        if e.type() == QEvent.Show and not self.badge.isVisible():
+            return True
+
+        # 2️⃣ Resize / Move 始终参与定位（防止左上角）
+        if e.type() in (QEvent.Resize, QEvent.Move):
+            self.badge.move(self.position())
+
+        return super().eventFilter(obj, e)
+
+class FluentOverlayWindow(FramelessWindow):
+    """
+    浮层版 FluentWindow（类似 Win11 汉堡菜单）
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setTitleBar(StandardTitleBar(self))
+
+        # 主内容
+        self.stackWidget = QStackedWidget(self)
+
+        # 导航面板（浮层）
+        self.navPanel = NavigationPanel(self, True)
+        self.navPanel.setExpandWidth(240)
+        self.navPanel.setAcrylicEnabled(True)
+        self.navPanel.hide()
+
+        # 汉堡按钮
+        self.menuBtn = NavigationToolButton(FluentIcon.MENU, self.titleBar)
+        self.titleBar.hBoxLayout.insertWidget(3, self.menuBtn)
+        self.menuBtn.clicked.connect(self.toggleNav)
+
+        # 布局
+        self.container = QWidget(self)
+        self.vLayout = QVBoxLayout(self.container)
+        self.vLayout.setContentsMargins(0, 0, 0, 0)
+        self.vLayout.addWidget(self.stackWidget)
+
+        #self.setCentralWidget(self.container)
+
+        self.resize(960, 640)
+        self.setWindowTitle("Fluent Overlay Window")
+
+        self.stackWidget.currentChanged.connect(self._syncNav)
+
+    # ------------------ API ------------------
+
+    def addSubInterface(self, widget: QWidget, icon, text: str,
+                        position=NavigationItemPosition.TOP):
+        routeKey = widget.objectName() or text
+
+        self.stackWidget.addWidget(widget)
+
+        self.navPanel.addItem(
+            routeKey=routeKey,
+            icon=icon,
+            text=text,
+            onClick=lambda: self.switchTo(widget),
+            position=position
+        )
+
+    def switchTo(self, widget: QWidget):
+        self.stackWidget.setCurrentWidget(widget)
+
+    def toggleNav(self):
+        if self.navPanel.isVisible():
+            self.navPanel.collapse()
+        else:
+            self.navPanel.show()
+            self.navPanel.expand()
+
+    # ------------------ 内部 ------------------
+
+    def _syncNav(self, index):
+        widget = self.stackWidget.widget(index)
+        self.navPanel.setCurrentItem(widget.objectName())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.navPanel.setFixedHeight(self.height())
+
+def install_click_debug(widget):
+    """
+    给任意 QWidget 安装点击调试：
+    鼠标按下时打印被点中的 Qt 控件
+    """
+    class ClickDebug(QObject):
+        def eventFilter(self, obj, event):
+            if event.type() == QEvent.MouseButtonPress:
+                pos = event.globalPos()
+                app = QApplication.instance()
+
+                # Qt 视角：鼠标下是哪个控件
+                under = app.widgetAt(pos)
+
+                if under:
+                    print("=" * 60)
+                    print(f"🖱️  鼠标点击 @ {pos.x()}, {pos.y()}")
+                    print(f"🎯 Qt 控件:")
+                    print(f"   • 类型 : {type(under).__name__}")
+                    print(f"   • 对象名: {under.objectName() or '(未命名)'}")
+                    print(f"   • 地址 : 0x{id(under):X}")
+                    print(f"   • 父链:")
+                    p = under
+                    while p:
+                        print(f"     ↳ {type(p).__name__}  name={p.objectName()}")
+                        p = p.parent()
+                    print("=" * 60)
+                else:
+                    print("🖱️  点击位置没有 Qt widget（可能是原生窗口/桌面）")
+
+            return super().eventFilter(obj, event)
+
+    d = ClickDebug()
+    widget.installEventFilter(d)
+    widget._click_debug = d   # 防 GC
+
+# install_click_debug(self) # 安装gui控件调试器
 
 class MainUI(UiMixin,UpdateMixin,FluentWindow):
     def __init__(self):
@@ -127,7 +279,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         SIP.load("Python",MetaverseSVG.Python)
 
         # 资源
-        self.resource_python = SIP.get("Python")
         pixmap_VEM = QPixmap()
         pixmap_VEM.loadFromData(svg_image.VEM)
         self.resource_VEM = QIcon(pixmap_VEM)
@@ -156,6 +307,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.maximize_after_startup_init_switch = JCP.get("config.json", ["setting","maximize_after_startup"],False)
         # 关闭便携式环境的脱控通知
         self.close_emb_out_control_notification_switch = JCP.get("config.json",["setting","close_emb_out_control_notification_switch"], False)
+        # 关闭虚拟环境开机提示
+        self.close_venv_power_on_tip_switch = JCP.get("config.json",["setting","close_venv_power_on_tip_switch"], False)
+        # 关闭虚拟环境关机提示
+        self.close_venv_power_out_tip_switch = JCP.get("config.json",["setting","close_venv_power_out_tip_switch"], False)
+        # 关闭控制台激活提示
+        self.close_console_activation_tip_switch = JCP.get("config.json",["setting","close_console_activation_tip_switch"], False)
+        # 关闭虚拟环境关机提示
+        self.close_console_destroy_tip_switch = JCP.get("config.json",["setting","close_console_destroy_tip_switch"], False)
+        # 关闭虚拟环境切换提示
+        self.close_console_switch_tip_switch = JCP.get("config.json",["setting","close_console_switch_tip_switch"], False)
         # 强制更新CMD
         self.mandatory_update_CMD_switch = JCP.get("config.json", ["setting","refresh_CMD"], False)
         # 启用手动更新CMD
@@ -242,6 +403,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
             size = {"小-80px":80,"中-120px":120,"大-240px":240}.get(self.startup_ico_size,120)
             self.splashScreen.setIconSize(QSize(size, size))
+            #self.splashScreen.titleBar.closeBtn.setEnabled(False)
             self.splashScreen.titleBar.closeBtn.clicked.connect(lambda :sys.exit())
 
         screen_size = QApplication.primaryScreen().availableGeometry()
@@ -272,6 +434,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     # 初始化导航栏
     def init_navigationInterface(self):
         self.navigationInterface.setExpandWidth(170)  # 固定抽屉长度
+
+        # 主页
+        self.Home = QWidget(self)
+        self.Home.setObjectName("Home")
+        #self.init_venv_manage()  # 初始化主页
+        self.addSubInterface(
+            self.Home,
+            FluentIcon.HOME,
+            "主页"
+        )
 
         # 虚拟环境
         self.VenvManage = QWidget(self)
@@ -349,7 +521,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.init_python() # 初始化基础环境
         self.addSubInterface(
             self.BaseEnv,
-            self.resource_python,
+            SIP.get("Python"),
             "基础环境"
         )
 
@@ -372,6 +544,28 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             self.Download,
             FluentIcon.DOWNLOAD,
             "下载",
+            position=NavigationItemPosition.BOTTOM
+        )
+
+        # 链接
+        self.Link = QWidget(self)
+        self.Link.setObjectName("Link")
+        self.init_link()  # 初始化链接
+        self.addSubInterface(
+            self.Link,
+            MetaverseFluentIcon.Link,
+            "链接",
+            position=NavigationItemPosition.BOTTOM
+        )
+
+        # 安装
+        self.Installation = QWidget(self)
+        self.Installation.setObjectName("Installation")
+        self.init_installation()  # 初始化安装
+        self.addSubInterface(
+            self.Installation,
+            MetaverseFluentIcon.Installation,
+            "安装",
             position=NavigationItemPosition.BOTTOM
         )
 
@@ -568,13 +762,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 item.setIcon(0, self.PLAY_SOLID_icon)
                 # 绑定意外退出信号
                 self.select_cmd.monitor_thread.running_changed.connect(lambda state: self.unexpected_exit(item, item.text(0), state, self.select_cmd, cmd_card))
-                # 提示
-                InfoBar.success(
-                    title="已启动",
-                    content=f"虚拟环境 {item.text(0)} 已启动",
-                    parent=self,
-                    position=InfoBarPosition.TOP
-                )
+
+                # 关闭开关机通知
+                if not self.close_venv_power_on_tip_switch:
+                    # 提示
+                    InfoBar.success(
+                        title="已启动",
+                        content=f"虚拟环境 {item.text(0)} 已启动",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
 
                 # 自动进入环境
                 if self.auto_enter_venv:
@@ -613,12 +810,14 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                         self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
                         item.setIcon(0, self.POWER_BUTTON_icon)
 
-                        InfoBar.info(
-                            title="已关闭",
-                            content=f"虚拟环境 {item.text(0)} 已关闭",
-                            parent=self,
-                            position=InfoBarPosition.TOP
-                        )
+                        # 关闭开关机通知
+                        if not self.close_venv_power_out_tip_switch:
+                            InfoBar.info(
+                                title="已关闭",
+                                content=f"虚拟环境 {item.text(0)} 已关闭",
+                                parent=self,
+                                position=InfoBarPosition.TOP
+                            )
                 else:
                     # 关闭当前的CMD
                     if self.select_cmd.finder_thread:
@@ -644,12 +843,14 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
                     item.setIcon(0, self.POWER_BUTTON_icon)
 
-                    InfoBar.info(
-                        title="已关闭",
-                        content=f"虚拟环境 {item.text(0)} 已关闭",
-                        parent=self,
-                        position=InfoBarPosition.TOP
-                    )
+                    # 关闭开关机通知
+                    if not self.close_venv_power_out_tip_switch:
+                        InfoBar.info(
+                            title="已关闭",
+                            content=f"虚拟环境 {item.text(0)} 已关闭",
+                            parent=self,
+                            position=InfoBarPosition.TOP
+                        )
         except OSError as e: # 捕捉OS报错
             print(e)
             InfoBar.error(
@@ -842,13 +1043,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
                     # 绑定意外退出信号
                     self.select_console.monitor_thread.running_changed.connect(lambda state: self.console_unexpected_exit(self.console_list.currentItem().text(), state, self.select_console))
-                    # 提示
-                    InfoBar.success(
-                        title="已激活",
-                        content=f"控制台 {cmd_name} 已激活",
-                        parent=self,
-                        position=InfoBarPosition.TOP
-                    )
+
+                    # 关闭控制台激活通知
+                    if not self.close_console_activation_tip_switch:
+                        InfoBar.success(
+                            title="已激活",
+                            content=f"控制台 {cmd_name} 已激活",
+                            parent=self,
+                            position=InfoBarPosition.TOP
+                        )
+                    # 返回值
                     return True
 
         except OSError as e: # 捕捉OS报错
@@ -897,13 +1101,14 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.console_list.takeItem(self.console_list.row(self.console_list.currentItem()))
                 self.select_console_item() # 刷新
 
-
-                InfoBar.info(
-                    title="已销毁",
-                    content=f"控制台 {cmd_name} 已销毁",
-                    parent=self,
-                    position=InfoBarPosition.TOP
-                )
+                # 关闭控制台销毁通知
+                if not self.close_console_destroy_tip_switch:
+                    InfoBar.info(
+                        title="已销毁",
+                        content=f"控制台 {cmd_name} 已销毁",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
         except OSError as e: # 捕捉OS报错
             print(e)
             InfoBar.error(
@@ -1005,12 +1210,15 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     self.console_list.setCurrentRow(self.console_list.count()-1)
                 # 触发槽函数
                 self.select_console_item()
-                InfoBar.info(
-                    title="提示",
-                    content=f"当前所选控制台 {self.console_list.currentItem().text()}",
-                    parent=self,
-                    position=InfoBarPosition.TOP
-                )
+
+                # 关闭控制台切换通知
+                if not self.close_console_switch_tip_switch:
+                    InfoBar.info(
+                        title="提示",
+                        content=f"当前所选控制台 {self.console_list.currentItem().text()}",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
         except Exception as a:
             print(a)
 
@@ -1027,12 +1235,15 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     self.console_list.setCurrentRow(0)
                 # 触发槽函数
                 self.select_console_item()
-                InfoBar.info(
-                    title="提示",
-                    content=f"当前所选控制台 {self.console_list.currentItem().text()}",
-                    parent=self,
-                    position=InfoBarPosition.TOP
-                )
+
+                # 关闭控制台切换通知
+                if not self.close_console_switch_tip_switch:
+                    InfoBar.info(
+                        title="提示",
+                        content=f"当前所选控制台 {self.console_list.currentItem().text()}",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
         except Exception as a:
             print(a)
 
@@ -2117,8 +2328,17 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
     # 初始化菜单
     def init_menu(self):
+        # 图钉列表菜单
+        self.pin_list_menu = RoundMenu(parent=self.pin_list)
+        self.pin_list_menu.addActions([
+            Action(FluentIcon.COPY, '复制', shortcut='Ctrl+C', triggered=lambda: self.copy_row(self.pin_list)),
+            Action(FluentIcon.SYNC, '刷新', triggered=self.update_pin),
+            Action(FluentIcon.EDIT, '编辑命令', triggered=self.edit_pin_list_name),
+            Action(FluentIcon.ADD, '创建图钉', triggered=lambda: self.add_jump("pin")),
+            Action(FluentIcon.DELETE, '删除', triggered=self.delete_pin_list)
+        ])
+
         # python环境表格菜单
-        # 避免内存泄漏
         self.python_table_menu = RoundMenu(parent=self.python_table)
         self.python_table_menu.addActions([
             Action(FluentIcon.COPY, '复制', shortcut='Ctrl+C', triggered=lambda: self.copy_row(self.python_table)),
@@ -2207,6 +2427,12 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.pin_table_menu.addAction(Action('全选', shortcut='Ctrl+A', triggered=self.pin_table.selectAll))
 
         # 空白区域菜单
+        # 图钉列表空白菜单
+        self.pin_list_none_menu = RoundMenu(parent=self.pin_list)
+        self.pin_list_none_menu.addActions([
+            Action(FluentIcon.SYNC, '刷新', triggered=self.update_pin),
+            Action(FluentIcon.ADD, '创建图钉', triggered=lambda: self.add_jump("pin"))
+        ])
         # python环境表格空白菜单
         self.python_table_none_menu = RoundMenu(parent=self.python_table)
         self.python_table_none_menu.addActions([
@@ -2243,6 +2469,75 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             Action(FluentIcon.SYNC, '刷新', triggered=self.update_pin),
             Action(FluentIcon.ADD, '创建图钉', triggered=lambda: self.add_jump("pin"))
         ])
+
+    # 弹出图钉列表右键菜单
+    def show_pin_list_menu(self,pos):
+        try:
+            item = self.pin_list.itemAt(pos)  # 拿到鼠标下的单元格
+
+            if item is None:
+                self.pin_list_none_menu.exec_(self.pin_list.viewport().mapToGlobal(pos))  # 弹空白区域菜单
+            else:
+                # 提前选中
+                self.pin_list.setCurrentItem(item)
+                # 在鼠标全局位置弹出
+                self.pin_list_menu.exec_(self.pin_list.viewport().mapToGlobal(pos))
+        except Exception as a:
+            print(a)
+
+    # 修改图钉列表命令
+    def edit_pin_list_name(self):
+        item = self.pin_list.currentItem()
+        old_text = item.text()
+        row = self.pin_list.row(item)
+
+        dialog = LineDialog("修改命令", "修改图钉命令", self)
+        dialog.line.setText(old_text)
+
+        if dialog.exec():
+            new_text = dialog.line.text().strip()
+            if new_text and new_text != old_text:
+                JCP.modify("config.json", ["pin"], row, new_text)
+
+                # 更新图钉
+                self.update_pin()
+
+                InfoBar.success(
+                    title="成功",
+                    content="图钉命令已修改",
+                    parent=self,
+                    position=InfoBarPosition.TOP
+                )
+
+        dialog.accept()
+        dialog.deleteLater()
+
+    # 删除图钉列表命令
+    def delete_pin_list(self):
+        item = self.pin_list.currentItem()
+        row = self.pin_list.row(item)
+
+        dialog = Dialog("提示", "是否删除所选图钉？此操作不可撤销", self)
+
+        if dialog.exec():
+
+            # 提前删除
+            JCP.remove("config.json", ["pin"], row)
+            # 删除列表项
+            self.pin_list.takeItem(row)
+
+            # 更新图钉
+            self.update_pin()
+
+            InfoBar.success(
+                title="成功",
+                content=f"选中图钉已删除",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+
+        dialog.accept()
+        dialog.deleteLater()
 
     # 弹出基础环境右键菜单
     def show_python_table_menu(self,pos):
@@ -2450,11 +2745,14 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             # 在删除前获取每行
             for row in rows_to_delete:
                 # 删除json
-                JCP.rename("config.json",["pin"],row)
+                JCP.remove("config.json",["pin"],row)
 
             # 从后往前删除，防止索引偏移
             for row in rows_to_delete:
                 self.pin_table.removeRow(row)
+
+            # 更新图钉
+            self.update_pin()
 
             InfoBar.success(
                 title="成功",
@@ -3669,3 +3967,66 @@ if __name__ == "__main__":
         timer.singleShot(duration, lambda: mainWin.show()) # 常规
 
     sys.exit(app.exec_())
+
+# ff29f1ff
+# ff009faa
+
+# 在启动页面关闭时 执行 强制关闭 拒绝关闭 隐藏控制按钮
+
+# 最大并行下载
+
+# 紧急修复 和一次性通知
+
+# 内存泄漏调试器
+# objgraph.show_growth()
+
+# 背景音乐 枚举值 MUSIC
+
+#downloadBadge 徽章终点位置
+
+#table.verticalHeader().hide() # 隐藏表头 / 表格头图标
+
+# 环境表格更新是否联动环境树
+# 编辑是否继承
+
+# 备份与恢复 公告 重置
+# 内部信息
+
+# 去掉外部cmd创建 配置创建后续待验证
+
+# 禁用侧边栏指示器滑动动画
+# self.navigationInterface.setIndicatorAnimationEnabled(False)
+
+# 自定义背景颜色
+# self.setCustomBackgroundColor(QColor(73, 156, 84), QColor(25, 33, 42))
+
+# from BlurWindow.blurWindow import GlobalBlur 透明亚克力
+# GlobalBlur(self.winId(),Acrylic=True,Dark=True, QWidget=self)
+
+# 窗口自定义分辨率
+
+# CMD std流历史 当前cmd详情
+
+# 关闭CMD全屏提示
+
+# 全局控制台 使用持续嵌入 意外退出重启控制台
+
+# 修改内部识别码 改为路径 该值唯一防止重名
+
+# 各个cmd 控制台状态 加入图表
+
+# 选择配置文件优先 APPDATA还是工作目录的配置
+
+# 是否允许回调时长叠加
+
+# 重启环境
+
+# 徽章跟随强调色
+
+# 工作站工作模式 源码/程序/虚拟环境
+
+# 自动配置查找环境 和 依据树查找cmd改为用 item data存的唯一值
+
+# 资源池 程序退出自动保存时如果未修改跳过保存
+
+# BSP.load("ImportantTip", MetaverseOGG.ImportantTip) 未使用音效

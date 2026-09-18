@@ -148,24 +148,25 @@ class JsonConfigPool:
         删除list指定位置的元素 remove("config.json", ["pin"], 2)
         """
         if not path:
-            return
+            raise ValueError("path 不能为空")
 
-        node = self.pool.setdefault(file_path, {})
-        for key in path:
-            node = node.setdefault(key, {})
+        node = self.pool.get(file_path)
+        if not isinstance(node, dict):
+            raise KeyError(f"文件节点不存在: {file_path}")
+
+        for key in path[:-1]:
+            node = node.get(key)
+            if not isinstance(node, dict):
+                raise KeyError(f"路径中间层不是 dict: {key}")
 
         last_key = path[-1]
-
-        if not isinstance(node, dict) or last_key not in node:
-            raise KeyError("路径不存在")
-
-        lst = node[last_key]
+        lst = node.get(last_key) if isinstance(node, dict) else None
 
         if not isinstance(lst, list):
-            raise TypeError("目标不是 list")
+            raise TypeError(f"{'.'.join(path)} 不是 list")
 
-        if index < 0 or index >= len(lst):
-            raise IndexError("list index out of range")
+        if index < -len(lst) or index >= len(lst):
+            raise IndexError(f"list index out of range: {index}")
 
         lst.pop(index)
 

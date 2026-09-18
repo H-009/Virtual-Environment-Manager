@@ -7,14 +7,13 @@ from pygame import mixer
 class BaseSoundPool:
     def __init__(self):
         self.pool = {}
+        self._raw = {}
 
     def load(self, name: str, base64_str: str) -> bool:
         """载入音频到池 load(sound,base64)"""
         if not name or not base64_str:
             return False
-
         try:
-            # 兼容 Data URI：data:audio/wav;base64,<真正base64>
             if base64_str.startswith("data:"):
                 base64_str = base64_str.split(",", 1)[1]
 
@@ -22,13 +21,13 @@ class BaseSoundPool:
             if not raw:
                 return False
 
-            # 用 BytesIO 包装 供 mixer.Sound 直接读
-            buf = io.BytesIO(raw)
-            buf.seek(0)  # 指针归零 否则 Sound() 可能读空
+            if not mixer.get_init():
+                mixer.init()
 
-            self.pool[name] = buf
+            # 一次性构造 Sound 之后完全脱离 BytesIO
+            self.pool[name] = mixer.Sound(io.BytesIO(raw))
+            self._raw[name] = base64_str
             return True
-
         except Exception as e:
             print(f"载入失败 {name}: {e}")
             return False
@@ -42,30 +41,23 @@ class BaseSoundPool:
 
     def play(self, name: str, loops: int = 0, default=None):
         """一行播放 play("important_tip")"""
-        buf = self.get(name, default)
-        if buf is None:
+        snd = self.pool.get(name)
+        if snd is None:
+            print(f"[SoundPool] 未载入音效: {name}")
             return None
         try:
-            # 首次使用前最好初始化一次
-            if not mixer.get_init():
-                mixer.init()
-            sound = mixer.Sound(buf)
-            sound.play(loops=loops)
-            return sound
+            return snd.play(loops=loops)
         except Exception as e:
             print(f"[SoundPool] 播放失败 {name}: {e}")
             return None
 
     def unload(self, name: str):
-        buf = self.pool.pop(name, None)
-        if buf is not None:
-            buf.close()
+        self.pool.pop(name, None)
+        self._raw.pop(name, None)
 
     def clear(self):
-        for buf in self.pool.values():
-            buf.close()
         self.pool.clear()
-
+        self._raw.clear()
 
 # 单例
 BSP = BaseSoundPool()

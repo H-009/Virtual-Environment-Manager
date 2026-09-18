@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 
 import psutil
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
+from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
+from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressBarDialog import IndeterminateProgressBarDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -452,7 +455,7 @@ class UpdateMixin(_MixinBase):
                 for version, info in python_envs.items():
                     # 设置数据
                     item = QTreeWidgetItem([info["name"]])
-                    item.setIcon(0, self.resource_python)
+                    item.setIcon(0, SIP.get("Python"))
                     item.setData(0, Qt.UserRole, {
                         "type": "python",
                         "name": info["name"],
@@ -488,6 +491,31 @@ class UpdateMixin(_MixinBase):
     def close_auto_CMD_passive_shutdown_notification(self, key):
         self.disable_auto_CMD_passive_shutdown_notification = key
         JCP.update("config.json", ["setting","disable_auto_CMD_passive_shutdown_notification"],key)
+
+    # 关闭虚拟环境开机提示
+    def close_venv_power_on_tip(self, key):
+        self.close_venv_power_on_tip_switch = key
+        JCP.update("config.json", ["setting","close_venv_power_on_tip_switch"], key)
+
+    # 关闭虚拟环境关机提示
+    def close_venv_power_out_tip(self, key):
+        self.close_venv_power_out_tip_switch = key
+        JCP.update("config.json", ["setting","close_venv_power_out_tip_switch"], key)
+
+    # 关闭控制台激活提示
+    def close_console_activation_tip(self, key):
+        self.close_console_activation_tip_switch = key
+        JCP.update("config.json", ["setting","close_console_activation_tip_switch"], key)
+
+    # 关闭控制台销毁提示
+    def close_console_destroy_tip(self, key):
+        self.close_console_destroy_tip_switch = key
+        JCP.update("config.json", ["setting","close_console_destroy_tip_switch"], key)
+
+    # 关闭控制台切换提示
+    def close_console_switch_tip(self, key):
+        self.close_console_switch_tip_switch = key
+        JCP.update("config.json", ["setting","close_console_switch_tip_switch"], key)
 
     # 更新强制刷新CMD
     def refresh_CMD_update(self, key):
@@ -983,7 +1011,7 @@ class UpdateMixin(_MixinBase):
             item_col3 = self.python_table.item(row, 3)  # 第4列
 
             if item_col3 is not None and item_col0 is not None:
-                box.addItem(f"{item_col0.text()}    {item_col3.text()}", self.resource_python,userData=item_col3.text())
+                box.addItem(f"{item_col0.text()}    {item_col3.text()}", SIP.get("Python"),userData=item_col3.text())
 
         box.setCurrentIndex(-1) # 取消选中
 
@@ -1045,12 +1073,12 @@ class UpdateMixin(_MixinBase):
         # 获取json
         json_data = JCP.get("config.json",["python",item.data(Qt.UserRole)])
 
-        dialog = DetailsPythonDialog("详情",self.resource_python,
-                                                           "Python 基础环境",
-                                                           f"环境名称 {json_data['name']}",
-                                                           f"解释器版本 {json_data['version']}",
-                                                           f"环境路径 {json_data['dir']}",
-                                                           f"解释器路径 {json_data['path']}",self)
+        dialog = DetailsPythonDialog("详情",SIP.get("Python"),
+                                     "Python 基础环境",
+                                     f"环境名称 {json_data['name']}",
+                                     f"解释器版本 {json_data['version']}",
+                                     f"环境路径 {json_data['dir']}",
+                                     f"解释器路径 {json_data['path']}",self)
         if dialog.exec():
             # 销毁
             dialog.accept()
@@ -1099,11 +1127,11 @@ class UpdateMixin(_MixinBase):
     # 图钉详情
     def details_pin(self):
         # 获取json
-        json_data = JCP.get("config.json",["pin"],self.pin_table.currentRow())
+        json_data = JCP.get("config.json",["pin"])[self.pin_table.currentRow()]
 
         dialog = DetailsPinDialog("详情",FluentIcon.PIN,
-                                                         "VEM 图钉",
-                                                         f"图钉命令 {json_data}",self)
+                                 "VEM 图钉",
+                                 f"图钉命令 {json_data}",self)
         if dialog.exec():
             # 销毁
             dialog.accept()
@@ -1163,7 +1191,7 @@ class UpdateMixin(_MixinBase):
             item_col3 = self.python_table.item(row, 3)  # 第4列
 
             if item_col3 is not None and item_col0 is not None:
-                box.addItem(f"{item_col0.text()}    {item_col3.text()}", self.resource_python,userData=item_col3.text())
+                box.addItem(f"{item_col0.text()}    {item_col3.text()}", SIP.get("Python"),userData=item_col3.text())
 
         box.setCurrentIndex(-1) # 取消选中
 
@@ -1370,9 +1398,10 @@ class UpdateMixin(_MixinBase):
                       duration=1500
                       )
 
+
         # 播放音效 操作完成音效未禁用
         if self.play_sound and not self.play_sound_operation_completed:
-            self.sound_operation_completed.play()
+            BSP.play("OperationCompleted")
 
     # 更新下载文件
     def update_download_file(self):
@@ -1411,8 +1440,13 @@ class UpdateMixin(_MixinBase):
                       )
 
         # 播放音效 操作完成音效未禁用
-        if self.play_sound and not self.play_sound_operation_completed:
-            self.sound_operation_completed.play()
+
+        try:
+            if self.play_sound and not self.play_sound_operation_completed:
+                BSP.play("OperationCompleted")
+
+        except Exception as a:
+            print(a)
 
     # 更新下载直链
     def update_download_direct_link(self):
@@ -1421,3 +1455,16 @@ class UpdateMixin(_MixinBase):
         text2 = self.download_file_combox.text()
 
         self.direct_link_line.setText(f"https://www.python.org/ftp/python/{text}/{text2}")
+
+    # 强制退出
+    def force_quit(self):
+        w = DangerCountdownDialog(
+            title='强制退出⚠️',
+            content="""放弃保存本次配置并强制退出VEM""",
+            parent=self,
+            countdown_seconds=3,
+            text="退出"
+        )
+        # 确认
+        if w.exec():
+            sys.exit()

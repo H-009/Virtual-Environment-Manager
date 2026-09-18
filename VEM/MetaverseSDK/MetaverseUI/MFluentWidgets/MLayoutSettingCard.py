@@ -2,6 +2,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
 from qtpy.QtCore import Signal
 from qfluentwidgets import SimpleCardWidget, IconWidget, BodyLabel, CaptionLabel, SwitchButton, HyperlinkButton
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MButton import DangerButton
 
 
 # 布局式设置卡片
@@ -50,6 +51,22 @@ class LayoutHyperlinkSettingCard(LayoutSettingCard):
         super().__init__(ico, title, content)
 
         self.linkBtn = HyperlinkButton(url, text, self)
-        self.linkBtn.setFixedWidth(80)
+        self.linkBtn.setFixedWidth(120)
         self.linkBtn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.hBoxLayout.addWidget(self.linkBtn)
+
+# 布局式危险按钮设置卡片
+class LayoutDangerButtonSettingCard(LayoutSettingCard):
+
+    clickedChanged = Signal(bool)
+
+    def __init__(self, ico, title, content, text):
+        super().__init__(ico, title, content)
+
+        self.btn = DangerButton(text)
+        self.btn.setFixedWidth(120)
+        self.btn.clicked.connect(self.onClickedChanged)
+        self.hBoxLayout.addWidget(self.btn)
+
+    def onClickedChanged(self,isChecked):
+        self.clickedChanged.emit(isChecked)
