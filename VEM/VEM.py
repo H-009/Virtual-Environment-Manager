@@ -42,7 +42,7 @@ from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG
 
 import Threads
-import svg_image
+import ico
 import tool
 import objgraph
 
@@ -51,6 +51,158 @@ from MetaverseSDK.MetaverseResource.MetaverseFluentIcon import MetaverseFluentIc
 from uimixin import UiMixin
 from updatemixin import UpdateMixin
 
+
+# 第一时间设置全局配置，开启硬件加速开关，锁定动画帧率为60fps，设置合理的组件缓存上限
+# config.ENABLE_HARDWARE_ACCELERATION = True
+# config.ANIMATION_FRAME_RATE = 60
+# config.MAX_CACHE_SIZE = 100
+
+# 全局配置OpenGL渲染参数
+# 额外开启Qt的OpenGL硬件渲染后端，将所有UI绘制任务直接交给GPU处理，大幅降低CPU渲染负载
+# 部分老旧集成显卡可能不支持OpenGL 3.3核心模式，可以降级到setVersion(2, 0)保证兼容性
+# 不要和Qt的软件渲染后端同时启用，避免出现渲染冲突导致界面闪烁
+# fmt = QSurfaceFormat()
+# fmt.setVersion(3, 3)  # 指定OpenGL 3.3版本，兼容性和性能平衡最优
+# fmt.setProfile(QSurfaceFormat.CoreProfile)  # 使用核心模式，移除废弃API
+# fmt.setSamples(4)  # 开启4倍抗锯齿，提升画面质感
+# QSurfaceFormat.setDefaultFormat(fmt)
+
+
+# # 跨工作目录
+# # 获取当前脚本所在目录
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# # 将当前目录添加到Python模块搜索路径
+# if current_dir not in sys.path:
+#     sys.path.append(current_dir)
+
+# 导航栏徽章管理器
+@InfoBadgeManager.register("StableHiddenNav")
+class StableHiddenNavBadgeManager(InfoBadgeManager):
+
+    def eventFilter(self, obj, e):
+        if obj is not self.target:
+            return super().eventFilter(obj, e)
+
+        # 1️⃣ 如果徽章逻辑上是隐藏的，直接吃掉 Show 事件
+        if e.type() == QEvent.Show and not self.badge.isVisible():
+            return True
+
+        # 2️⃣ Resize / Move 始终参与定位（防止左上角）
+        if e.type() in (QEvent.Resize, QEvent.Move):
+            self.badge.move(self.position())
+
+        return super().eventFilter(obj, e)
+
+class FluentOverlayWindow(FramelessWindow):
+    """
+    浮层版 FluentWindow（类似 Win11 汉堡菜单）
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setTitleBar(StandardTitleBar(self))
+
+        # 主内容
+        self.stackWidget = QStackedWidget(self)
+
+        # 导航面板（浮层）
+        self.navPanel = NavigationPanel(self, True)
+        self.navPanel.setExpandWidth(240)
+        self.navPanel.setAcrylicEnabled(True)
+        self.navPanel.hide()
+
+        # 汉堡按钮
+        self.menuBtn = NavigationToolButton(FluentIcon.MENU, self.titleBar)
+        self.titleBar.hBoxLayout.insertWidget(3, self.menuBtn)
+        self.menuBtn.clicked.connect(self.toggleNav)
+
+        # 布局
+        self.container = QWidget(self)
+        self.vLayout = QVBoxLayout(self.container)
+        self.vLayout.setContentsMargins(0, 0, 0, 0)
+        self.vLayout.addWidget(self.stackWidget)
+
+        #self.setCentralWidget(self.container)
+
+        self.resize(960, 640)
+        self.setWindowTitle("Fluent Overlay Window")
+
+        self.stackWidget.currentChanged.connect(self._syncNav)
+
+    # ------------------ API ------------------
+
+    def addSubInterface(self, widget: QWidget, icon, text: str,
+                        position=NavigationItemPosition.TOP):
+        routeKey = widget.objectName() or text
+
+        self.stackWidget.addWidget(widget)
+
+        self.navPanel.addItem(
+            routeKey=routeKey,
+            icon=icon,
+            text=text,
+            onClick=lambda: self.switchTo(widget),
+            position=position
+        )
+
+    def switchTo(self, widget: QWidget):
+        self.stackWidget.setCurrentWidget(widget)
+
+    def toggleNav(self):
+        if self.navPanel.isVisible():
+            self.navPanel.collapse()
+        else:
+            self.navPanel.show()
+            self.navPanel.expand()
+
+    # ------------------ 内部 ------------------
+
+    def _syncNav(self, index):
+        widget = self.stackWidget.widget(index)
+        self.navPanel.setCurrentItem(widget.objectName())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.navPanel.setFixedHeight(self.height())
+
+def install_click_debug(widget):
+    """
+    给任意 QWidget 安装点击调试：
+    鼠标按下时打印被点中的 Qt 控件
+    """
+    class ClickDebug(QObject):
+        def eventFilter(self, obj, event):
+            if event.type() == QEvent.MouseButtonPress:
+                pos = event.globalPos()
+                app = QApplication.instance()
+
+                # Qt 视角：鼠标下是哪个控件
+                under = app.widgetAt(pos)
+
+                if under:
+                    print("=" * 60)
+                    print(f"🖱️  鼠标点击 @ {pos.x()}, {pos.y()}")
+                    print(f"🎯 Qt 控件:")
+                    print(f"   • 类型 : {type(under).__name__}")
+                    print(f"   • 对象名: {under.objectName() or '(未命名)'}")
+                    print(f"   • 地址 : 0x{id(under):X}")
+                    print(f"   • 父链:")
+                    p = under
+                    while p:
+                        print(f"     ↳ {type(p).__name__}  name={p.objectName()}")
+                        p = p.parent()
+                    print("=" * 60)
+                else:
+                    print("🖱️  点击位置没有 Qt widget（可能是原生窗口/桌面）")
+
+            return super().eventFilter(obj, event)
+
+    d = ClickDebug()
+    widget.installEventFilter(d)
+    widget._click_debug = d   # 防 GC
+
+# install_click_debug(self) # 安装gui控件调试器
 
 class MainUI(UiMixin,UpdateMixin,FluentWindow):
     def __init__(self):
@@ -129,7 +281,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         # 资源
         pixmap_VEM = QPixmap()
-        pixmap_VEM.loadFromData(svg_image.VEM)
+        pixmap_VEM.loadFromData(ico.VEM)
         self.resource_VEM = QIcon(pixmap_VEM)
 
         # 读取主题色
@@ -284,6 +436,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     def init_navigationInterface(self):
         self.navigationInterface.setExpandWidth(170)  # 固定抽屉长度
 
+        # 主页
+        self.Home = QWidget(self)
+        self.Home.setObjectName("Home")
+        #self.init_venv_manage()  # 初始化主页
+        self.addSubInterface(
+            self.Home,
+            FluentIcon.HOME,
+            "主页"
+        )
+
         # 虚拟环境
         self.VenvManage = QWidget(self)
         self.VenvManage.setObjectName("VenvManage")
@@ -383,6 +545,28 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             self.Download,
             FluentIcon.DOWNLOAD,
             "下载",
+            position=NavigationItemPosition.BOTTOM
+        )
+
+        # 链接
+        self.Link = QWidget(self)
+        self.Link.setObjectName("Link")
+        self.init_link()  # 初始化链接
+        self.addSubInterface(
+            self.Link,
+            MetaverseFluentIcon.Link,
+            "链接",
+            position=NavigationItemPosition.BOTTOM
+        )
+
+        # 安装
+        self.Installation = QWidget(self)
+        self.Installation.setObjectName("Installation")
+        self.init_installation()  # 初始化安装
+        self.addSubInterface(
+            self.Installation,
+            MetaverseFluentIcon.Installation,
+            "安装",
             position=NavigationItemPosition.BOTTOM
         )
 
