@@ -684,6 +684,11 @@ class UpdateMixin(_MixinBase):
         self.shutdown_protection_switch = key
         JCP.update("config.json", ["setting","shutdown_protection"], key)
 
+    # 更新全屏保护
+    def full_screen_update(self,key):
+        self.full_screen_switch = key
+        JCP.update("config.json", ["setting","full_screen"], key)
+
     # 更新自动进入环境
     def update_auto_enter_venv(self,key):
         self.auto_enter_venv = key

@@ -326,6 +326,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.enable_cmd_full_screen_switch = JCP.get("config.json", ["setting","full_screen_CMD"], False)
         # 关机保护
         self.shutdown_protection_switch = JCP.get("config.json", ["setting","shutdown_protection"], True)
+        # 关机保护
+        self.full_screen_switch = JCP.get("config.json", ["setting","full_screen"], True)
         # 自动进入环境
         self.auto_enter_venv = JCP.get("config.json", ["setting","auto_enter_venv"], True)
         # 嵌入延时
@@ -1269,10 +1271,26 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
     # 全屏控制台
     def full_screen_console(self):
-        dialog = Dialog("全屏提示","全屏操作不可逆\n全屏后无法退出全屏状态\n"
-                        "并且切换桌面会导致控制台丢失焦点\n如需关闭控制台 输入命令 exit/EXIT 强制退出控制台")
 
-        if dialog.exec():
+        # CMD全屏保护
+        if self.full_screen_switch:
+            dialog = Dialog("全屏提示","全屏操作不可逆\n全屏后无法退出全屏状态\n"
+                            "并且切换桌面会导致控制台丢失焦点\n如需关闭控制台 输入命令 exit/EXIT 强制退出控制台")
+
+            if dialog.exec():
+                try:
+                    self.select_console.cmd_full_screen_on()
+                except Exception as a:
+                    print(a)
+                    InfoBar.warning(
+                        title="警告",
+                        content=f"控制台未激活或被销毁",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+            dialog.accept()
+            dialog.deleteLater()
+        else:
             try:
                 self.select_console.cmd_full_screen_on()
             except Exception as a:
@@ -1283,8 +1301,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     parent=self,
                     position=InfoBarPosition.TOP
                 )
-        dialog.accept()
-        dialog.deleteLater()
 
     # 更新主题模式
     def update_theme_model(self, theme):
@@ -1856,10 +1872,26 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
     # 全屏CMD
     def full_screen_CMD(self):
-        dialog = Dialog("全屏提示","全屏操作不可逆\n全屏后无法退出全屏状态\n"
-                        "并且切换桌面会导致CMD丢失焦点\n如需关闭CMD 输入命令 exit/EXIT 强制退出CMD")
 
-        if dialog.exec():
+        # CMD全屏保护
+        if self.full_screen_switch:
+            dialog = Dialog("全屏提示","全屏操作不可逆\n全屏后无法退出全屏状态\n"
+                            "并且切换桌面会导致CMD丢失焦点\n如需关闭CMD 输入命令 exit/EXIT 强制退出CMD")
+
+            if dialog.exec():
+                try:
+                    self.select_cmd.cmd_full_screen_on()
+                except Exception as a:
+                    print(a)
+                    InfoBar.warning(
+                        title="警告",
+                        content=f"CMD未开机或被销毁",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+            dialog.accept()
+            dialog.deleteLater()
+        else:
             try:
                 self.select_cmd.cmd_full_screen_on()
             except Exception as a:
@@ -1870,8 +1902,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     parent=self,
                     position=InfoBarPosition.TOP
                 )
-        dialog.accept()
-        dialog.deleteLater()
 
     # 打开添加便携式环境窗口
     def open_add_emb_window(self):
