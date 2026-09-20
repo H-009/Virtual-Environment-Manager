@@ -16,9 +16,9 @@ from MetaverseSDK.MetaverseUI.MWidgets.MLabel import HyperlinkFileLabel
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel, CaptionLabel,TitleLabel
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtWidgets import QHeaderView, QSizePolicy, QSpacerItem, QGridLayout
-from qfluentwidgets import FluentIcon, SimpleCardWidget,EditableComboBox, ListWidget, IconWidget, ToolButton, \
-    PopUpAniStackedWidget, Pivot,LineEdit, SegmentedWidget, PushButton, ComboBox, CheckBox, TextEdit, \
-    SmoothScrollArea,SwitchButton, getFont
+from qfluentwidgets import FluentIcon, SimpleCardWidget, EditableComboBox, ListWidget, IconWidget, ToolButton, \
+    PopUpAniStackedWidget, Pivot, LineEdit, SegmentedWidget, PushButton, ComboBox, CheckBox, TextEdit, \
+    SmoothScrollArea, SwitchButton, getFont, ToolTipFilter, ToolTipPosition
 from typing import TYPE_CHECKING
 
 import tool
@@ -79,14 +79,19 @@ class UiMixin(_MixinBase):
         cmd_venv_card_vlayout.addWidget(cmd_console_card)
         # 电源按钮
         self.cmd_power_button = ToolButton()
+        self.cmd_power_button.setToolTip("电源")
+        self.cmd_power_button.installEventFilter(ToolTipFilter(self.cmd_power_button))
         self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
         self.cmd_power_button.clicked.connect(self.power_on_off)
         cmd_console_card_vlayout.addWidget(self.cmd_power_button)
         # 禁用电源按钮
         self.cmd_power_button.setEnabled(False)
 
+
         # 图钉按钮
         self.pin_button = ToolButton()
+        self.pin_button.setToolTip("图钉")
+        self.pin_button.installEventFilter(ToolTipFilter(self.pin_button))
         self.pin_button.setIcon(FluentIcon.PIN)
         self.pin_button.clicked.connect(self.switch_pin)
         cmd_console_card_vlayout.addWidget(self.pin_button)
@@ -95,6 +100,8 @@ class UiMixin(_MixinBase):
 
         # 预设脚本按钮
         self.preset_scripts_button = ToolButton()
+        self.preset_scripts_button.setToolTip("预设脚本")
+        self.preset_scripts_button.installEventFilter(ToolTipFilter(self.preset_scripts_button))
         self.preset_scripts_button.setIcon(FluentIcon.QUICK_NOTE)
         self.preset_scripts_button.clicked.connect(self.flyout_reset_scripts)
         cmd_console_card_vlayout.addWidget(self.preset_scripts_button)
@@ -103,6 +110,8 @@ class UiMixin(_MixinBase):
 
         # 手动更新按钮
         self.manual_update_button = ToolButton()
+        self.manual_update_button.setToolTip("手动更新")
+        self.manual_update_button.installEventFilter(ToolTipFilter(self.manual_update_button))
         self.manual_update_button.setIcon(FluentIcon.SYNC)
         self.manual_update_button.clicked.connect(self.manual_update_CMD)
         cmd_console_card_vlayout.addWidget(self.manual_update_button)
@@ -114,6 +123,8 @@ class UiMixin(_MixinBase):
 
         # 全屏按钮
         self.cmd_full_screen_button = ToolButton()
+        self.cmd_full_screen_button.setToolTip("全屏")
+        self.cmd_full_screen_button.installEventFilter(ToolTipFilter(self.cmd_full_screen_button))
         self.cmd_full_screen_button.setIcon(FluentIcon.FIT_PAGE)
         self.cmd_full_screen_button.clicked.connect(self.full_screen_CMD)
         cmd_console_card_vlayout.addWidget(self.cmd_full_screen_button)
@@ -209,21 +220,29 @@ class UiMixin(_MixinBase):
         cmd_console_card.setLayout(cmd_console_card_vlayout)
         # 创建控制台按钮
         self.create_console_button = ToolButton()
+        self.create_console_button.setToolTip("创建")
+        self.create_console_button.installEventFilter(ToolTipFilter(self.create_console_button))
         self.create_console_button.setIcon(self.SEND_FILL_icon)
         self.create_console_button.clicked.connect(self.console_on)
         cmd_console_card_vlayout.addWidget(self.create_console_button)
         # 销毁控制台按钮
         self.destroy_console_button = ToolButton()
+        self.destroy_console_button.setToolTip("销毁")
+        self.destroy_console_button.installEventFilter(ToolTipFilter(self.destroy_console_button))
         self.destroy_console_button.setIcon(self.BROOM_icon)
         self.destroy_console_button.clicked.connect(self.console_off)
         cmd_console_card_vlayout.addWidget(self.destroy_console_button)
         # 控制台列表按钮
         self.console_list_button = ToolButton()
+        self.console_list_button.setToolTip("控制台列表")
+        self.console_list_button.installEventFilter(ToolTipFilter(self.console_list_button))
         self.console_list_button.setIcon(FluentIcon.VIEW)
         self.console_list_button.clicked.connect(self.switch_console_list)
         cmd_console_card_vlayout.addWidget(self.console_list_button)
         # 手动更新按钮
         self.console_manual_update_button = ToolButton()
+        self.console_manual_update_button.setToolTip("手动更新")
+        self.console_manual_update_button.installEventFilter(ToolTipFilter(self.console_manual_update_button))
         self.console_manual_update_button.setIcon(FluentIcon.SYNC)
         self.console_manual_update_button.clicked.connect(self.manual_update_console)
         cmd_console_card_vlayout.addWidget(self.console_manual_update_button)
@@ -235,11 +254,15 @@ class UiMixin(_MixinBase):
 
         # 上一个终端按钮
         self.up_console_button = ToolButton()
+        self.up_console_button.setToolTip("上一个")
+        self.up_console_button.installEventFilter(ToolTipFilter(self.up_console_button))
         self.up_console_button.setIcon(FluentIcon.CARE_UP_SOLID)
         self.up_console_button.clicked.connect(self.up_console_item)
         cmd_console_card_vlayout.addWidget(self.up_console_button)
         # 下一个终端按钮
         self.down_console_button = ToolButton()
+        self.down_console_button.setToolTip("下一个")
+        self.down_console_button.installEventFilter(ToolTipFilter(self.down_console_button))
         self.down_console_button.setIcon(FluentIcon.CARE_DOWN_SOLID)
         self.down_console_button.clicked.connect(self.down_console_item)
         cmd_console_card_vlayout.addWidget(self.down_console_button)
@@ -249,6 +272,8 @@ class UiMixin(_MixinBase):
 
         # 全屏按钮
         self.console_full_screen_button = ToolButton()
+        self.console_full_screen_button.setToolTip("全屏")
+        self.console_full_screen_button.installEventFilter(ToolTipFilter(self.console_full_screen_button))
         self.console_full_screen_button.setIcon(FluentIcon.FIT_PAGE)
         self.console_full_screen_button.clicked.connect(self.full_screen_console)
         cmd_console_card_vlayout.addWidget(self.console_full_screen_button)
