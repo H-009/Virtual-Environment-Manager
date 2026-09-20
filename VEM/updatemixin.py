@@ -1497,7 +1497,7 @@ class UpdateMixin(_MixinBase):
             parent=self
         )
 
-        w.line.setText(str(self.cmd_obj_dict))
+        w.line.setText(str(self.cmd_obj_dict)+"\n"+str(self.console_obj_dict))
         w.line.setReadOnly(True)
         w.cancelButton.hide()
         w.line.setFixedSize(800,500)
