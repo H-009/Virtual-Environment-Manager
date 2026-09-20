@@ -1489,11 +1489,26 @@ class UpdateMixin(_MixinBase):
 
         w.exec()
 
-    # 打开音效池
+    # 打开CMD池
+    def open_cmd_pool(self):
+        w = TextEditDialog(
+            title='CMD池',
+            content="查看在内存中的CMD池",
+            parent=self
+        )
+
+        w.line.setText(str(self.cmd_obj_dict))
+        w.line.setReadOnly(True)
+        w.cancelButton.hide()
+        w.line.setFixedSize(800,500)
+
+        w.exec()
+
+    # 打开矢量图池
     def open_sip_pool(self):
         w = TextEditDialog(
-            title='矢量池',
-            content="查看在内存中的矢量池",
+            title='矢量图池',
+            content="查看在内存中的矢量图池",
             parent=self
         )
 

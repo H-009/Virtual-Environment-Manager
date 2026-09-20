@@ -3,7 +3,6 @@ import os
 import subprocess
 import sys
 import zipfile
-from distutils.command.config import config
 from pathlib import Path
 
 import darkdetect
@@ -16,8 +15,7 @@ from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
 from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QStackedWidget, \
-    QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QStackedWidget,QFileDialog
 from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject
 from pathvalidate import is_valid_filepath
 from qfluentwidgets import FluentWindow, setTheme, FluentIcon, NavigationItemPosition, setThemeColor, SimpleCardWidget,\
@@ -52,11 +50,6 @@ from MetaverseSDK.MetaverseResource.MetaverseFluentIcon import MetaverseFluentIc
 from uimixin import UiMixin
 from updatemixin import UpdateMixin
 
-
-# 第一时间设置全局配置，开启硬件加速开关，锁定动画帧率为60fps，设置合理的组件缓存上限
-# config.ENABLE_HARDWARE_ACCELERATION = True
-# config.ANIMATION_FRAME_RATE = 60
-# config.MAX_CACHE_SIZE = 100
 
 # 全局配置OpenGL渲染参数
 # 额外开启Qt的OpenGL硬件渲染后端，将所有UI绘制任务直接交给GPU处理，大幅降低CPU渲染负载

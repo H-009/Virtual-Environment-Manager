@@ -15,8 +15,8 @@ class UnzipWorker(QThread):
     finished = Signal()
     error = Signal(str)
 
-    def __init__(self, zip_path: str, extract_to: str):
-        super().__init__()
+    def __init__(self, zip_path: str, extract_to: str, parent=None):
+        super().__init__(parent)
         self.zip_path = zip_path
         self.extract_to = extract_to
 
@@ -53,8 +53,8 @@ class UnzipWorkerByte(QThread):
     finished = Signal()
     error = Signal(str)
 
-    def __init__(self, zip_path, extract_to):
-        super().__init__()
+    def __init__(self, zip_path, extract_to, parent=None):
+        super().__init__(parent)
         self.zip_path = zip_path
         self.extract_to = extract_to
 
