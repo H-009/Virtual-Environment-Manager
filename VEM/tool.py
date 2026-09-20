@@ -534,55 +534,6 @@ def run_command_temp_cmd(command: Union[str, List[str]],activate_path, visible=F
     except Exception as e:
         return f"执行异常: {str(e)}"
 
-def get_python_all_versions():
-    try:
-        url = "https://www.python.org/ftp/python/"
-        resp = requests.get(url, timeout=10)
-        resp.raise_for_status()
-
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        versions = [
-            a['href'].strip('/')
-            for a in soup.find_all('a')
-            if a.has_attr('href')
-            and a['href'][0].isdigit()
-            and a['href'].endswith('/')
-        ]
-        # 只保留合法 x.y.z 版本号
-        versions = [v for v in versions if v.count('.') >= 1 and all(p.isdigit() for p in v.split('.'))]
-        versions.sort(key=lambda x: list(map(int, x.split('.'))), reverse=True)
-        return versions
-
-    except Exception as e:
-        print(e)
-        return []
-
-def get_python_versions_all_file(v):
-    try:
-        # 传入具体的Python版本号，比如v="3.14.2"，拼接访问该版本的专属下载目录
-        url = f"https://www.python.org/ftp/python/{v}/"
-        resp = requests.get(url, timeout=10)
-        resp.raise_for_status()
-
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        # 提取所有符合要求的文件，仅排除文件夹
-        file_list = [
-            a['href']
-            for a in soup.find_all('a')
-            # 跳过无效的空href属性
-            if a.has_attr('href')
-            # 排除所有以/结尾的子文件夹，其余都是文件
-            and not a['href'].endswith('/')
-            # 额外过滤掉页面导航用的上级目录链接"../"，避免无关条目混入
-            and a['href'] != '../'
-        ]
-
-        return file_list
-
-    except Exception as e:
-        print(e)
-        return []
-
 # 批量注册实例方法
 def batch_registration_instance_method(mixin,self):
     for name, func in inspect.getmembers(mixin, inspect.isfunction):

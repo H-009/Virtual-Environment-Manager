@@ -12,6 +12,7 @@ import pywintypes
 
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
+from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
 from PyQt5.QtGui import QIcon, QPixmap, QColor
@@ -3237,7 +3238,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     dialog2.show()
 
                     # 删除文件夹
-                    self.delect_venv_thread = Threads.DeleteFolder(data)
+                    self.delect_venv_thread = DeleteFolder(data)
                     self.delect_venv_thread.error.connect(lambda s:self.uninstall_venv_error(s,dialog2,self.delect_venv_thread))
                     self.delect_venv_thread.finished.connect(lambda :self.uninstall_venv(dialog2,self.delect_venv_thread))
                     self.delect_venv_thread.start()

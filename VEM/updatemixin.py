@@ -9,6 +9,7 @@ from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
+from MetaverseSDK.MetaverseUI.MCore.MThread.MNetWorker import GetPythonVersions, GetPythonFile
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressBarDialog import IndeterminateProgressBarDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -17,7 +18,6 @@ from qfluentwidgets import InfoBarPosition, InfoBar, FluentIcon, Dialog, BodyLab
 
 from typing import TYPE_CHECKING
 
-import Threads
 import tool
 from Dialog import DetailsConfigDialog, DetailsPresetScriptsDialog, DetailsPinDialog, DetailsPythonDialog, \
     DetailsEmbDialog, DetailsVenvDialog
@@ -1382,7 +1382,7 @@ class UpdateMixin(_MixinBase):
         dialog.show()
 
         # 获取版本
-        self.get_python_thread = Threads.GetPythonVersions()
+        self.get_python_thread = GetPythonVersions()
         self.get_python_thread.error.connect(lambda s: self.uninstall_venv_error(s, dialog, self.get_python_thread))
         self.get_python_thread.finished.connect(lambda v:self.update_download_version_list(dialog,self.get_python_thread,v))
         self.get_python_thread.start()
@@ -1423,7 +1423,7 @@ class UpdateMixin(_MixinBase):
             dialog.show()
 
             # 获取版本
-            self.get_python_file_thread = Threads.GetPythonFile(version)
+            self.get_python_file_thread = GetPythonFile(version)
             self.get_python_file_thread.error.connect(lambda s: self.uninstall_venv_error(s, dialog, self.get_python_file_thread))
             self.get_python_file_thread.finished.connect(lambda v:self.update_download_file_list(dialog,self.get_python_file_thread,v))
             self.get_python_file_thread.start()
