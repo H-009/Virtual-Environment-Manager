@@ -249,7 +249,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.15.2"
+        self.VEM_Version = "v1.15.3"
         self.CMD_Version = "v0.8.0"
 
         # 预制图标
@@ -376,6 +376,9 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         BSP.load("OperationCompleted",MetaverseOGG.OperationCompleted)
         BSP.load("DownloadComplete",MetaverseOGG.DownloadComplete)
         BSP.load("ImportantTip",MetaverseOGG.ImportantTip)
+
+        # 后台线程引用
+        self.github_release_thread = None
 
         self.init_window()  # 初始化窗口
         self.init_navigationInterface()  # 初始化导航栏
@@ -4055,3 +4058,6 @@ if __name__ == "__main__":
 # 资源池 程序退出自动保存时如果未修改跳过保存
 
 # BSP.load("ImportantTip", MetaverseOGG.ImportantTip) 未使用音效
+
+# 读取版本信息
+# JCP.get("config.json", ["info", "version"], "LIGHT")

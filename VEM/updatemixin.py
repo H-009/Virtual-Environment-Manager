@@ -5,16 +5,19 @@ import re
 import sys
 
 import psutil
+from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
-from MetaverseSDK.MetaverseUI.MCore.MThread.MNetWorker import GetPythonVersions, GetPythonFile
+from MetaverseSDK.MetaverseUI.MCore.MThread.MNetWorker import GetPythonVersions, GetPythonFile, GetGitHubReleaseThread
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressBarDialog import IndeterminateProgressBarDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QHBoxLayout, QTreeWidgetItem, QListWidgetItem, QFileDialog
-from qfluentwidgets import InfoBarPosition, InfoBar, FluentIcon, Dialog, BodyLabel, SimpleCardWidget, EditableComboBox
+from packaging.version import Version
+from qfluentwidgets import InfoBarPosition, InfoBar, FluentIcon, Dialog, BodyLabel, SimpleCardWidget, EditableComboBox, \
+    StateToolTip
 
 from typing import TYPE_CHECKING
 
@@ -22,7 +25,7 @@ import tool
 from Dialog import DetailsConfigDialog, DetailsPresetScriptsDialog, DetailsPinDialog, DetailsPythonDialog, \
     DetailsEmbDialog, DetailsVenvDialog
 
-from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import DangerCountdownDialog, TextEditDialog
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import DangerCountdownDialog, TextEditDialog, ReleaseDialog
 
 if TYPE_CHECKING:
     from VEM import MainUI
@@ -1382,7 +1385,7 @@ class UpdateMixin(_MixinBase):
         dialog.show()
 
         # 获取版本
-        self.get_python_thread = GetPythonVersions()
+        self.get_python_thread = GetPythonVersions(UrlBuilder.PythonAllVersions())
         self.get_python_thread.error.connect(lambda s: self.uninstall_venv_error(s, dialog, self.get_python_thread))
         self.get_python_thread.finished.connect(lambda v:self.update_download_version_list(dialog,self.get_python_thread,v))
         self.get_python_thread.start()
@@ -1423,7 +1426,7 @@ class UpdateMixin(_MixinBase):
             dialog.show()
 
             # 获取版本
-            self.get_python_file_thread = GetPythonFile(version)
+            self.get_python_file_thread = GetPythonFile(UrlBuilder.PythonVersionsAllFile(version))
             self.get_python_file_thread.error.connect(lambda s: self.uninstall_venv_error(s, dialog, self.get_python_file_thread))
             self.get_python_file_thread.finished.connect(lambda v:self.update_download_file_list(dialog,self.get_python_file_thread,v))
             self.get_python_file_thread.start()
@@ -1473,6 +1476,69 @@ class UpdateMixin(_MixinBase):
         # 确认
         if w.exec():
             sys.exit()
+
+    # 获取新版本
+    def get_new_version(self):
+        # 防止多次获取
+        if self.github_release_thread is None:
+            # 状态工具提示
+            self.new_version_state_tooltip = StateToolTip("正在检查更新", "正在获取最新版本,请耐心等待...", self)
+            self.new_version_state_tooltip.adjustSize()
+
+            x = self.width() - self.new_version_state_tooltip.width() - 20
+
+            self.new_version_state_tooltip.move(x, 55)
+            self.new_version_state_tooltip.show()
+
+            # 获取更新线程
+            self.github_release_thread = GetGitHubReleaseThread(UrlBuilder.GithubRepoLatestRelease("H-009","Virtual-Environment-Manager"))
+            self.github_release_thread.release_fetched.connect(self.get_new_version_success)
+            self.github_release_thread.error_occurred.connect(self.get_new_version_error)
+            self.github_release_thread.start()
+
+    # 获取最新版本错误
+    def get_new_version_error(self,error):
+        try:
+            InfoBar.error(title="错误",
+                          content=error,
+                          parent=self,
+                          position=InfoBarPosition.TOP_RIGHT,
+                          duration=2000
+                          )
+            # 销毁状态提示
+            self.new_version_state_tooltip.setTitle("获取失败")
+            self.new_version_state_tooltip.setContent("未找到任何版本")
+            self.new_version_state_tooltip.setState(True)
+            # 销毁线程
+            self.github_release_thread.deleteLater()
+            # 清空引用
+            self.github_release_thread = None
+        except Exception as a:
+            print(a)
+
+    # 获取最新版本成功
+    def get_new_version_success(self,release):
+        try:
+            self.new_version_state_tooltip.setTitle("获取成功")
+            self.new_version_state_tooltip.setState(True)
+
+            # 找到新版本
+            if Version(self.VEM_Version) < Version(release["version"]):
+                self.new_version_state_tooltip.setContent("找到新版本")
+
+                dialog = ReleaseDialog(release,self)
+                dialog.exec()
+
+            # 当前为新版本
+            else:
+                self.new_version_state_tooltip.setContent("当前为新版本")
+
+            # 销毁线程
+            self.github_release_thread.deleteLater()
+            # 清空引用
+            self.github_release_thread = None
+        except Exception as a:
+            print(a)
 
     # 打开配置池
     def open_jcp_pool(self):
