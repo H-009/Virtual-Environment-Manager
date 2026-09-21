@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
+from MetaverseSDK.MetaverseAPI.UrlKey import ContributorKey, RepoKey
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MCard import HorizontalFoldCard
@@ -2319,12 +2320,12 @@ class UiMixin(_MixinBase):
         # Github标题
         self.setting_view_layout.addWidget(BodyLabel("Github"))
         # Github卡片
-        card = LayoutHyperlinkButtonSettingCard(FluentIcon.GITHUB,"仓库","前往VEM仓库","前往",UrlBuilder.GithubRepo("H-009","Virtual-Environment-Manager"))
+        card = LayoutHyperlinkButtonSettingCard(FluentIcon.GITHUB,"仓库页","前往VEM仓库页","前往",UrlBuilder.GithubRepo(ContributorKey.H009,RepoKey.VEM))
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
-        card = LayoutHyperlinkButtonSettingCard(FluentIcon.GITHUB,"发布","前往VEM发布","前往",UrlBuilder.GithubRepoReleases("H-009","Virtual-Environment-Manager"))
+        card = LayoutHyperlinkButtonSettingCard(FluentIcon.GITHUB,"发布页","前往VEM发布页","前往",UrlBuilder.GithubRepoReleases(ContributorKey.H009,RepoKey.VEM))
         self.setting_view_layout.addWidget(card)
         card = LayoutPrimaryButtonSettingCard(FluentIcon.GITHUB,"提交反馈","通过提交反馈帮助改进VEM","提交反馈")
-        card.clickedChanged.connect(lambda :QDesktopServices.openUrl(QUrl(UrlBuilder.GithubRepoIssues("H-009","Virtual-Environment-Manager"))))
+        card.clickedChanged.connect(lambda :QDesktopServices.openUrl(QUrl(UrlBuilder.GithubRepoIssues(ContributorKey.H009,RepoKey.VEM))))
         self.setting_view_layout.addWidget(card)
         card = LayoutPrimaryButtonSettingCard(FluentIcon.GITHUB,"检查更新","检查是否有可用更新","检查更新")
         card.clickedChanged.connect(self.get_new_version)

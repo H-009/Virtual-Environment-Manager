@@ -249,7 +249,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.15.3"
+        self.VEM_Version = "v1.15.4"
         self.CMD_Version = "v0.8.0"
 
         # 预制图标

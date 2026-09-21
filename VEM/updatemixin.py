@@ -6,6 +6,7 @@ import sys
 
 import psutil
 from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
+from MetaverseSDK.MetaverseAPI.UrlKey import ContributorKey, RepoKey
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
@@ -1491,7 +1492,7 @@ class UpdateMixin(_MixinBase):
             self.new_version_state_tooltip.show()
 
             # 获取更新线程
-            self.github_release_thread = GetGitHubReleaseThread(UrlBuilder.GithubRepoLatestRelease("H-009","Virtual-Environment-Manager"))
+            self.github_release_thread = GetGitHubReleaseThread(UrlBuilder.GithubRepoLatestRelease(ContributorKey.H009,RepoKey.VEM))
             self.github_release_thread.release_fetched.connect(self.get_new_version_success)
             self.github_release_thread.error_occurred.connect(self.get_new_version_error)
             self.github_release_thread.start()
@@ -1521,6 +1522,10 @@ class UpdateMixin(_MixinBase):
         try:
             self.new_version_state_tooltip.setTitle("获取成功")
             self.new_version_state_tooltip.setState(True)
+
+            # 播放音效 操作完成音效未禁用
+            if self.play_sound and not self.play_sound_operation_completed:
+                BSP.play("OperationCompleted")
 
             # 找到新版本
             if Version(self.VEM_Version) < Version(release["version"]):
