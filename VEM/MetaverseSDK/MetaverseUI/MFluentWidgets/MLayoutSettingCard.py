@@ -1,7 +1,7 @@
 from qtpy.QtCore import Qt,QUrl,Signal
 from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
 from qfluentwidgets import SimpleCardWidget, IconWidget, BodyLabel, CaptionLabel, SwitchButton, HyperlinkButton, \
-    HyperlinkLabel, PushButton
+    HyperlinkLabel, PushButton, PrimaryPushButton
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MButton import DangerButton
 
 
@@ -54,6 +54,22 @@ class LayoutButtonSettingCard(LayoutSettingCard):
         super().__init__(ico, title, content)
 
         self.btn = PushButton(text)
+        self.btn.setFixedWidth(120)
+        self.btn.clicked.connect(self.onClickedChanged)
+        self.hBoxLayout.addWidget(self.btn)
+
+    def onClickedChanged(self,isChanged):
+        self.clickedChanged.emit(isChanged)
+
+# 布局式主题色按钮设置卡片
+class LayoutPrimaryButtonSettingCard(LayoutSettingCard):
+
+    clickedChanged = Signal(bool)
+
+    def __init__(self, ico, title, content, text):
+        super().__init__(ico, title, content)
+
+        self.btn = PrimaryPushButton(text)
         self.btn.setFixedWidth(120)
         self.btn.clicked.connect(self.onClickedChanged)
         self.hBoxLayout.addWidget(self.btn)

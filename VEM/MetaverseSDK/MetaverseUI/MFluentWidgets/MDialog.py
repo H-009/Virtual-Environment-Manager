@@ -1,7 +1,8 @@
+import webbrowser
 from qtpy.QtCore import Signal, Qt, QTimer
-from qtpy.QtWidgets import QLabel, QVBoxLayout, QSizePolicy, QHBoxLayout, QFileDialog
-from qfluentwidgets import BodyLabel, SingleDirectionScrollArea, SimpleCardWidget, FluentStyleSheet, LineEdit, TextEdit,\
-    ToolButton, FluentIcon, Dialog
+from qtpy.QtWidgets import QLabel, QVBoxLayout, QSizePolicy, QHBoxLayout, QFileDialog,QHeaderView, QTableWidgetItem
+from qfluentwidgets import BodyLabel, SingleDirectionScrollArea, SimpleCardWidget, FluentStyleSheet, LineEdit, TextEdit, \
+    ToolButton, FluentIcon, Dialog, TextBrowser, TableWidget, HyperlinkButton
 from qfluentwidgets.components.dialog_box.dialog import Ui_MessageBox
 from qframelesswindow import FramelessDialog
 
@@ -282,3 +283,73 @@ class DangerCountdownDialog(Dialog):
             self.yesButton.setText(self.text)
         else:
             self.yesButton.setText(f"{self.text}({self.remaining}s)")
+
+# 发布对话框
+class ReleaseDialog(Dialog):
+    def __init__(self, release_json: dict, parent=None):
+        super().__init__(
+            title=f"新版本发布 {release_json['version']}",
+            content="",
+            parent=parent
+        )
+
+        self.release = release_json
+        self.setResizeEnabled(False)
+
+        pub_time = self.release["publish_time"].replace("T", " ").replace("Z", "")
+        self.contentLabel.setText(f"发布时间：{pub_time}")
+
+        # -------- 更新日志（插入到按钮之前） --------
+        self.noteBrowser = TextBrowser(self)
+        self.noteBrowser.setMarkdown(self.release["release_note"])
+        self.noteBrowser.setOpenExternalLinks(True)
+        self.noteBrowser.setFixedHeight(160)
+
+        self.textLayout.addWidget(self.noteBrowser)
+
+        # -------- 下载资源表 --------
+        assets = self.release.get("download_assets", [])
+
+        self.table = TableWidget(self)
+        self.table.setRowCount(len(assets))
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(["文件名", "SHA256", "大小"])
+        self.table.verticalHeader().hide()
+        self.table.setEditTriggers(TableWidget.NoEditTriggers)
+
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.Fixed)
+        self.table.setColumnWidth(1, 200)
+
+        for row, a in enumerate(assets):
+            link = HyperlinkButton(
+                url=a["download_url"],
+                text=a["filename"],
+                parent=self.table
+            )
+            link.setToolTip(a["download_url"])
+            self.table.setCellWidget(row, 0, link)
+
+            self.table.setItem(row, 1, QTableWidgetItem(a["sha256"]))
+            self.table.setItem(
+                row, 2,
+                QTableWidgetItem(f"{a['size'] / 1024 / 1024:.2f} MB")
+            )
+
+        self.table.setFixedHeight(120)
+        self.textLayout.addWidget(self.table)
+
+        # -------- 底部按钮 --------
+        self.yesButton.setText("查看发布页")
+        self.yesButton.clicked.connect(
+            lambda: webbrowser.open(self.release["detail_page_url"])
+        )
+        self.cancelButton.setText("关闭")
+
+        # -------- 尺寸 --------
+        self.setFixedSize(720, 460)
+
+    def setTitleBarVisible(self, isVisible: bool):
+        super().setTitleBarVisible(isVisible)

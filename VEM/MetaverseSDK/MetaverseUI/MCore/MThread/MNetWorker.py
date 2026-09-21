@@ -11,8 +11,10 @@ class GetPythonVersions(QThread):
     finished = Signal(list)
     error = Signal(str)
 
-    def __init__(self,parent=None):
+    def __init__(self,url,parent=None):
         super().__init__(parent)
+
+        self.url = url
 
     def run(self):
         try:
@@ -21,11 +23,9 @@ class GetPythonVersions(QThread):
             self.error.emit(f"获取版本超时")
             print(e)
 
-    @staticmethod
-    def get_python_all_versions():
+    def get_python_all_versions(self):
         try:
-            url = "https://www.python.org/ftp/python/"
-            resp = requests.get(url, timeout=10)
+            resp = requests.get(self.url, timeout=10)
             resp.raise_for_status()
 
             soup = BeautifulSoup(resp.text, 'html.parser')
@@ -53,23 +53,20 @@ class GetPythonFile(QThread):
     finished = Signal(list)
     error = Signal(str)
 
-    def __init__(self,v,parent=None):
+    def __init__(self,url,parent=None):
         super().__init__(parent)
-        self.v = v
+        self.url = url
 
     def run(self):
         try:
-            self.finished.emit(self.get_python_versions_all_file(self.v))
+            self.finished.emit(self.get_python_versions_all_file())
         except Exception as e:
             self.error.emit(f"获取文件超时")
             print(e)
 
-    @staticmethod
-    def get_python_versions_all_file(v):
+    def get_python_versions_all_file(self):
         try:
-            # 传入具体的Python版本号，比如v="3.14.2"，拼接访问该版本的专属下载目录
-            url = f"https://www.python.org/ftp/python/{v}/"
-            resp = requests.get(url, timeout=10)
+            resp = requests.get(self.url, timeout=10)
             resp.raise_for_status()
 
             soup = BeautifulSoup(resp.text, 'html.parser')
@@ -90,3 +87,66 @@ class GetPythonFile(QThread):
         except Exception as e:
             print(e)
             return []
+
+# 获取Github发布
+class GetGitHubReleaseThread(QThread):
+    """请求一次 GitHub Release"""
+
+    release_fetched = Signal(dict)
+    error_occurred = Signal(str)
+
+    def __init__(self,url,parent=None):
+        super().__init__(parent)
+        self.url = url
+
+    def run(self):
+        try:
+            data = self.get_latest_release()
+            if data is None:
+                self.error_occurred.emit("未找到 Release")
+            else:
+                parsed = self.parse_github_release(data)
+                self.release_fetched.emit(parsed)
+
+        except requests.exceptions.HTTPError as e:
+            resp = e.response
+            if resp is not None and resp.status_code == 403:
+                self.error_occurred.emit("GitHub API 速率限制已超出")
+            else:
+                self.error_occurred.emit(str(e))
+
+        except Exception as e:
+            self.error_occurred.emit(str(e))
+
+    # ---------- GitHub 请求逻辑 ----------
+    def get_latest_release(self):
+        headers = {"Accept": "application/vnd.github+json"}
+        r = requests.get(self.url, headers=headers, timeout=10,verify=False)
+
+        if r.status_code == 404:
+            return None
+        r.raise_for_status()
+        return r.json()
+
+    @staticmethod
+    def parse_github_release(raw_json):
+        return {
+            "version": raw_json["tag_name"],
+            "release_note": raw_json["body"],
+            "publish_time": raw_json["published_at"],
+            "is_prerelease": raw_json["prerelease"],
+            "detail_page_url": raw_json["html_url"],
+            "download_assets": [
+                {
+                    "filename": asset["name"],
+                    "download_url": asset["browser_download_url"],
+                    "size": asset["size"],
+                    "sha256": (
+                        asset["digest"].split(":")[-1]
+                        if asset.get("digest") and ":" in asset["digest"]
+                        else None
+                    ),
+                }
+                for asset in raw_json["assets"]
+            ],
+        }
