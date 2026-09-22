@@ -223,7 +223,7 @@ class UiMixin(_MixinBase):
         cmd_console_card.setLayout(cmd_console_card_vlayout)
         # 创建控制台按钮
         self.create_console_button = ToolButton()
-        self.create_console_button.setToolTip("创建")
+        self.create_console_button.setToolTip("激活")
         self.create_console_button.installEventFilter(ToolTipFilter(self.create_console_button))
         self.create_console_button.setIcon(self.SEND_FILL_icon)
         self.create_console_button.clicked.connect(self.console_on)

@@ -399,7 +399,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # 如果不是不显示-0ms 开始
         if self.startup_animation_duration != "不显示-0ms":
             # 创建启动页面
-            self.splashScreen = SplashScreen(self.windowIcon(), self)
+            self.splashScreen = SplashScreen(self.windowIcon(), self, enableShadow=True)
 
             size = {"小-80px":80,"中-120px":120,"大-240px":240}.get(self.startup_ico_size,120)
             self.splashScreen.setIconSize(QSize(size, size))
@@ -670,12 +670,13 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.cmd_full_screen_button.setEnabled(True)
 
             item = self.venv_tree.itemFromIndex(index)
+            data = item.data(0, Qt.UserRole)
 
-            # 存在
-            if item.text(0) in self.cmd_obj_dict:
-                self.cmd_stackedwidget.setCurrentWidget(self.cmd_obj_dict[item.text(0)][1])
+            # 存在 使用CMD的路径而非名称
+            if data.get("dir") in self.cmd_obj_dict:
+                self.cmd_stackedwidget.setCurrentWidget(self.cmd_obj_dict[data.get("dir")][1])
                 # 更新当前选择的CMD
-                self.select_cmd = self.cmd_obj_dict[item.text(0)][0]
+                self.select_cmd = self.cmd_obj_dict[data.get("dir")][0]
                 if self.mandatory_update_CMD_switch:
                     # 强制刷新CMD
                     self.select_cmd.refresh()
@@ -753,7 +754,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 cmd_card_vlayout.addWidget(cmd)
 
                 # 添加CMD对象字典
-                self.cmd_obj_dict[item.text(0)] = [cmd, cmd_card]
+                self.cmd_obj_dict[data.get("dir")] = [cmd, cmd_card]
                 # 更新当前选择的CMD
                 self.select_cmd = cmd
 
@@ -761,7 +762,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.cmd_power_button.setIcon(self.POWER_BUTTON_icon)
                 item.setIcon(0, self.PLAY_SOLID_icon)
                 # 绑定意外退出信号
-                self.select_cmd.monitor_thread.running_changed.connect(lambda state: self.unexpected_exit(item, item.text(0), state, self.select_cmd, cmd_card))
+                self.select_cmd.monitor_thread.running_changed.connect(lambda state: self.unexpected_exit(item, data.get("dir"), state, self.select_cmd, cmd_card))
 
                 # 关闭开关机通知
                 if not self.close_venv_power_on_tip_switch:
@@ -805,7 +806,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                         self.power_label_text.setText(item.text(0))
                         self.switch_power_bool = True
                         # 移出键
-                        del self.cmd_obj_dict[item.text(0)]
+                        data = item.data(0, Qt.UserRole)
+                        del self.cmd_obj_dict[data.get("dir")]
                         # 更新图标
                         self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
                         item.setIcon(0, self.POWER_BUTTON_icon)
@@ -838,7 +840,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     self.power_label_text.setText(item.text(0))
                     self.switch_power_bool = True
                     # 移出键
-                    del self.cmd_obj_dict[item.text(0)]
+                    data = item.data(0, Qt.UserRole)
+                    del self.cmd_obj_dict[data.get("dir")]
                     # 更新图标
                     self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
                     item.setIcon(0, self.POWER_BUTTON_icon)
@@ -4061,3 +4064,5 @@ if __name__ == "__main__":
 
 # 读取版本信息
 # JCP.get("config.json", ["info", "version"], "LIGHT")
+
+# 启动时检查更新

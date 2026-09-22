@@ -329,11 +329,13 @@ class UpdateMixin(_MixinBase):
 
                             # 回到选择页
                             item = self.venv_tree.currentItem()
+
                             self.cmd_stackedwidget.setCurrentIndex(0)
                             self.power_label_text.setText("没有选中的虚拟环境")
                             self.switch_power_bool = True
                             # 移出键
-                            del self.cmd_obj_dict[item.text(0)]
+                            data = item.data(0, Qt.UserRole)
+                            del self.cmd_obj_dict[data.get("dir")]
                             # 更新图标
                             self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
                             item.setIcon(0, self.POWER_BUTTON_icon)
@@ -392,7 +394,8 @@ class UpdateMixin(_MixinBase):
                         self.power_label_text.setText("没有选中的虚拟环境")
                         self.switch_power_bool = True
                         # 移出键
-                        del self.cmd_obj_dict[item.text(0)]
+                        data = item.data(0, Qt.UserRole)
+                        del self.cmd_obj_dict[data.get("dir")]
                         # 更新图标
                         self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
                         item.setIcon(0, self.POWER_BUTTON_icon)
