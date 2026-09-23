@@ -15,9 +15,9 @@ from MetaverseSDK.MetaverseUI.MWidgets.MStackedWidget import PopUpAniUpDownStack
     PageLeftRightStackedWidget
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTreeWidget import AllKeyProhibitedTreeWidget
 from MetaverseSDK.MetaverseUI.MGui.MValidator import PromotionValidator, OperatorValidator, PromotionPlaceholderValidator
-from MetaverseSDK.MetaverseUI.MWidgets.MLabel import HyperlinkFileLabel
+from MetaverseSDK.MetaverseUI.MWidgets.MLabel import HyperlinkFileLabel, ImageLabel
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel, CaptionLabel,TitleLabel
-from PyQt5.QtGui import QIcon, QFont, QDesktopServices
+from PyQt5.QtGui import QIcon, QFont, QDesktopServices, QPixmap
 from PyQt5.QtWidgets import QHeaderView, QSizePolicy, QSpacerItem, QGridLayout
 from qfluentwidgets import FluentIcon, SimpleCardWidget, EditableComboBox, ListWidget, IconWidget, ToolButton, \
     PopUpAniStackedWidget, Pivot, LineEdit, SegmentedWidget, PushButton, ComboBox, CheckBox, TextEdit, \
@@ -48,6 +48,13 @@ from qfluentwidgets import PrimaryPushButton,SingleDirectionScrollArea
 
 
 class UiMixin(_MixinBase):
+    # 初始化主页
+    def init_homepage(self):
+        # 嵌入垂直布局
+        vlayout = QHBoxLayout(self.Home)
+
+        vlayout.addWidget(ImageLabel(self.resource_VEM.pixmap(180,200),180,200))
+
     # 初始化环境管理
     def init_venv_manage(self):
         # 嵌入垂直布局
@@ -123,6 +130,15 @@ class UiMixin(_MixinBase):
 
         # 控制栏弹簧
         cmd_console_card_vlayout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
+
+        # 重启按钮
+        self.cmd_reload_button = ToolButton()
+        self.cmd_reload_button.setToolTip("重启")
+        self.cmd_reload_button.installEventFilter(ToolTipFilter(self.cmd_reload_button))
+        self.cmd_reload_button.setIcon(MetaverseFluentIcon.Reload)
+        self.cmd_reload_button.clicked.connect(self.reload_CMD)
+        cmd_console_card_vlayout.addWidget(self.cmd_reload_button)
+        self.cmd_reload_button.setEnabled(False)
 
         # 全屏按钮
         self.cmd_full_screen_button = ToolButton()
@@ -272,6 +288,15 @@ class UiMixin(_MixinBase):
 
         # 控制栏弹簧
         cmd_console_card_vlayout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
+
+        # 重启按钮
+        self.console_reload_button = ToolButton()
+        self.console_reload_button.setToolTip("重启")
+        self.console_reload_button.installEventFilter(ToolTipFilter(self.console_reload_button))
+        self.console_reload_button.setIcon(MetaverseFluentIcon.Reload)
+        self.console_reload_button.clicked.connect(self.reload_console)
+        cmd_console_card_vlayout.addWidget(self.console_reload_button)
+        self.console_reload_button.setEnabled(False)
 
         # 全屏按钮
         self.console_full_screen_button = ToolButton()
@@ -1624,6 +1649,11 @@ class UiMixin(_MixinBase):
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        # 启用CMD重启保护
+        card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT, "CMD重启保护", "重新启动CMD时提醒是否重新启动")
+        card.setChecked(self.reload_switch)
+        card.checkedChanged.connect(self.reload_update)
+        self.setting_view_layout.addWidget(card)
         # CMD全屏保护卡片
         card = SimpleCardWidget()
         hBoxLayout = QHBoxLayout()  # 水平布局
@@ -1741,6 +1771,11 @@ class UiMixin(_MixinBase):
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        # 启用CMD重启
+        card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT, "启用CMD重启", "允许CMD重新启动")
+        card.setChecked(self.enable_cmd_reload_CMD_switch)
+        card.checkedChanged.connect(self.update_reload_CMD)
+        self.setting_view_layout.addWidget(card)
         # CMD自动配置模式卡片
         card = SimpleCardWidget()
         hBoxLayout = QHBoxLayout()  # 水平布局

@@ -316,11 +316,15 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.mandatory_update_CMD_switch = JCP.get("config.json", ["setting","refresh_CMD"], False)
         # 启用手动更新CMD
         self.enable_manual_update_CMD_switch = JCP.get("config.json", ["setting","manual_CMD"], False)
+        # 启用CMD重启
+        self.enable_cmd_reload_CMD_switch = JCP.get("config.json", ["setting","reload_CMD"], False)
         # 启用CMD全屏
         self.enable_cmd_full_screen_switch = JCP.get("config.json", ["setting","full_screen_CMD"], False)
         # 关机保护
         self.shutdown_protection_switch = JCP.get("config.json", ["setting","shutdown_protection"], True)
-        # 关机保护
+        # 重启保护
+        self.reload_switch = JCP.get("config.json", ["setting","reload_protection"], True)
+        # 全屏保护
         self.full_screen_switch = JCP.get("config.json", ["setting","full_screen"], True)
         # 自动进入环境
         self.auto_enter_venv = JCP.get("config.json", ["setting","auto_enter_venv"], True)
@@ -438,7 +442,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # 主页
         self.Home = QWidget(self)
         self.Home.setObjectName("Home")
-        #self.init_venv_manage()  # 初始化主页
+        self.init_homepage()  # 初始化主页
         self.addSubInterface(
             self.Home,
             FluentIcon.HOME,
@@ -613,6 +617,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.preset_scripts_button.setEnabled(False)
                 # 禁用手动更新按钮
                 self.manual_update_button.setEnabled(False)
+                # 禁用重启按钮
+                self.cmd_reload_button.setEnabled(False)
                 # 禁用全屏按钮
                 self.cmd_full_screen_button.setEnabled(False)
                 return
@@ -630,6 +636,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.preset_scripts_button.setEnabled(False)
                 # 禁用手动更新按钮
                 self.manual_update_button.setEnabled(False)
+                # 禁用重启按钮
+                self.cmd_reload_button.setEnabled(False)
                 # 禁用全屏按钮
                 self.cmd_full_screen_button.setEnabled(False)
                 return
@@ -648,6 +656,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.preset_scripts_button.setEnabled(False)
                 # 禁用手动更新按钮
                 self.manual_update_button.setEnabled(False)
+                # 禁用重启按钮
+                self.cmd_reload_button.setEnabled(False)
                 # 禁用全屏按钮
                 self.cmd_full_screen_button.setEnabled(False)
                 return
@@ -663,6 +673,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             if self.enable_manual_update_CMD_switch:
                 # 解禁手动更新按钮
                 self.manual_update_button.setEnabled(True)
+
+            # 启用CMD重启
+            if self.cmd_reload_button:
+                # 解禁重启按钮
+                self.cmd_reload_button.setEnabled(True)
 
             # 启用CMD全屏
             if self.enable_cmd_full_screen_switch:
@@ -762,7 +777,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.cmd_power_button.setIcon(self.POWER_BUTTON_icon)
                 item.setIcon(0, self.PLAY_SOLID_icon)
                 # 绑定意外退出信号
-                self.select_cmd.monitor_thread.running_changed.connect(lambda state: self.unexpected_exit(item, data.get("dir"), state, self.select_cmd, cmd_card))
+                self.select_cmd.monitor_thread.running_changed.connect(lambda state: self.unexpected_exit(item,item.text(0), data.get("dir"), state, self.select_cmd, cmd_card))
 
                 # 关闭开关机通知
                 if not self.close_venv_power_on_tip_switch:
@@ -932,11 +947,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         JCP.save()
 
     # 意外退出
-    def unexpected_exit(self, item,cmd_name, state,obj,card):
+    def unexpected_exit(self, item,cmd_name,path, state,obj,card):
         try:
             if not state:
                 # cmd存在
-                if cmd_name in self.cmd_obj_dict:
+                if path in self.cmd_obj_dict:
                     InfoBar.error(
                         title="意外退出",
                         content=f"虚拟环境 {cmd_name} 意外退出",
@@ -952,7 +967,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                         obj.monitor_thread.wait()
                     if self.select_cmd.proc:
                         self.select_cmd.proc.terminate()
-                    del self.cmd_obj_dict[cmd_name]
+                    del self.cmd_obj_dict[path]
                     item.setIcon(0, self.POWER_BUTTON_icon)
 
                     # 是否是选中页
@@ -1039,6 +1054,10 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     if self.enable_manual_update_CMD_switch:
                         # 解禁手动更新按钮
                         self.console_manual_update_button.setEnabled(True)
+                    # 启用CMD重启
+                    if self.enable_cmd_reload_CMD_switch:
+                        # 解禁重启按钮
+                        self.console_reload_button.setEnabled(True)
                     # 启用CMD全屏
                     if self.enable_cmd_full_screen_switch:
                         # 解禁全屏按钮
@@ -1174,6 +1193,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 # 解禁手动更新按钮
                 self.console_manual_update_button.setEnabled(True)
 
+            # 启用重启
+            if self.enable_cmd_reload_CMD_switch:
+                # 解禁手动更新按钮
+                self.console_reload_button.setEnabled(True)
+
             # 启用CMD全屏
             if self.enable_cmd_full_screen_switch:
                 # 解禁全屏按钮
@@ -1195,6 +1219,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.console_stackedwidget.setCurrentIndex(0)
                 # 禁用手动更新按钮
                 self.console_manual_update_button.setEnabled(True)
+                # 禁用重启按钮
+                self.console_reload_button.setEnabled(True)
                 # 禁用全屏按钮
                 self.console_full_screen_button.setEnabled(True)
         except Exception as a:
@@ -1268,6 +1294,39 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 parent=self,
                 position=InfoBarPosition.TOP
             )
+
+    # 重启控制台
+    def reload_console(self):
+        # CMD重启保护
+        if self.reload_switch:
+            dialog = Dialog("重启提示","重启当前控制台会丢失当前未保存的数据")
+
+            if dialog.exec():
+                # 没有控制台存在
+                if not self.console_obj_dict != {}:
+                    InfoBar.warning(
+                        title="警告",
+                        content=f"控制台未激活无法重启",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+                else:
+                    # 执行关闭再开启
+                    self.console_off()
+                    self.console_on()
+            else:
+                # 没有控制台存在
+                if not self.console_obj_dict != {}:
+                    InfoBar.warning(
+                        title="警告",
+                        content=f"控制台未激活无法重启",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+                else:
+                    # 执行关闭再开启
+                    self.console_off()
+                    self.console_on()
 
     # 全屏控制台
     def full_screen_console(self):
@@ -1902,6 +1961,43 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     parent=self,
                     position=InfoBarPosition.TOP
                 )
+
+    # 重启CMD
+    def reload_CMD(self):
+
+        # CMD重启保护
+        if self.reload_switch:
+            dialog = Dialog("重启提示","重启当前CMD会丢失当前未保存的数据")
+
+            if dialog.exec():
+                item = self.venv_tree.currentItem()
+                # 按钮状态是开机 并且选中不为空
+                if self.switch_power_bool is True and item is not None:
+                    InfoBar.warning(
+                        title="警告",
+                        content=f"CMD未开机无法重启",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+                elif self.switch_power_bool is False and item is not None:
+                    # 执行两次电源
+                    self.power_on_off()
+                    self.power_on_off()
+        else:
+            item = self.venv_tree.currentItem()
+            # 按钮状态是开机 并且选中不为空
+            if self.switch_power_bool is True and item is not None:
+                InfoBar.warning(
+                    title="警告",
+                    content=f"CMD未开机无法重启",
+                    parent=self,
+                    position=InfoBarPosition.TOP
+                )
+            elif self.switch_power_bool is False and item is not None:
+                # 执行两次电源
+                self.power_on_off()
+                self.power_on_off()
+
 
     # 打开添加便携式环境窗口
     def open_add_emb_window(self):

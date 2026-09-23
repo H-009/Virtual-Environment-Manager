@@ -605,6 +605,34 @@ class UpdateMixin(_MixinBase):
             # 立即禁用
             self.cmd_full_screen_button.setEnabled(False)
 
+    # 更新CMD重启
+    def update_reload_CMD(self, key):
+        # 开启
+        if key:
+            InfoBar.info(
+                title="已开启",
+                content="CMD重启已开启",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_cmd_reload_CMD_switch = True
+            JCP.update("config.json", ["setting","reload_CMD"], True)
+            # 如果电源按钮未禁用 则启用
+            if self.cmd_power_button.isEnabled():
+                self.cmd_reload_button.setEnabled(True)
+
+        else:
+            InfoBar.info(
+                title="已关闭",
+                content="CMD重启已关闭",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_cmd_reload_CMD_switch = False
+            JCP.update("config.json", ["setting","reload_CMD"], False)
+            # 立即禁用
+            self.cmd_reload_button.setEnabled(False)
+
     # 更新云母效果
     def update_mica_effect(self,key):
         self.setMicaEffectEnabled(key)
@@ -690,6 +718,11 @@ class UpdateMixin(_MixinBase):
     def shutdown_protection_update(self,key):
         self.shutdown_protection_switch = key
         JCP.update("config.json", ["setting","shutdown_protection"], key)
+
+    # 更新重启保护
+    def reload_update(self,key):
+        self.reload_switch = key
+        JCP.update("config.json", ["setting","reload_protection"], key)
 
     # 更新全屏保护
     def full_screen_update(self,key):
