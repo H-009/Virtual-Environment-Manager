@@ -12,7 +12,7 @@ from MetaverseSDK.MetaverseUI.MFluentWidgets.MLayoutSettingCard import LayoutSet
     LayoutButtonSettingCard, LayoutPrimaryButtonSettingCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTableWidget import RoundedTableListWidget
 from MetaverseSDK.MetaverseUI.MWidgets.MStackedWidget import PopUpAniUpDownStackedWidget, PageUpDownStackedWidget, \
-    PageLeftRightStackedWidget
+    PageLeftRightStackedWidget, PageFreezeUpDownStackedWidget
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTreeWidget import AllKeyProhibitedTreeWidget
 from MetaverseSDK.MetaverseUI.MGui.MValidator import PromotionValidator, OperatorValidator, PromotionPlaceholderValidator
 from MetaverseSDK.MetaverseUI.MWidgets.MLabel import HyperlinkFileLabel, ImageLabel
@@ -51,9 +51,48 @@ class UiMixin(_MixinBase):
     # 初始化主页
     def init_homepage(self):
         # 嵌入垂直布局
-        vlayout = QHBoxLayout(self.Home)
+        vlayout = QVBoxLayout(self.Home)
 
-        vlayout.addWidget(ImageLabel(self.resource_VEM.pixmap(180,200),180,200))
+        # 顶部弹簧
+        vlayout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
+
+        vlayout.addWidget(ImageLabel(self.resource_VEM.pixmap(180,180),180,180),alignment=Qt.AlignCenter)
+        vlayout.addWidget(TitleLabel("Virtual Environment Manager"),alignment=Qt.AlignCenter)
+
+        vlayout.addWidget(BodyLabel(f"VEM | 版本 {self.VEM_Version}"),alignment=Qt.AlignCenter)
+        vlayout.addWidget(BodyLabel("更加可读,快捷的管理Python环境"),alignment=Qt.AlignCenter)
+
+        # 间隔弹簧
+        vlayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+        # 按钮布局
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+        # 居中弹簧
+        btn_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        add_btn = PrimaryPushButton("创建")
+        add_btn.setIcon(FluentIcon.ADD)
+        add_btn.setFixedWidth(100)
+        add_btn.clicked.connect(lambda :tool.switch_widget_debounce(self.stackedWidget,self.Created))
+        btn_layout.addWidget(add_btn, alignment=Qt.AlignCenter)
+
+        iot_btn = PushButton("环境")
+        iot_btn.setIcon(FluentIcon.IOT)
+        iot_btn.setFixedWidth(100)
+        iot_btn.clicked.connect(lambda :self.stackedWidget.setCurrentWidget(self.VenvManage))
+        btn_layout.addWidget(iot_btn, alignment=Qt.AlignCenter)
+
+        console_btn = PushButton("控制台")
+        console_btn.setIcon(FluentIcon.COMMAND_PROMPT)
+        console_btn.setFixedWidth(120)
+        console_btn.clicked.connect(lambda :self.stackedWidget.setCurrentWidget(self.Console))
+        btn_layout.addWidget(console_btn, alignment=Qt.AlignCenter)
+        # 居中弹簧
+        btn_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        vlayout.addLayout(btn_layout)
+
+        # 底部弹簧
+        vlayout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
 
     # 初始化环境管理
     def init_venv_manage(self):
@@ -69,6 +108,8 @@ class UiMixin(_MixinBase):
         # 创建树状表
         self.venv_tree = AllKeyProhibitedTreeWidget()
         self.venv_tree.clicked.connect(lambda index: self.select_venv_item(index))
+        self.venv_tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.venv_tree.customContextMenuRequested.connect(self.show_venv_tree_menu)
         # 隐藏表头
         self.venv_tree.setHeaderHidden(True)
         # 添加树状图
@@ -310,7 +351,7 @@ class UiMixin(_MixinBase):
         # 控制台堆叠窗口
         # 上下翻页堆叠控件
         if self.page_up_down_stacked_widget:
-            self.console_stackedwidget = PageUpDownStackedWidget()
+            self.console_stackedwidget = PageFreezeUpDownStackedWidget()
         # 上下弹出堆叠控件
         else:
             self.console_stackedwidget = PopUpAniUpDownStackedWidget()
@@ -2105,6 +2146,30 @@ class UiMixin(_MixinBase):
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        # 最大并行下载卡片
+        card = SimpleCardWidget()
+        hBoxLayout = QHBoxLayout()  # 水平布局
+        hBoxLayout.setContentsMargins(20, 10, 10, 10)
+        hBoxLayout.setSpacing(15)
+        icon = IconWidget(FluentIcon.DOWNLOAD)  # 启动动画图标界面
+        icon.setFixedSize(24, 24)
+        vBoxLayout = QVBoxLayout()  # 垂直布局
+        vBoxLayout.setSpacing(0)
+        vBoxLayout.addWidget(BodyLabel("最大并行下载数"))  # 文字标签
+        contentLabel = CaptionLabel("下载列表最大并行下载数量")  # 字幕标签
+        contentLabel.setTextColor("#606060", "#d2d2d2")
+        vBoxLayout.addWidget(contentLabel)
+        self.max_parallel_download_combox = ComboBox()  # 下拉框
+        self.max_parallel_download_combox.setFixedWidth(120)
+        self.max_parallel_download_combox.addItems(["1","2","3","4","5"])
+        self.max_parallel_download_combox.setCurrentText(self.max_parallel_download)
+        self.max_parallel_download_combox.activated.connect(self.update_max_parallel_download)
+        hBoxLayout.addWidget(icon)  # 添加到布局
+        hBoxLayout.addLayout(vBoxLayout)
+        hBoxLayout.addWidget(self.max_parallel_download_combox)
+        card.setLayout(hBoxLayout)  # 设置卡片布局
+        card.setFixedHeight(70)
+        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -2365,6 +2430,10 @@ class UiMixin(_MixinBase):
         card = LayoutPrimaryButtonSettingCard(FluentIcon.GITHUB,"检查更新","检查是否有可用更新","检查更新")
         card.clickedChanged.connect(self.get_new_version)
         self.setting_view_layout.addWidget(card)
+        card = LayoutSwitchButtonSettingCard(FluentIcon.GITHUB,"启动时检查更新","启动程序时检查是否有可用更新")
+        card.setChecked(self.startup_check_update)
+        card.checkedChanged.connect(self.update_startup_check_update)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -2391,7 +2460,11 @@ class UiMixin(_MixinBase):
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
-
+        # 退出自动保存卡片
+        card = LayoutSwitchButtonSettingCard(FluentIcon.SETTING,"跳过退出保存","退出时跳过未修改的保存")
+        card.setChecked(self.skip_exit_save)
+        card.checkedChanged.connect(self.update_skip_exit_save)
+        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 强制退出卡片
         card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"强制退出","放弃本次保存强制退出程序","强制退出")
         card.clickedChanged.connect(self.force_quit)

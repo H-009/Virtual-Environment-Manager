@@ -302,7 +302,7 @@ class UpdateMixin(_MixinBase):
                     if not self.CMD_passive_shutdown:
                         # 播放音效 重要提示音效未禁用
                         if self.play_sound and not self.play_sound_important_tip:
-                            self.sound_important_tip.play()
+                            BSP.play("ImportantTip")
                         dialog = Dialog("当前操作完成 但仍有CMD正在工作","环境列表不会刷新 是否关闭全部CMD刷新？"
                                         "\n强制关闭会丢失当前全部的工作进度 并且不会保留任何工作数据", self)
                         # 强制关闭
@@ -327,18 +327,13 @@ class UpdateMixin(_MixinBase):
                                 except Exception as e:
                                     print(e)
 
-                            # 回到选择页
-                            item = self.venv_tree.currentItem()
-
+                            # 回退到选择页
                             self.cmd_stackedwidget.setCurrentIndex(0)
                             self.power_label_text.setText("没有选中的虚拟环境")
                             self.switch_power_bool = True
-                            # 移出键
-                            data = item.data(0, Qt.UserRole)
-                            del self.cmd_obj_dict[data.get("dir")]
                             # 更新图标
                             self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
-                            item.setIcon(0, self.POWER_BUTTON_icon)
+
 
                             InfoBar.success(
                                 "完成",
@@ -351,8 +346,8 @@ class UpdateMixin(_MixinBase):
                             InfoBar.warning(
                                 "警告",
                                 "环境列表未能完成更新",
-                                parent = self,
-                                position = InfoBarPosition.TOP
+                                parent=self,
+                                position=InfoBarPosition.TOP
                             )
                             return
                     # 静默决定
@@ -389,23 +384,23 @@ class UpdateMixin(_MixinBase):
                                 print(e)
 
                         # 回到选择页
-                        item = self.venv_tree.currentItem()
                         self.cmd_stackedwidget.setCurrentIndex(0)
                         self.power_label_text.setText("没有选中的虚拟环境")
                         self.switch_power_bool = True
-                        # 移出键
-                        data = item.data(0, Qt.UserRole)
-                        del self.cmd_obj_dict[data.get("dir")]
                         # 更新图标
                         self.cmd_power_button.setIcon(self.PLAY_SOLID_icon)
-                        item.setIcon(0, self.POWER_BUTTON_icon)
                 # 常规
                 else:
                     # 重置
                     self.cmd_stackedwidget.setCurrentIndex(0)
                     self.power_label_text.setText("没有选中的虚拟环境")
 
-            self.venv_tree.clear() # 清空
+            # 安全销毁全部项
+            while self.venv_tree.topLevelItemCount() > 0:
+                item = self.venv_tree.takeTopLevelItem(0)
+                tool.safe_delete_item_close(item)
+
+            self.cmd_obj_dict = {} # 重置表
 
             # 读取虚拟环境配置
             venv_envs = JCP.get("config.json",["venv"])
@@ -1337,6 +1332,11 @@ class UpdateMixin(_MixinBase):
             # 开启
             JCP.update("config.json", ["setting","prohibit_creating_native_control_windows_same_level"], True)
 
+    # 更新启动时检查更新
+    def update_startup_check_update(self,key):
+        self.startup_check_update = key
+        JCP.update("config.json", ["setting","startup_check_update"], key)
+
     # 更新导航栏下载徽章
     def update_download_badge(self,m="+"):
         try:
@@ -1415,6 +1415,22 @@ class UpdateMixin(_MixinBase):
             self.downloads_path = path
             self.downloads_path_contentLabel.setText(path) # 更新字幕标签
             JCP.update("config.json",["setting","downloads_path"],path)
+
+    # 更新最大并行下载数
+    def update_max_parallel_download(self, index):
+        self.max_parallel_download = self.max_parallel_download_combox.itemText(index)
+
+        JCP.update("config.json",["setting","max_parallel_download"], self.max_parallel_download)
+        InfoBar.info(
+            title="通知",
+            content=f"最大并行下载数更为 {self.max_parallel_download} 重启生效",
+            parent=self,
+            position=InfoBarPosition.TOP,
+            duration=1500
+        )
+
+        # 更新图标
+        self.update_set_startup_animation_duration_ico()
 
     # 更新下载版本
     def update_download_version(self):
@@ -1539,8 +1555,8 @@ class UpdateMixin(_MixinBase):
             InfoBar.error(title="错误",
                           content=error,
                           parent=self,
-                          position=InfoBarPosition.TOP_RIGHT,
-                          duration=2000
+                          position=InfoBarPosition.BOTTOM_RIGHT,
+                          duration=-1
                           )
             # 销毁状态提示
             self.new_version_state_tooltip.setTitle("获取失败")
@@ -1580,6 +1596,11 @@ class UpdateMixin(_MixinBase):
             self.github_release_thread = None
         except Exception as a:
             print(a)
+
+    # 更新跳过退出保存
+    def update_skip_exit_save(self,key):
+        self.skip_exit_save = key
+        JCP.update("config.json", ["setting","skip_exit_save"], key)
 
     # 打开配置池
     def open_jcp_pool(self):

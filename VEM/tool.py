@@ -7,7 +7,7 @@ from typing import Optional, Union, List
 
 import requests
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem, QTreeWidgetItem
 from bs4 import BeautifulSoup
 from qfluentwidgets import Theme
 import re
@@ -538,3 +538,19 @@ def run_command_temp_cmd(command: Union[str, List[str]],activate_path, visible=F
 def batch_registration_instance_method(mixin,self):
     for name, func in inspect.getmembers(mixin, inspect.isfunction):
         self.__dict__[name] = MethodType(func, self)
+
+# 安全销毁树
+def safe_delete_item_close(item: QTreeWidgetItem):
+    """递归安全删除子节点"""
+    for i in reversed(range(item.childCount())):
+        child = item.takeChild(i)
+        safe_delete_item_close(child)
+    # 断开数据引用，帮助 GC
+    item.setData(0, Qt.UserRole, None)
+    del item
+
+# 切换页面防抖
+def switch_widget_debounce(stackedWidget,widget):
+    if stackedWidget.currentWidget() is widget:
+        return
+    stackedWidget.setCurrentWidget(widget)

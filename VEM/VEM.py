@@ -8,6 +8,7 @@ from pathlib import Path
 import darkdetect
 import psutil
 import pywintypes
+from MetaverseSDK.MetaverseTool.Config import JsonConfigTool
 
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
@@ -249,7 +250,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.15.4"
+        self.VEM_Version = "v1.16.0"
         self.CMD_Version = "v0.8.0"
 
         # 预制图标
@@ -352,6 +353,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.startup_ico_size = JCP.get("config.json", ["setting","startup_ico_size"], "中-120px")
         # 下载路径
         self.downloads_path = JCP.get("config.json", ["setting","downloads_path"],os.getcwd()+"\\Downloads")
+        # 最大并行下载数
+        self.max_parallel_download = JCP.get("config.json", ["setting","max_parallel_download"], "3")
         # 播放音效
         self.play_sound = JCP.get("config.json", ["setting","play_sound"], False)
         # 警告音效
@@ -374,6 +377,10 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.page_up_down_stacked_widget = JCP.get("config.json", ["setting","page_up_down_stacked_widget"], False)
         # 禁止创建原生控件同级窗口
         self.prohibit_creating_native_control_windows_same_level = JCP.get("config.json", ["setting","prohibit_creating_native_control_windows_same_level"], False)
+        # 启动时检查更新
+        self.startup_check_update = JCP.get("config.json", ["setting","startup_check_update"], False)
+        # 跳过退出保存
+        self.skip_exit_save = JCP.get("config.json", ["setting","skip_exit_save"], False)
 
         # 初始化音效池
         BSP.load("Warning",MetaverseOGG.Warning)
@@ -434,6 +441,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
             # 关闭启动页
             self.splashScreen.finish()
+
+        # 启动设置
+        # 启动时检查更新
+        if self.startup_check_update:
+            self.get_new_version()
 
     # 初始化导航栏
     def init_navigationInterface(self):
@@ -943,8 +955,22 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         else:
             super().closeEvent(event)
 
-        # 保存池
-        JCP.save()
+        # 跳过退出保存
+        if self.skip_exit_save:
+            # 判断是否修改
+            # 池中Json
+            new_json = JCP.read("config.json")
+            # 本地Json
+            old_json = JsonConfigTool.read_json("config.json")
+            # 是否相同
+            same = JsonConfigTool.json_equal(new_json,old_json)
+            # 不相同
+            if not same:
+                # 保存池
+                JCP.save()
+        else:
+            # 保存池
+            JCP.save()
 
     # 意外退出
     def unexpected_exit(self, item,cmd_name,path, state,obj,card):
@@ -1314,19 +1340,19 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     # 执行关闭再开启
                     self.console_off()
                     self.console_on()
+        else:
+            # 没有控制台存在
+            if not self.console_obj_dict != {}:
+                InfoBar.warning(
+                    title="警告",
+                    content=f"控制台未激活无法重启",
+                    parent=self,
+                    position=InfoBarPosition.TOP
+                )
             else:
-                # 没有控制台存在
-                if not self.console_obj_dict != {}:
-                    InfoBar.warning(
-                        title="警告",
-                        content=f"控制台未激活无法重启",
-                        parent=self,
-                        position=InfoBarPosition.TOP
-                    )
-                else:
-                    # 执行关闭再开启
-                    self.console_off()
-                    self.console_on()
+                # 执行关闭再开启
+                self.console_off()
+                self.console_on()
 
     # 全屏控制台
     def full_screen_console(self):
@@ -2464,6 +2490,39 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             Action(FluentIcon.ADD, '创建图钉', triggered=lambda: self.add_jump("pin")),
             Action(FluentIcon.DELETE, '删除', triggered=self.delete_pin_list)
         ])
+        # 环境树树枝菜单
+        self.venv_tree_branch_menu = RoundMenu(parent=self.venv_tree)
+        self.venv_tree_branch_menu.addActions([
+            Action(FluentIcon.COPY, '复制', shortcut='Ctrl+C', triggered=lambda: self.copy_tree_row(self.venv_tree)),
+            Action(FluentIcon.SYNC, '刷新', triggered=self.update_venv_tree),
+            Action(MetaverseFluentIcon.Up, '收起', triggered=lambda: self.venv_tree.currentItem().setExpanded(False)),
+            Action(MetaverseFluentIcon.Down, '展开', triggered=lambda: self.venv_tree.currentItem().setExpanded(True))
+        ])
+        # 环境树虚拟环境菜单
+        self.venv_tree_venv_menu = RoundMenu(parent=self.venv_tree)
+        self.venv_tree_venv_menu.addActions([
+            Action(FluentIcon.COPY, '复制', shortcut='Ctrl+C', triggered=lambda: self.copy_tree_row(self.venv_tree)),
+            Action(FluentIcon.SYNC, '刷新', triggered=self.update_venv_tree),
+            Action(FluentIcon.POWER_BUTTON, '电源', triggered=self.power_on_off),
+            Action(FluentIcon.ADD, '创建', triggered=lambda: self.add_jump("venv")),
+            Action(FluentIcon.APPLICATION, '管理', triggered=lambda :self.stackedWidget.setCurrentWidget(self.Venv))
+        ])
+        # 环境树便携式环境菜单
+        self.venv_tree_emb_menu = RoundMenu(parent=self.venv_tree)
+        self.venv_tree_emb_menu.addActions([
+            Action(FluentIcon.COPY, '复制', shortcut='Ctrl+C', triggered=lambda: self.copy_tree_row(self.venv_tree)),
+            Action(FluentIcon.SYNC, '刷新', triggered=self.update_venv_tree),
+            Action(FluentIcon.ADD, '创建', triggered=lambda: self.add_jump("emb")),
+            Action(FluentIcon.APPLICATION, '管理', triggered=lambda :self.stackedWidget.setCurrentWidget(self.EmbEnv))
+        ])
+        # 环境树基础环境菜单
+        self.venv_tree_python_menu = RoundMenu(parent=self.venv_tree)
+        self.venv_tree_python_menu.addActions([
+            Action(FluentIcon.COPY, '复制', shortcut='Ctrl+C', triggered=lambda: self.copy_tree_row(self.venv_tree)),
+            Action(FluentIcon.SYNC, '刷新', triggered=self.update_venv_tree),
+            Action(FluentIcon.ADD, '创建', triggered=lambda: self.add_jump("python")),
+            Action(FluentIcon.APPLICATION, '管理', triggered=lambda :self.stackedWidget.setCurrentWidget(self.BaseEnv))
+        ])
 
         # python环境表格菜单
         self.python_table_menu = RoundMenu(parent=self.python_table)
@@ -2559,6 +2618,12 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.pin_list_none_menu.addActions([
             Action(FluentIcon.SYNC, '刷新', triggered=self.update_pin),
             Action(FluentIcon.ADD, '创建图钉', triggered=lambda: self.add_jump("pin"))
+        ])
+        # 环境树空白菜单
+        self.venv_tree_none_menu = RoundMenu(parent=self.venv_tree)
+        self.venv_tree_none_menu.addActions([
+            Action(FluentIcon.SYNC, '刷新', triggered=self.update_venv_tree),
+            Action(FluentIcon.ADD, '创建环境', triggered=lambda: self.add_jump("venv"))
         ])
         # python环境表格空白菜单
         self.python_table_none_menu = RoundMenu(parent=self.python_table)
@@ -2666,6 +2731,37 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         dialog.accept()
         dialog.deleteLater()
 
+    # 弹出环境树右键菜单
+    def show_venv_tree_menu(self,pos):
+        try:
+            item = self.venv_tree.itemAt(pos)  # 拿到鼠标下的单元格
+
+            # 项对象转换模型索引
+            self.select_venv_item(self.venv_tree.indexFromItem(item))
+
+            # 选中无项
+            if item is None:
+                self.venv_tree_none_menu.exec_(self.venv_tree.viewport().mapToGlobal(pos))  # 弹空白区域菜单
+            # 选中树枝
+            elif item.parent() is None:
+                self.venv_tree_branch_menu.exec_(self.venv_tree.viewport().mapToGlobal(pos))  # 弹树枝区域菜单
+
+            # 选中Venv
+            elif item.data(0, Qt.UserRole)["type"] == "venv":
+                self.venv_tree_venv_menu.exec_(self.venv_tree.viewport().mapToGlobal(pos))  # 弹虚拟环境区域菜单
+            # 选中Emb
+            elif item.data(0, Qt.UserRole)["type"] == "emb":
+                self.venv_tree_emb_menu.exec_(self.venv_tree.viewport().mapToGlobal(pos))  # 弹便携式环境区域菜单
+            # 选中Python
+            elif item.data(0, Qt.UserRole)["type"] == "python":
+                self.venv_tree_python_menu.exec_(self.venv_tree.viewport().mapToGlobal(pos))  # 弹基础环境区域菜单
+            # 其他情况 选中空白
+            else:
+                self.venv_tree_none_menu.exec_(self.venv_tree.viewport().mapToGlobal(pos))  # 弹空白区域菜单
+
+        except Exception as a:
+            print(a)
+
     # 弹出基础环境右键菜单
     def show_python_table_menu(self,pos):
         try:
@@ -2679,10 +2775,21 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         except Exception as a:
             print(a)
 
-    # 复制基础环境
+    # 复制行
     def copy_row(self,table):
         item = table.currentItem()
         QApplication.clipboard().setText(item.text())
+        InfoBar.info(
+            title="通知",
+            content="内容已复制到剪切板",
+            parent=self,
+            position=InfoBarPosition.TOP
+        )
+
+    # 复制树行
+    def copy_tree_row(self,table):
+        item = table.currentItem()
+        QApplication.clipboard().setText(item.text(0))
         InfoBar.info(
             title="通知",
             content="内容已复制到剪切板",
@@ -4006,7 +4113,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
     # 初始化下载器
     def init_download_manager(self):
-        self.download_manager_thread = Threads.DownloadManager(self.downloads_path,3) # 多任务下载管理器 最大并行下载数 3
+        self.download_manager_thread = Threads.DownloadManager(self.downloads_path,int(self.max_parallel_download)) # 多任务下载管理器 最大并行下载数
         self.download_manager_thread.error.connect(lambda i,s: InfoBar.error(title="错误",content=f"任务{i}错误 {s}",parent=self,position=InfoBarPosition.TOP,duration=1500))
         self.download_manager_thread.finished.connect(lambda i,s:self.download_manager_python_complete(i,s))
 
@@ -4100,8 +4207,6 @@ if __name__ == "__main__":
 
 # 在启动页面关闭时 执行 强制关闭 拒绝关闭 隐藏控制按钮
 
-# 最大并行下载
-
 # 紧急修复 和一次性通知
 
 # 内存泄漏调试器
@@ -4134,11 +4239,7 @@ if __name__ == "__main__":
 
 # CMD std流历史 当前cmd详情
 
-# 关闭CMD全屏提示
-
 # 全局控制台 使用持续嵌入 意外退出重启控制台
-
-# 修改内部识别码 改为路径 该值唯一防止重名
 
 # 各个cmd 控制台状态 加入图表
 
@@ -4146,19 +4247,14 @@ if __name__ == "__main__":
 
 # 是否允许回调时长叠加
 
-# 重启环境
-
 # 徽章跟随强调色
 
 # 工作站工作模式 源码/程序/虚拟环境
 
 # 自动配置查找环境 和 依据树查找cmd改为用 item data存的唯一值
 
-# 资源池 程序退出自动保存时如果未修改跳过保存
-
-# BSP.load("ImportantTip", MetaverseOGG.ImportantTip) 未使用音效
-
 # 读取版本信息
 # JCP.get("config.json", ["info", "version"], "LIGHT")
 
-# 启动时检查更新
+# 控制台自动配置名称
+# 控制台自动创建
