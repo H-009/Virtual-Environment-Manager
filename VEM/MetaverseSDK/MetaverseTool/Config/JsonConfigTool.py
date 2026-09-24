@@ -1,6 +1,5 @@
 import json
 import os
-from pathlib import Path
 from typing import Sequence, Any, Optional, Union
 
 
@@ -487,27 +486,55 @@ def get_json_list_item_v2(file_path: str,path: Sequence[str],index: int,default:
 
     return target[index]
 
-def ensure_parent_dir(file_path: Union[str, Path], is_dir: bool = False) -> str:
+def json_equal(a: Any, b: Any) -> bool:
     """
-    检查并确保文件/目录的父目录已存在，不存在则自动创建。
-
-    参数:
-        file_path: 文件或目录路径
-        is_dir:    如果为 True，则认为 file_path 本身就是目录路径，
-                   直接创建它本身；否则只创建其父目录。
-
-    返回:
-        规范化后的路径字符串（方便链式调用）
+    判断两个 JSON 数据是否一致：
+    - 字典：key 顺序无关，值必须完全一致
+    - 列表：顺序敏感（完全一致）
+    - 支持嵌套
     """
-    path = Path(file_path)
+    # 类型不同直接判 False
+    if type(a) != type(b):
+        return False
 
-    # 如果传入的是目录本身，直接创建它
-    if is_dir:
-        target = path
-    else:
-        # 文件 → 取父目录
-        target = path.parent
+    # 字典：key 顺序无关，递归比较值
+    if isinstance(a, dict):
+        if a.keys() != b.keys():
+            return False
+        return all(json_equal(a[k], b[k]) for k in a)
 
-    target.mkdir(parents=True, exist_ok=True)
+    # 列表：顺序敏感
+    if isinstance(a, list):
+        if len(a) != len(b):
+            return False
+        return all(json_equal(a[i], b[i]) for i in range(len(a)))
 
-    return str(path)
+    # 基本类型：值必须完全相等
+    return a == b
+
+def read_json(file_path: str, default: Any = None) -> Any:
+    """
+    直接读取 JSON 文件，返回整个 JSON 数据。
+
+    示例：
+        data = read_json_file("config.json")
+        data = read_json_file("not_exist.json", {})
+
+    参数：
+        file_path: JSON 文件路径
+        default:   文件不存在或解析失败时的返回值
+
+    返回：
+        解析后的 JSON 数据（dict / list），或 default
+    """
+    if not isinstance(file_path, str) or not file_path:
+        return default
+
+    if not os.path.exists(file_path):
+        return default
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return default

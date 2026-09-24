@@ -1,5 +1,7 @@
 import json
 import os
+from ctypes import Union
+from pathlib import Path
 
 
 def read_json(json_path):
@@ -62,3 +64,28 @@ def modify_json(json_path, key, new_value):
         print(f"JSON格式错误: {json_path}")
     except Exception as e:
         print(f"修改失败: {e}")
+
+def ensure_parent_dir(file_path: Union[str, Path], is_dir: bool = False) -> str:
+    """
+    检查并确保文件/目录的父目录已存在，不存在则自动创建。
+
+    参数:
+        file_path: 文件或目录路径
+        is_dir:    如果为 True，则认为 file_path 本身就是目录路径，
+                   直接创建它本身；否则只创建其父目录。
+
+    返回:
+        规范化后的路径字符串（方便链式调用）
+    """
+    path = Path(file_path)
+
+    # 如果传入的是目录本身，直接创建它
+    if is_dir:
+        target = path
+    else:
+        # 文件 → 取父目录
+        target = path.parent
+
+    target.mkdir(parents=True, exist_ok=True)
+
+    return str(path)

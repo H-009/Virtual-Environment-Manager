@@ -1,6 +1,7 @@
 from typing import Optional
 from functools import partial
 
+from PyQt5.QtWidgets import QSizePolicy
 from qtpy.QtCore import QElapsedTimer
 from qtpy.QtCore import Signal, QParallelAnimationGroup, QPropertyAnimation, QEasingCurve, QPoint, QTimer, Qt, QVariantAnimation
 from qtpy.QtWidgets import QStackedWidget, QWidget, QGraphicsOpacityEffect, QScrollArea, QApplication
@@ -1082,6 +1083,356 @@ class PopUpAniLeftRightStackedWidget(QStackedWidget):
             w = self.currentWidget()
             if w:
                 w.move(margins.left(), margins.top())
+
+# 上下冻结翻页堆叠部件
+class PageFreezeUpDownStackedWidget(QWidget):
+    aniFinished = Signal()
+    aniStart = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._duration = 420
+        self._animating = False
+
+        self._anim = QVariantAnimation(self)
+        self._anim.setDuration(self._duration)
+        self._anim.setEasingCurve(QEasingCurve.Linear)   # 缓动自己在 _ease 里做
+        self._anim.valueChanged.connect(self._on_value)
+        self._anim.finished.connect(self._on_finished)
+
+        self._pages = []
+        self._currentIndex = -1
+        self._cur = self._nxt = None
+        self._targetIndex = -1
+        self._cy0 = self._cy1 = self._ny0 = self._ny1 = 0
+
+        self._dead = set()      # 已销毁页面的 id()
+        self._hooks = {}        # id(w) -> destroyed 槽
+
+        # 布局冻结恢复用
+        self._saved_size_policy = None
+        self._saved_min_size = None
+        self._saved_max_size = None
+
+    # ================= 布局冻结（防崩溃核心） =================
+    def _freeze_layout(self):
+        """动画开始前：冻结布局，防止布局系统插手"""
+        self._saved_size_policy = self.sizePolicy()
+        self._saved_min_size = self.minimumSize()
+        self._saved_max_size = self.maximumSize()
+
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setMinimumSize(self.size())
+        self.setMaximumSize(self.size())
+
+        # 禁用父布局，防止父布局在动画期间刷新
+        p = self.parentWidget()
+        if p and p.layout():
+            p.layout().setEnabled(False)
+
+    def _unfreeze_layout(self):
+        """动画结束后：恢复布局控制，并强制刷新一次"""
+        p = self.parentWidget()
+
+        #  先恢复父布局启用状态
+        if p and p.layout():
+            p.layout().setEnabled(True)
+
+        # 恢复自身布局属性
+        if self._saved_size_policy is not None:
+            self.setSizePolicy(self._saved_size_policy)
+        if self._saved_min_size is not None:
+            self.setMinimumSize(self._saved_min_size)
+        if self._saved_max_size is not None:
+            self.setMaximumSize(self._saved_max_size)
+
+        # 通知布局系统：几何已变
+        self.updateGeometry()
+
+        # 强制父布局立即重算（关键）
+        if p and p.layout():
+            p.layout().update()
+
+    # ================= 通用存活判断 =================
+    def _alive(self, w) -> bool:
+        if w is None:
+            return False
+        if id(w) in self._dead:
+            return False
+        try:
+            w.isVisible()
+        except (RuntimeError, TypeError):
+            self._dead.add(id(w))
+            return False
+        return True
+
+    # ---------------- 生命周期看守 ----------------
+    def _watch(self, w):
+        if w is None or not self._alive(w):
+            return
+        key = id(w)
+        if key in self._hooks:
+            return
+        hook = partial(self._on_page_destroyed, w)
+        try:
+            w.destroyed.connect(hook)
+        except (RuntimeError, TypeError):
+            return
+        self._hooks[key] = hook
+
+    def _unwatch(self, w):
+        if w is None:
+            return
+        key = id(w)
+        hook = self._hooks.pop(key, None)
+        if hook is not None and self._alive(w):
+            try:
+                w.destroyed.disconnect(hook)
+            except (RuntimeError, TypeError):
+                pass
+        self._dead.discard(key)
+        self._hooks.pop(key, None)
+
+    def _on_page_destroyed(self, w, _obj=None):
+        key = id(w)
+        self._dead.add(key)
+        self._hooks.pop(key, None)
+        try:
+            if w in self._pages:
+                self._pages.remove(w)
+        except ValueError:
+            pass
+        if self._animating and (w is self._cur or w is self._nxt):
+            self._abort()
+
+    # ================= Public API =================
+    def duration(self):
+        return self._duration
+
+    def setDuration(self, ms: int):
+        self._duration = int(ms)
+        self._anim.setDuration(self._duration)
+
+    def addWidget(self, w: QWidget):
+        if not self._alive(w):
+            return
+        try:
+            w.setParent(self)
+            w.setGeometry(0, 0, self.width(), self.height())
+            w.hide()
+        except RuntimeError:
+            return
+        self._pages.append(w)
+        self._watch(w)
+        if self._currentIndex == -1:
+            self._currentIndex = 0
+            try:
+                w.setGeometry(0, 0, self.width(), self.height())
+                w.show()
+            except RuntimeError:
+                pass
+
+    def removeWidget(self, w: QWidget):
+        if self._animating and (w is self._cur or w is self._nxt):
+            self._settle(emit=False)
+        if w not in self._pages:
+            return
+        idx = self._pages.index(w)
+        self._pages.remove(w)
+        self._unwatch(w)
+        try:
+            w.setParent(None)
+            w.hide()
+        except RuntimeError:
+            pass
+        if idx < self._currentIndex:
+            self._currentIndex -= 1
+        self._currentIndex = max(-1, min(self._currentIndex, len(self._pages) - 1))
+        if self._cur is w:
+            self._cur = None
+        if self._nxt is w:
+            self._nxt = None
+
+    def count(self):
+        return len(self._pages)
+
+    def currentIndex(self): return self._currentIndex
+
+    def currentWidget(self):
+        if 0 <= self._currentIndex < len(self._pages):
+            return self._pages[self._currentIndex]
+        return None
+
+    def setCurrentWidget(self, widget: QWidget):
+        try:
+            self.setCurrentIndex(self._pages.index(widget))
+        except ValueError:
+            return
+
+    def setCurrentIndex(self, index, direction="auto"):
+        if index < 0 or index >= len(self._pages):
+            return
+        if self._animating and index == self._targetIndex:
+            return
+        if self._animating:
+            self._settle(emit=True)
+        if index == self._currentIndex:
+            return
+
+        cur = self.currentWidget()
+        nxt = self._pages[index]
+        if not self._alive(cur) or not self._alive(nxt):
+            return
+
+        h, w = self.height(), self.width()
+        if direction == "auto":
+            direction = "down" if index > self._currentIndex else "up"
+
+        if direction == "up":
+            self._cy0, self._cy1 = 0, h
+            self._ny0, self._ny1 = -h, 0
+        else:
+            self._cy0, self._cy1 = 0, -h
+            self._ny0, self._ny1 = h, 0
+
+        try:
+            nxt.setParent(self)
+            nxt.setGeometry(0, self._ny0, w, h)
+            nxt.show()
+            nxt.raise_()
+            cur.setGeometry(0, 0, w, h)
+            cur.show()
+        except RuntimeError:
+            return
+
+        self._cur, self._nxt = cur, nxt
+        self._targetIndex = index
+        self._watch(cur)
+        self._watch(nxt)
+
+        # 动画开始前冻结布局
+        self._animating = True
+        self._freeze_layout()
+        self._anim.stop()
+        self._anim.setStartValue(0.0)
+        self._anim.setEndValue(1.0)
+        self._anim.start()
+        self.aniStart.emit()
+
+    def stopAnimation(self):
+        if self._animating:
+            self._settle(emit=False)
+
+    # ================= Animation =================
+    def _place(self, w, y, ww, hh) -> bool:
+        if not self._alive(w):
+            return False
+        try:
+            w.setGeometry(0, y, ww, hh)
+            return True
+        except RuntimeError:
+            return False
+
+    def _on_value(self, t):
+        if not self._animating:
+            return
+        try:
+            e = self._ease(float(t))
+            h, w = self.height(), self.width()
+            cy = int(self._cy0 + (self._cy1 - self._cy0) * e)
+            ny = int(self._ny0 + (self._ny1 - self._ny0) * e)
+            if not (self._place(self._cur, cy, w, h) and
+                    self._place(self._nxt, ny, w, h)):
+                self._abort()
+        except RuntimeError:
+            self._abort()
+
+    def _on_finished(self):
+        if self._animating:
+            self._settle(emit=True)
+
+    def _abort(self):
+        self._animating = False
+        try:
+            self._anim.stop()
+        except RuntimeError:
+            pass
+        self._cur = self._nxt = None
+        self._targetIndex = -1
+
+    def _settle(self, emit=True):
+        if not self._animating:
+            return
+        self._animating = False
+        self._anim.stop()
+
+        # 动画结束后恢复布局
+        self._unfreeze_layout()
+
+        cur, nxt, target = self._cur, self._nxt, self._targetIndex
+        h, w = self.height(), self.width()
+
+        if self._alive(nxt):
+            try:
+                nxt.setGeometry(0, 0, w, h)
+                nxt.show()
+                nxt.raise_()
+            except RuntimeError:
+                pass
+            self._currentIndex = target
+        if self._alive(cur) and cur is not nxt:
+            try:
+                cur.hide()
+            except RuntimeError:
+                pass
+
+        self._unwatch(cur)
+        self._unwatch(nxt)
+        self._cur = self._nxt = None
+        self._targetIndex = -1
+        if emit:
+            self.aniFinished.emit()
+
+    def _ease(self, t: float) -> float:
+        p1x, p1y = 0.2, 0.0
+        p2x, p2y = 0.0, 1.0
+        cx = 3 * p1x
+        bx = 3 * (p2x - p1x) - cx
+        ax = 1 - cx - bx
+        cy = 3 * p1y
+        by = 3 * (p2y - p1y) - cy
+        ay = 1 - cy - by
+        x = t
+        for _ in range(8):
+            v = ((ax * x + bx) * x + cx) * x - t
+            d = (3 * ax * x + 2 * bx) * x + cx
+            if abs(d) < 1e-6:
+                break
+            x -= v / d
+        x = max(0.0, min(1.0, x))
+        return ((ay * x + by) * x + cy) * x
+
+    # ================= Events =================
+    def hideEvent(self, e):
+        super().hideEvent(e)
+        if self._animating:
+            self._settle(emit=True)
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        w, h = self.width(), self.height()
+
+        if self._animating:
+            # ✅ 动画期间只改尺寸，不改坐标
+            for pg in (self._cur, self._nxt):
+                if self._alive(pg):
+                    try:
+                        pg.resize(w, h)
+                    except RuntimeError:
+                        pass
+        elif self._alive(self.currentWidget()):
+            self.currentWidget().setGeometry(0, 0, w, h)
 
 # 上下翻页堆叠部件
 class PageUpDownStackedWidget(QWidget):

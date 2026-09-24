@@ -32,6 +32,10 @@ class JsonConfigPool:
         """获取原始池 older()"""
         return self.pool
 
+    def read(self, file_path: str, default=None):
+        """获取池中指定 json 文件的全部数据 read("data.json")"""
+        return self.pool.get(file_path, default)
+
     def get(self, file_path: str, path: str, default = None):
         """获取Json get("data.json",["key","value"],None)"""
         if not path:
