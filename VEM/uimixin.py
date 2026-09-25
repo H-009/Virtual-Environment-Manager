@@ -2411,7 +2411,10 @@ class UiMixin(_MixinBase):
         card = LayoutSettingCard(FluentIcon.INFO,"版本",f"VEM 虚拟环境管理器 {self.VEM_Version}")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 归属于卡片
-        card = LayoutSettingCard(FluentIcon.INFO,"归属于","STD Studio Metaverse 4")
+        card = LayoutSettingCard(FluentIcon.INFO,"系列","Metaverse 4")
+        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        # 归属于卡片
+        card = LayoutSettingCard(FluentIcon.INFO,"工作室","STD Studio")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
 
         # 间隔弹簧
