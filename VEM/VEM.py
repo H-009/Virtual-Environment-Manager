@@ -250,7 +250,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.16.0"
+        self.VEM_Version = "v1.16.1"
         self.CMD_Version = "v0.8.0"
 
         # 预制图标
@@ -351,6 +351,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.startup_animation_duration = JCP.get("config.json", ["setting","startup_animation_duration"], "常规-1000ms")
         # 启动图标大小
         self.startup_ico_size = JCP.get("config.json", ["setting","startup_ico_size"], "中-120px")
+        # 启动图标阴影
+        self.startup_ico_shadow = JCP.get("config.json", ["setting","startup_ico_shadow"], False)
         # 下载路径
         self.downloads_path = JCP.get("config.json", ["setting","downloads_path"],os.getcwd()+"\\Downloads")
         # 最大并行下载数
@@ -410,7 +412,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # 如果不是不显示-0ms 开始
         if self.startup_animation_duration != "不显示-0ms":
             # 创建启动页面
-            self.splashScreen = SplashScreen(self.windowIcon(), self, enableShadow=True)
+            self.splashScreen = SplashScreen(self.windowIcon(), self, enableShadow=self.startup_ico_shadow)
 
             size = {"小-80px":80,"中-120px":120,"大-240px":240}.get(self.startup_ico_size,120)
             self.splashScreen.setIconSize(QSize(size, size))
@@ -4258,3 +4260,5 @@ if __name__ == "__main__":
 
 # 控制台自动配置名称
 # 控制台自动创建
+
+# 启动页面阴影

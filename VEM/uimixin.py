@@ -2118,6 +2118,29 @@ class UiMixin(_MixinBase):
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        # 图标阴影卡片
+        card = SimpleCardWidget()
+        hBoxLayout = QHBoxLayout()  # 水平布局
+        hBoxLayout.setContentsMargins(20, 10, 10, 10)
+        hBoxLayout.setSpacing(15)
+        iconWidget = IconWidget(FluentIcon.TRANSPARENT)  # 图标界面
+        iconWidget.setFixedSize(24, 24)
+        vBoxLayout = QVBoxLayout()  # 垂直布局
+        vBoxLayout.setSpacing(0)
+        vBoxLayout.addWidget(BodyLabel("图标阴影"))  # 文字标签
+        contentLabel = CaptionLabel("启动页面图标阴影效果")  # 字幕标签
+        contentLabel.setTextColor("#606060", "#d2d2d2")
+        vBoxLayout.addWidget(contentLabel)
+        self.shadow_switch = SwitchButton()  # 强制刷新按钮
+        self.shadow_switch.setChecked(self.startup_ico_shadow)
+        self.shadow_switch.checkedChanged.connect(lambda key: self.update_shadow(key))
+        self.shadow_switch.setFixedWidth(80)
+        hBoxLayout.addWidget(iconWidget)  # 添加到布局
+        hBoxLayout.addLayout(vBoxLayout)
+        hBoxLayout.addWidget(self.shadow_switch)
+        card.setLayout(hBoxLayout)  # 设置卡片布局
+        card.setFixedHeight(70)
+        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))

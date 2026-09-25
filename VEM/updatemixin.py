@@ -123,6 +123,28 @@ class UpdateMixin(_MixinBase):
         # 更新图标
         self.update_set_startup_ico_size_ico()
 
+    # 更新启动图标阴影
+    def update_shadow(self,key):
+        self.setMicaEffectEnabled(key)
+        JCP.update("config.json", ["setting","startup_ico_shadow"], key)
+
+        if key:
+            InfoBar.info(
+                title="已开启",
+                content="启动页面图标阴影已开启 重启应用生效",
+                parent=self,
+                position=InfoBarPosition.TOP,
+                duration=1500
+            )
+        else:
+            InfoBar.info(
+                title="已关闭",
+                content="启动页面图标阴影已关闭 重启应用生效",
+                parent=self,
+                position=InfoBarPosition.TOP,
+                duration=1500
+            )
+
     # 启用DPI缩放
     def update_dpi_zoom(self, key):
         # 开启
