@@ -598,11 +598,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         )
 
         # 设置
-        self.setting = QWidget(self)
-        self.setting.setObjectName("setting")
+        self.Setting = QWidget(self)
+        self.Setting.setObjectName("setting")
         self.init_setting()  # 初始化设置
         self.addSubInterface(
-            self.setting,
+            self.Setting,
             FluentIcon.SETTING,
             "设置",
             position=NavigationItemPosition.BOTTOM
@@ -4261,4 +4261,5 @@ if __name__ == "__main__":
 # 控制台自动配置名称
 # 控制台自动创建
 
-# 启动页面阴影
+# 自检
+# 扫描环境

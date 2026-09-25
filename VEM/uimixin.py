@@ -1422,7 +1422,7 @@ class UiMixin(_MixinBase):
     # 初始化设置
     def init_setting(self):
         # 嵌入垂直布局
-        self.setting_vlayout = QVBoxLayout(self.setting)
+        self.setting_vlayout = QVBoxLayout(self.Setting)
         # 标题布局
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(10, 10, 0, 0)
@@ -1919,74 +1919,20 @@ class UiMixin(_MixinBase):
         # 缩放标题
         self.setting_view_layout.addWidget(BodyLabel("缩放"))
         # 启用DPI缩放卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.ZOOM)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("开启DPI缩放"))  # 文字标签
-        contentLabel = CaptionLabel("开启高DPI感知缩放")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.dpi_zoom_switch = SwitchButton()  # 开关按钮
-        self.dpi_zoom_switch.setChecked(self.activated_dpi_zoom_switch)
-        self.dpi_zoom_switch.setFixedWidth(80)
-        self.dpi_zoom_switch.checkedChanged.connect(lambda key: self.update_dpi_zoom(key))
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.dpi_zoom_switch)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutSwitchButtonSettingCard(FluentIcon.ZOOM,"开启DPI缩放","开启高DPI感知缩放")
+        card.setChecked(self.activated_dpi_zoom_switch)
+        card.checkedChanged.connect(self.update_dpi_zoom)
+        self.setting_view_layout.addWidget(card)
         # 启用非整数缩放卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.ZOOM)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("启用非整数缩放"))  # 文字标签
-        contentLabel = CaptionLabel("支持高DPI感知非整数缩放比")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.dpi_non_int_zoom_switch = SwitchButton()  # 开关按钮
-        self.dpi_non_int_zoom_switch.setChecked(self.activated_dpi_non_int_zoom_switch)
-        self.dpi_non_int_zoom_switch.setFixedWidth(80)
-        self.dpi_non_int_zoom_switch.checkedChanged.connect(lambda key: self.update_dpi_non_int_zoom(key))
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.dpi_non_int_zoom_switch)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
-        # 启用非整数缩放卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.ZOOM)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("启用高DPI像素映射"))  # 文字标签
-        contentLabel = CaptionLabel("启用高DPI图像资源自动适配")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.high_DPI_pixel_mapping_switch = SwitchButton()  # 开关按钮
-        self.high_DPI_pixel_mapping_switch.setChecked(self.high_DPI_pixel_mapping)
-        self.high_DPI_pixel_mapping_switch.setFixedWidth(80)
-        self.high_DPI_pixel_mapping_switch.checkedChanged.connect(lambda key: self.update_high_DPI_pixel_mapping(key))
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.high_DPI_pixel_mapping_switch)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutSwitchButtonSettingCard(FluentIcon.ZOOM,"启用非整数缩放","支持高DPI感知非整数缩放比")
+        card.setChecked(self.activated_dpi_non_int_zoom_switch)
+        card.checkedChanged.connect(self.update_dpi_non_int_zoom)
+        self.setting_view_layout.addWidget(card)
+        # 启用高DPI像素映射
+        card = LayoutSwitchButtonSettingCard(FluentIcon.ZOOM,"启用高DPI像素映射","启用高DPI图像资源自动适配")
+        card.setChecked(self.high_DPI_pixel_mapping)
+        card.checkedChanged.connect(self.update_high_DPI_pixel_mapping)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -2119,28 +2065,10 @@ class UiMixin(_MixinBase):
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 图标阴影卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.TRANSPARENT)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("图标阴影"))  # 文字标签
-        contentLabel = CaptionLabel("启动页面图标阴影效果")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.shadow_switch = SwitchButton()  # 强制刷新按钮
-        self.shadow_switch.setChecked(self.startup_ico_shadow)
-        self.shadow_switch.checkedChanged.connect(lambda key: self.update_shadow(key))
-        self.shadow_switch.setFixedWidth(80)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.shadow_switch)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutSwitchButtonSettingCard(FluentIcon.TRANSPARENT,"图标阴影","启动页面图标阴影效果")
+        card.setChecked(self.startup_ico_shadow)
+        card.checkedChanged.connect(lambda key: self.update_shadow(key))
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -2407,23 +2335,9 @@ class UiMixin(_MixinBase):
         card = LayoutSettingCard(QIcon(":/qfluentwidgets/images/logo.png"), "QFluentWidgets", f"版本 v{QFW__version__}")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # PyQt5卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(MetaverseFluentIcon.Qt)  # 图标界面
-        iconWidget.setFixedSize(24, 18)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("PyQt5"))  # 文字标签
-        contentLabel = CaptionLabel(f"版本 v{QT__version__}")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutSettingCard(MetaverseFluentIcon.Qt, "PyQt5", f"版本 v{QT__version__}")
+        card.iconWidget.setFixedSize(24, 18)
+        self.setting_view_layout.addWidget(card)
         # Python卡片
         card = LayoutSettingCard(SIP.get("Python"), "Python", f"版本 v{self.Python__version__}")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
@@ -2522,8 +2436,6 @@ class UiMixin(_MixinBase):
 
         # 配置标题
         self.setting_view_layout.addWidget(BodyLabel("池"))
-
-
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"配置池","打开配置池","打开")
         card.clickedChanged.connect(self.open_jcp_pool)
         self.setting_view_layout.addWidget(card)
