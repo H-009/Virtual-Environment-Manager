@@ -125,7 +125,6 @@ class UpdateMixin(_MixinBase):
 
     # 更新启动图标阴影
     def update_shadow(self,key):
-        self.setMicaEffectEnabled(key)
         JCP.update("config.json", ["setting","startup_ico_shadow"], key)
 
         if key:
