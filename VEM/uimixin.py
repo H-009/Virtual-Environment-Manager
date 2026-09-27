@@ -73,7 +73,7 @@ class UiMixin(_MixinBase):
         add_btn = PrimaryPushButton("创建")
         add_btn.setIcon(FluentIcon.ADD)
         add_btn.setFixedWidth(100)
-        add_btn.clicked.connect(lambda :tool.switch_widget_debounce(self.stackedWidget,self.Created))
+        add_btn.clicked.connect(lambda :self.stackedWidget.setCurrentWidget(self.Created))
         btn_layout.addWidget(add_btn, alignment=Qt.AlignCenter)
 
         iot_btn = PushButton("环境")
@@ -2063,6 +2063,10 @@ class UiMixin(_MixinBase):
         hBoxLayout.addWidget(self.startup_ico_size_combox)
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
+        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        # 关闭启动延迟卡片
+        card = LayoutButtonSettingCard(FluentIcon.SPEED_HIGH, "关闭启动延迟", "关闭有关启动延时的设置","关闭")
+        card.clickedChanged.connect(self.update_close_startup_delay)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 图标阴影卡片
         card = LayoutSwitchButtonSettingCard(FluentIcon.TRANSPARENT,"图标阴影","启动页面图标阴影效果")

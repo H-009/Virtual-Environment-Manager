@@ -123,6 +123,15 @@ class UpdateMixin(_MixinBase):
         # 更新图标
         self.update_set_startup_ico_size_ico()
 
+    # 更新关闭启动延迟
+    def update_close_startup_delay(self):
+        # 设置启动页面时长
+        self.startup_animation_duration_combox.setCurrentIndex(0)
+        # 设置窗口过渡时长
+        self.transition_duration_combox.setCurrentIndex(0)
+        # 设置启动页面过渡时长
+        self.startup_animation_transition_duration_combox.setCurrentIndex(0)
+
     # 更新启动图标阴影
     def update_shadow(self,key):
         JCP.update("config.json", ["setting","startup_ico_shadow"], key)
