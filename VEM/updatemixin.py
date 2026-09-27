@@ -127,10 +127,13 @@ class UpdateMixin(_MixinBase):
     def update_close_startup_delay(self):
         # 设置启动页面时长
         self.startup_animation_duration_combox.setCurrentIndex(0)
+        self.update_startup_animation_duration(0)
         # 设置窗口过渡时长
         self.transition_duration_combox.setCurrentIndex(0)
+        self.update_transition_duration(0)
         # 设置启动页面过渡时长
         self.startup_animation_transition_duration_combox.setCurrentIndex(0)
+        self.update_startup_animation_transition_duration(0)
 
     # 更新启动图标阴影
     def update_shadow(self,key):
