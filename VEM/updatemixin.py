@@ -1455,6 +1455,13 @@ class UpdateMixin(_MixinBase):
             self.downloads_path_contentLabel.setText(path) # 更新字幕标签
             JCP.update("config.json",["setting","downloads_path"],path)
 
+    # 恢复默认下载路径
+    def restore_default_download_path(self):
+        path = os.getcwd()+"\\Downloads"
+        self.downloads_path = path
+        self.downloads_path_contentLabel.setText(path)  # 更新字幕标签
+        JCP.update("config.json", ["setting", "downloads_path"],path) # 更新配置
+
     # 更新最大并行下载数
     def update_max_parallel_download(self, index):
         self.max_parallel_download = self.max_parallel_download_combox.itemText(index)
@@ -1693,10 +1700,36 @@ class UpdateMixin(_MixinBase):
         self.skip_exit_save = key
         JCP.update("config.json", ["setting","skip_exit_save"], key)
 
-    # 更新跳过退出保存
+    # 更新配置文件保护
     def update_config_file_protect(self,key):
         self.config_file_protect = key
         JCP.update("config.json", ["setting","config_file_protect"], key)
+
+    # 更新备份路径
+    def update_backup_path(self):
+        path = QFileDialog.getExistingDirectory(
+            self,
+            "选择 备份位置",
+            "C:/"
+        )
+
+        if path != '':
+            InfoBar.success(title="成功",
+                            content=f"备份位置已更新为 {path}",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+            self.backup_path = path
+            self.backup_path_contentLabel.setText(path) # 更新字幕标签
+            JCP.update("config.json",["setting","backup_path"],path)
+
+    # 恢复默认备份路径
+    def restore_default_backup_path(self):
+        path = os.getcwd()+"\\Backup"
+        self.backup_path = path
+        self.backup_path_contentLabel.setText(path)  # 更新字幕标签
+        JCP.update("config.json", ["setting", "backup_path"],path) # 更新配置
 
     # 打开配置池
     def open_jcp_pool(self):

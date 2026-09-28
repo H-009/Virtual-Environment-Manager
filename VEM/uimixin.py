@@ -2064,7 +2064,7 @@ class UiMixin(_MixinBase):
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 关闭启动延迟卡片
-        card = LayoutButtonSettingCard(FluentIcon.SPEED_HIGH, "关闭启动延迟", "关闭有关启动延时的设置","关闭")
+        card = LayoutButtonSettingCard(FluentIcon.SPEED_HIGH, "关闭启动延迟", "关闭有关启动延时的设置","关闭延时")
         card.clickedChanged.connect(self.update_close_startup_delay)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 图标阴影卡片
@@ -2100,6 +2100,9 @@ class UiMixin(_MixinBase):
         card.setLayout(hBoxLayout)  # 设置卡片布局
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutButtonSettingCard(FluentIcon.DOWNLOAD,"恢复默认下载路径","恢复当前路径默认下载路径","恢复默认")
+        card.clickedChanged.connect(self.restore_default_download_path)
+        self.setting_view_layout.addWidget(card)
         # 最大并行下载卡片
         card = SimpleCardWidget()
         hBoxLayout = QHBoxLayout()  # 水平布局
@@ -2420,6 +2423,37 @@ class UiMixin(_MixinBase):
         # 删除配置卡片
         card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"删除配置","删除配置文件并清空配置池","删除配置")
         card.clickedChanged.connect(self.delete_config_file)
+        self.setting_view_layout.addWidget(card)
+
+        # 间隔弹簧
+        self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+        # 备份标题
+        self.setting_view_layout.addWidget(BodyLabel("备份"))
+        # 关闭便携式环境的脱控通知卡片
+        card = SimpleCardWidget()
+        hBoxLayout = QHBoxLayout()  # 水平布局
+        hBoxLayout.setContentsMargins(20, 10, 10, 10)
+        hBoxLayout.setSpacing(15)
+        iconWidget = IconWidget(FluentIcon.HISTORY)  # 图标界面
+        iconWidget.setFixedSize(24, 24)
+        vBoxLayout = QVBoxLayout()  # 垂直布局
+        vBoxLayout.setSpacing(0)
+        vBoxLayout.addWidget(BodyLabel("备份路径"))  # 文字标签
+        self.backup_path_contentLabel = CaptionLabel(self.backup_path)  # 字幕标签
+        self.backup_path_contentLabel.setTextColor("#606060", "#d2d2d2")
+        vBoxLayout.addWidget(self.backup_path_contentLabel)
+        button = PushButton("选择路径")
+        button.setFixedWidth(120)
+        button.clicked.connect(self.update_backup_path)
+        hBoxLayout.addWidget(iconWidget)  # 添加到布局
+        hBoxLayout.addLayout(vBoxLayout)
+        hBoxLayout.addWidget(button)
+        card.setLayout(hBoxLayout)  # 设置卡片布局
+        card.setFixedHeight(70)
+        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutButtonSettingCard(FluentIcon.HISTORY,"恢复默认备份路径","恢复当前路径默认备份路径","恢复默认")
+        card.clickedChanged.connect(self.restore_default_backup_path)
         self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧

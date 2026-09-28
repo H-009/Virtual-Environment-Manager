@@ -355,6 +355,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.startup_ico_shadow = JCP.get("config.json", ["setting","startup_ico_shadow"], False)
         # 下载路径
         self.downloads_path = JCP.get("config.json", ["setting","downloads_path"],os.getcwd()+"\\Downloads")
+        # 备份路径
+        self.backup_path = JCP.get("config.json", ["setting","backup_path"],os.getcwd()+"\\Backup")
         # 最大并行下载数
         self.max_parallel_download = JCP.get("config.json", ["setting","max_parallel_download"], "3")
         # 播放音效
