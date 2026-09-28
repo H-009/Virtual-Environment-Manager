@@ -26,7 +26,8 @@ import tool
 from Dialog import DetailsConfigDialog, DetailsPresetScriptsDialog, DetailsPinDialog, DetailsPythonDialog, \
     DetailsEmbDialog, DetailsVenvDialog
 
-from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import DangerCountdownDialog, TextEditDialog, ReleaseDialog
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import DangerCountdownDialog, TextEditDialog, ReleaseDialog, \
+    NotificationDialog
 
 if TYPE_CHECKING:
     from VEM import MainUI
@@ -127,12 +128,17 @@ class UpdateMixin(_MixinBase):
     def update_close_startup_delay(self):
         # 设置启动页面时长
         self.startup_animation_duration_combox.setCurrentIndex(0)
+        # 手动触发槽函数
         self.update_startup_animation_duration(0)
+
         # 设置窗口过渡时长
         self.transition_duration_combox.setCurrentIndex(0)
+        # 手动触发槽函数
         self.update_transition_duration(0)
+
         # 设置启动页面过渡时长
         self.startup_animation_transition_duration_combox.setCurrentIndex(0)
+        # 手动触发槽函数
         self.update_startup_animation_transition_duration(0)
 
     # 更新启动图标阴影
@@ -1554,7 +1560,7 @@ class UpdateMixin(_MixinBase):
     def force_quit(self):
         w = DangerCountdownDialog(
             title='强制退出⚠️',
-            content="""放弃保存本次配置并强制退出VEM""",
+            content="""是否放弃保存本次配置并强制退出VEM""",
             parent=self,
             countdown_seconds=3,
             text="退出"
@@ -1562,6 +1568,58 @@ class UpdateMixin(_MixinBase):
         # 确认
         if w.exec():
             sys.exit()
+
+    # 删除配置
+    def delete_config_file(self):
+        # 配置文件保护
+        if not self.config_file_protect:
+            w = DangerCountdownDialog(
+                title='删除配置⚠️',
+                content="""是否删除当前配置文件并清空配置池\n此操作不可撤销! 会丢失全部配置数据!!!\n是否继续?""",
+                parent=self,
+                countdown_seconds=10,
+                text="删除"
+            )
+            # 确认
+            if w.exec():
+
+                data = JCP.read("config.json")
+                w2 = DangerCountdownDialog(
+                    title='数据安全警告⚠️',
+                    content=f"""是否继续删除配置文件并清空配置池 会丢失全部配置数据!\n当前配置中包含:\n
+                    {len(data["setting"])} 项设置
+                    {len(data["python"])} 个基础环境
+                    {len(data["venv"])} 个虚拟环境
+                    {len(data["emb"])} 个便携式环境
+                    {len(data["pin"])} 个图钉
+                    {len(data["preset_scripts"])} 个预设脚本
+                    {len(data["config"])} 个配置文件""",
+                    parent=self,
+                    countdown_seconds=15,
+                    text="继续删除"
+                )
+
+                if w2.exec():
+                    try:
+                        os.remove("config.json")
+                        JCP.clear()
+                    except Exception as a:
+                        InfoBar.error(title="错误",
+                                      content=a,
+                                      parent=self,
+                                      position=InfoBarPosition.TOP,
+                                      duration=2000
+                                      )
+
+                    dialog = NotificationDialog("通知","配置文件与配置池删除完成\nVEM需要强制退出程序完成新配置更新",self)
+                    dialog.exec()
+
+                    sys.exit()
+        else:
+            w = NotificationDialog("操作被阻止❌","为了保护配置文件 当前删除操作被配置文件保护阻止\n如果需要删除配置文件\n\n前往👉设置-配置-配置文件保护",self)
+            w.exec()
+
+
 
     # 获取新版本
     def get_new_version(self):
@@ -1634,6 +1692,11 @@ class UpdateMixin(_MixinBase):
     def update_skip_exit_save(self,key):
         self.skip_exit_save = key
         JCP.update("config.json", ["setting","skip_exit_save"], key)
+
+    # 更新跳过退出保存
+    def update_config_file_protect(self,key):
+        self.config_file_protect = key
+        JCP.update("config.json", ["setting","config_file_protect"], key)
 
     # 打开配置池
     def open_jcp_pool(self):

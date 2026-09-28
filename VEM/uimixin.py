@@ -6,12 +6,11 @@ from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MCard import HorizontalFoldCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MColorPickerButton import NoMaskColorPickerButton
-from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import TextEditDialog
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MLayoutSettingCard import LayoutSettingCard, LayoutSwitchButtonSettingCard, \
     LayoutHyperlinkButtonSettingCard, LayoutDangerButtonSettingCard, LayoutHyperlinkLabelSettingCard, \
     LayoutButtonSettingCard, LayoutPrimaryButtonSettingCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTableWidget import RoundedTableListWidget
-from MetaverseSDK.MetaverseUI.MWidgets.MStackedWidget import PopUpAniUpDownStackedWidget, PageUpDownStackedWidget, \
+from MetaverseSDK.MetaverseUI.MWidgets.MStackedWidget import PopUpAniUpDownStackedWidget, \
     PageLeftRightStackedWidget, PageFreezeUpDownStackedWidget
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTreeWidget import AllKeyProhibitedTreeWidget
 from MetaverseSDK.MetaverseUI.MGui.MValidator import PromotionValidator, OperatorValidator, PromotionPlaceholderValidator
@@ -2408,11 +2407,20 @@ class UiMixin(_MixinBase):
         card = LayoutSwitchButtonSettingCard(FluentIcon.SETTING,"跳过退出保存","退出时跳过未修改的保存")
         card.setChecked(self.skip_exit_save)
         card.checkedChanged.connect(self.update_skip_exit_save)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.setting_view_layout.addWidget(card)
+        # 配置文件保护卡片
+        card = LayoutSwitchButtonSettingCard(FluentIcon.SETTING,"配置文件保护","阻止删除配置文件")
+        card.setChecked(self.config_file_protect)
+        card.checkedChanged.connect(self.update_config_file_protect)
+        self.setting_view_layout.addWidget(card)
         # 强制退出卡片
         card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"强制退出","放弃本次保存强制退出程序","强制退出")
         card.clickedChanged.connect(self.force_quit)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.setting_view_layout.addWidget(card)
+        # 删除配置卡片
+        card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"删除配置","删除配置文件并清空配置池","删除配置")
+        card.clickedChanged.connect(self.delete_config_file)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))

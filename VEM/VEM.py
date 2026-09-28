@@ -383,6 +383,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.startup_check_update = JCP.get("config.json", ["setting","startup_check_update"], False)
         # 跳过退出保存
         self.skip_exit_save = JCP.get("config.json", ["setting","skip_exit_save"], False)
+        # 配置文件保护
+        self.config_file_protect = JCP.get("config.json", ["setting","config_file_protect"], True)
 
         # 初始化音效池
         BSP.load("Warning",MetaverseOGG.Warning)
@@ -425,7 +427,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         w = 800
         x = (screen_size.width() - h) // 2
         y = (screen_size.height() - w) // 2
-        self.setGeometry(x, y, h, 800)  # 窗口大小 还原
+        self.setGeometry(x, y, h, w)  # 窗口大小 还原
 
         # 全屏
         if self.full_screen_startup_init_switch:
@@ -1327,7 +1329,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     def reload_console(self):
         # CMD重启保护
         if self.reload_switch:
-            dialog = Dialog("重启提示","重启当前控制台会丢失当前未保存的数据")
+            dialog = Dialog("重启提示","重启当前控制台会丢失当前未保存的数据",self)
 
             if dialog.exec():
                 # 没有控制台存在
@@ -1362,7 +1364,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # CMD全屏保护
         if self.full_screen_switch:
             dialog = Dialog("全屏提示","全屏操作不可逆\n全屏后无法退出全屏状态\n"
-                            "并且切换桌面会导致控制台丢失焦点\n如需关闭控制台 输入命令 exit/EXIT 强制退出控制台")
+                            "并且切换桌面会导致控制台丢失焦点\n如需关闭控制台 输入命令 exit/EXIT 强制退出控制台",self)
 
             if dialog.exec():
                 try:
@@ -1963,7 +1965,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # CMD全屏保护
         if self.full_screen_switch:
             dialog = Dialog("全屏提示","全屏操作不可逆\n全屏后无法退出全屏状态\n"
-                            "并且切换桌面会导致CMD丢失焦点\n如需关闭CMD 输入命令 exit/EXIT 强制退出CMD")
+                            "并且切换桌面会导致CMD丢失焦点\n如需关闭CMD 输入命令 exit/EXIT 强制退出CMD",self)
 
             if dialog.exec():
                 try:
@@ -1995,7 +1997,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         # CMD重启保护
         if self.reload_switch:
-            dialog = Dialog("重启提示","重启当前CMD会丢失当前未保存的数据")
+            dialog = Dialog("重启提示","重启当前CMD会丢失当前未保存的数据",self)
 
             if dialog.exec():
                 item = self.venv_tree.currentItem()
@@ -3583,7 +3585,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             )
         # 是否是空路径
         elif self.venv_loca_line.text() == "":
-            dialog = Dialog("提示","安装路径为空 是否将虚拟环境安装在VEM下的.venvs文件夹中")
+            dialog = Dialog("提示","安装路径为空 是否将虚拟环境安装在VEM下的.venvs文件夹中",self)
 
             if dialog.exec():
                 # 获取工作目录下的venvs和防重名
@@ -3760,7 +3762,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             )
         # 是否是空路径
         elif self.config_venv_Loca_line.text() == "":
-            dialog = Dialog("提示","安装路径为空 是否将虚拟环境安装在VEM下的.venvs文件夹中")
+            dialog = Dialog("提示","安装路径为空 是否将虚拟环境安装在VEM下的.venvs文件夹中",self)
 
             if dialog.exec():
                 # 获取工作目录下的venvs和防重名
@@ -3858,7 +3860,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             )
         # 是否是空路径
         elif self.config_venv_Loca_line.text() == "":
-            dialog = Dialog("提示","安装路径为空 是否将虚拟环境安装在VEM下的.venvs文件夹中")
+            dialog = Dialog("提示","安装路径为空 是否将虚拟环境安装在VEM下的.venvs文件夹中",self)
 
             if dialog.exec():
                 # 获取工作目录下的venvs和防重名
@@ -4077,7 +4079,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         else:
             try:
-                dialog = ProgressBarDialog("下载中...")
+                dialog = ProgressBarDialog("下载中...",self)
                 dialog.show()
 
                 url = self.direct_link_line.text()
@@ -4263,3 +4265,7 @@ if __name__ == "__main__":
 
 # 自检
 # 扫描环境
+
+# 创建-别名 venv python embed uv
+
+# 路径不统bug
