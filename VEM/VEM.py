@@ -387,6 +387,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.skip_exit_save = JCP.get("config.json", ["setting","skip_exit_save"], False)
         # 配置文件保护
         self.config_file_protect = JCP.get("config.json", ["setting","config_file_protect"], True)
+        # 完整备份
+        self.full_backup = JCP.get("config.json", ["setting","full_backup"], False)
 
         # 初始化音效池
         BSP.load("Warning",MetaverseOGG.Warning)
@@ -4275,3 +4277,5 @@ if __name__ == "__main__":
 # 开启演示模式 不会保存任何配置
 
 # 虚拟环境快照
+
+# 落盘池

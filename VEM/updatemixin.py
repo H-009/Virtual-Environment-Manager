@@ -1733,6 +1733,11 @@ class UpdateMixin(_MixinBase):
         self.backup_path_contentLabel.setText(path)  # 更新字幕标签
         JCP.update("config.json", ["setting", "backup_path"],path) # 更新配置
 
+    # 更新完整备份
+    def update_full_backup(self,key):
+        self.full_backup = key
+        JCP.update("config.json", ["setting","full_backup"], key)
+
     # 备份配置文件
     def backup_config_file(self):
         # 获取格式化时间戳
@@ -1744,8 +1749,13 @@ class UpdateMixin(_MixinBase):
         os.makedirs(self.backup_path, exist_ok=True)
 
         try:
-            # 复制
-            shutil.copy("config.json",file_path)
+            # 完整备份
+            if not self.full_backup:
+                # 复制
+                shutil.copy("config.json",file_path)
+            else:
+                # 完整复制
+                shutil.copy2("config.json",file_path)
         except Exception as a:
             InfoBar.error(title="错误",
                           content=a,
