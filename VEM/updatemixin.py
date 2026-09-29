@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import sys
+from datetime import datetime
 
 import psutil
 from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
@@ -1730,6 +1732,34 @@ class UpdateMixin(_MixinBase):
         self.backup_path = path
         self.backup_path_contentLabel.setText(path)  # 更新字幕标签
         JCP.update("config.json", ["setting", "backup_path"],path) # 更新配置
+
+    # 备份配置文件
+    def backup_config_file(self):
+        # 获取格式化时间戳
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "-" + datetime.now().strftime("%f")[:3]
+        file_name = f"config_backup_{timestamp}.json.bak"
+        file_path = self.backup_path+"\\"+file_name
+
+        # 目录不存在则创建目录
+        os.makedirs(self.backup_path, exist_ok=True)
+
+        try:
+            # 复制
+            shutil.copy("config.json",file_path)
+        except Exception as a:
+            InfoBar.error(title="错误",
+                          content=a,
+                          parent=self,
+                          position=InfoBarPosition.TOP,
+                          duration=2000
+                          )
+
+        InfoBar.success(title="成功",
+                        content=f"备份保存到 {file_path}",
+                        parent=self,
+                        position=InfoBarPosition.TOP,
+                        duration=1500
+                        )
 
     # 打开配置池
     def open_jcp_pool(self):

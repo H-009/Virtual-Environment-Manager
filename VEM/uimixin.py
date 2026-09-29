@@ -2455,6 +2455,9 @@ class UiMixin(_MixinBase):
         card = LayoutButtonSettingCard(FluentIcon.HISTORY,"恢复默认备份路径","恢复当前路径默认备份路径","恢复默认")
         card.clickedChanged.connect(self.restore_default_backup_path)
         self.setting_view_layout.addWidget(card)
+        card = LayoutButtonSettingCard(FluentIcon.HISTORY,"备份配置","立即备份当前配置文件","立即备份")
+        card.clickedChanged.connect(self.backup_config_file)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))

@@ -4271,3 +4271,7 @@ if __name__ == "__main__":
 # 创建-别名 venv python embed uv
 
 # 路径不统bug
+
+# 开启演示模式 不会保存任何配置
+
+# 虚拟环境快照
