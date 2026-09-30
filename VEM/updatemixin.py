@@ -1760,14 +1760,14 @@ class UpdateMixin(_MixinBase):
             InfoBar.error(title="错误",
                           content=a,
                           parent=self,
-                          position=InfoBarPosition.TOP,
-                          duration=2000
+                          position=InfoBarPosition.BOTTOM_RIGHT,
+                          duration=-1
                           )
 
         InfoBar.success(title="成功",
                         content=f"备份保存到 {file_path}",
                         parent=self,
-                        position=InfoBarPosition.TOP,
+                        position=InfoBarPosition.BOTTOM_RIGHT,
                         duration=1500
                         )
 

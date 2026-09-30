@@ -2459,7 +2459,7 @@ class UiMixin(_MixinBase):
         card.setChecked(self.full_backup)
         card.checkedChanged.connect(self.update_full_backup)
         self.setting_view_layout.addWidget(card)
-        card = LayoutButtonSettingCard(FluentIcon.HISTORY,"备份配置","立即备份当前配置文件","立即备份")
+        card = LayoutPrimaryButtonSettingCard(FluentIcon.HISTORY,"备份配置","立即备份当前配置文件","立即备份")
         card.clickedChanged.connect(self.backup_config_file)
         self.setting_view_layout.addWidget(card)
 
