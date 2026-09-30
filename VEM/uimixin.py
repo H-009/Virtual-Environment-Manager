@@ -8,7 +8,7 @@ from MetaverseSDK.MetaverseUI.MFluentWidgets.MCard import HorizontalFoldCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MColorPickerButton import NoMaskColorPickerButton
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MLayoutSettingCard import LayoutSettingCard, LayoutSwitchButtonSettingCard, \
     LayoutHyperlinkButtonSettingCard, LayoutDangerButtonSettingCard, LayoutHyperlinkLabelSettingCard, \
-    LayoutButtonSettingCard, LayoutPrimaryButtonSettingCard
+    LayoutButtonSettingCard, LayoutPrimaryButtonSettingCard, LayoutComboBoxSettingCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MTableWidget import RoundedTableListWidget
 from MetaverseSDK.MetaverseUI.MWidgets.MStackedWidget import PopUpAniUpDownStackedWidget, \
     PageLeftRightStackedWidget, PageFreezeUpDownStackedWidget
@@ -1448,29 +1448,11 @@ class UiMixin(_MixinBase):
         # 主题标题
         self.setting_view_layout.addWidget(BodyLabel("主题"))
         # 主题卡片
-        card = SimpleCardWidget()  # 简单卡片
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.PALETTE)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("主题模式"))  # 文字标签
-        contentLabel = CaptionLabel("设置配色方案")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        theme_model_combox = ComboBox()  # 下拉框
-        theme_model_combox.setFixedWidth(120)
-        theme_model_combox.addItems(["明亮", "黑暗", "自动"])
-        theme_model_combox.setCurrentText(self.twist_theme_map[JCP.get("config.json", ["setting","theme_model"],"LIGHT")])# 默认选中
-        theme_model_combox.currentTextChanged.connect(self.update_theme_model) # 等待初始化后绑定信号
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(theme_model_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.PALETTE,"主题模式","设置配色方案")
+        card.addItems(["明亮", "黑暗", "自动"])
+        card.setCurrentText(self.twist_theme_map[JCP.get("config.json", ["setting","theme_model"],"LIGHT")])# 默认选中
+        card.currentTextChanged.connect(self.update_theme_model) # 等待初始化后绑定信号
+        self.setting_view_layout.addWidget(card)
         # 强调色卡片
         card = SimpleCardWidget()  # 简单卡片
         hBoxLayout = QHBoxLayout()  # 水平布局
@@ -1620,29 +1602,11 @@ class UiMixin(_MixinBase):
         # CMD嵌入标题
         self.setting_view_layout.addWidget(BodyLabel("嵌入式CMD"))
         # CMD延时嵌入时长卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.COMMAND_PROMPT)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("CMD延时嵌入时长"))  # 文字标签
-        contentLabel = CaptionLabel("防止CMD嵌入过快引发异常")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.themem_model_combox = ComboBox()  # 下拉框
-        self.themem_model_combox.setFixedWidth(120)
-        self.themem_model_combox.addItems(["0ms", "50ms", "100ms", "250ms", "500ms"])
-        self.themem_model_combox.setCurrentText(self.delay_cmd)
-        self.themem_model_combox.activated.connect(self.update_delay)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.themem_model_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.COMMAND_PROMPT,"CMD延时嵌入时长","防止CMD嵌入过快引发异常")
+        card.addItems(["0ms", "50ms", "100ms", "250ms", "500ms"])
+        card.setCurrentText(self.delay_cmd)
+        card.activated.connect(self.update_delay)
+        self.setting_view_layout.addWidget(card)
         # CMD自动进入环境卡片
         card = SimpleCardWidget()
         hBoxLayout = QHBoxLayout()  # 水平布局
@@ -1718,53 +1682,17 @@ class UiMixin(_MixinBase):
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # CMD生命监控频率卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.COMMAND_PROMPT)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("CMD监控频率"))  # 文字标签
-        contentLabel = CaptionLabel("CMD生命周期监控频率")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.cmd_frequency_combox = ComboBox()  # 下拉框
-        self.cmd_frequency_combox.setFixedWidth(120)
-        self.cmd_frequency_combox.addItems(["0.5s", "1.0s", "2.0s", "5.0s"])
-        self.cmd_frequency_combox.setCurrentText(self.frequency_cmd)
-        self.cmd_frequency_combox.activated.connect(self.update_frequency)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.cmd_frequency_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.COMMAND_PROMPT,"CMD监控频率","CMD生命周期监控频率")
+        card.addItems(["0.5s", "1.0s", "2.0s", "5.0s"])
+        card.setCurrentText(self.frequency_cmd)
+        card.activated.connect(self.update_frequency)
+        self.setting_view_layout.addWidget(card)
         # 回调时长卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.COMMAND_PROMPT)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("回调时长"))  # 文字标签
-        contentLabel = CaptionLabel("自动进入环境回调时长")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.pullback_duration_combox = ComboBox()  # 下拉框
-        self.pullback_duration_combox.setFixedWidth(120)
-        self.pullback_duration_combox.addItems(["0ms","10ms", "50ms", "100ms", "250ms","500ms"])
-        self.pullback_duration_combox.setCurrentText(self.pullback_duration)
-        self.pullback_duration_combox.activated.connect(self.update_auto_enter_venv_pullback_duration)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.pullback_duration_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.COMMAND_PROMPT,"回调时长","自动进入环境回调时长")
+        card.addItems(["0ms","10ms", "50ms", "100ms", "250ms","500ms"])
+        card.setCurrentText(self.pullback_duration)
+        card.activated.connect(self.update_auto_enter_venv_pullback_duration)
+        self.setting_view_layout.addWidget(card)
         # CMD被动关机卡片
         card = SimpleCardWidget()
         hBoxLayout = QHBoxLayout()  # 水平布局
@@ -1817,53 +1745,17 @@ class UiMixin(_MixinBase):
         card.checkedChanged.connect(self.update_reload_CMD)
         self.setting_view_layout.addWidget(card)
         # CMD自动配置模式卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.COMMAND_PROMPT)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("CMD自动配置模式"))  # 文字标签
-        contentLabel = CaptionLabel("内部创建器自动配置时调用的CMD")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.auto_config_model_combox = ComboBox()  # 下拉框
-        self.auto_config_model_combox.setFixedWidth(120)
-        self.auto_config_model_combox.addItems(["虚拟环境","控制台"])
-        self.auto_config_model_combox.setCurrentText(self.auto_config_model)
-        self.auto_config_model_combox.activated.connect(self.update_auto_config_model)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.auto_config_model_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.COMMAND_PROMPT,"CMD自动配置模式","内部创建器自动配置时调用的CMD")
+        card.addItems(["虚拟环境","控制台"])
+        card.setCurrentText(self.auto_config_model)
+        card.activated.connect(self.update_auto_config_model)
+        self.setting_view_layout.addWidget(card)
         # 虚拟环境配置命令延时回调模式卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.COMMAND_PROMPT)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("虚拟环境配置回调时长"))  # 文字标签
-        contentLabel = CaptionLabel("虚拟环境自动配置命令的延时回调时长")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.venv_config_callback_duration_combox = ComboBox()  # 下拉框
-        self.venv_config_callback_duration_combox.setFixedWidth(120)
-        self.venv_config_callback_duration_combox.addItems(["同步","50ms","100ms","200ms","500ms","1000ms"])
-        self.venv_config_callback_duration_combox.setCurrentText(self.venv_config_callback_duration)
-        self.venv_config_callback_duration_combox.activated.connect(self.update_venv_config_callback_duration)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.venv_config_callback_duration_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.COMMAND_PROMPT,"虚拟环境配置回调时长","虚拟环境自动配置命令的延时回调时长")
+        card.addItems(["同步","50ms","100ms","200ms","500ms","1000ms"])
+        card.setCurrentText(self.venv_config_callback_duration)
+        card.activated.connect(self.update_venv_config_callback_duration)
+        self.setting_view_layout.addWidget(card)
         # 允许虚拟环境配置叠加回调时长叠加卡片
         card = SimpleCardWidget()
         hBoxLayout = QHBoxLayout()  # 水平布局
@@ -1888,29 +1780,11 @@ class UiMixin(_MixinBase):
         card.setFixedHeight(70)
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 控制台配置命令延时回调模式卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.COMMAND_PROMPT)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("控制台配置回调时长"))  # 文字标签
-        contentLabel = CaptionLabel("控制台自动配置命令的延时回调时长")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.console_config_callback_duration_combox = ComboBox()  # 下拉框
-        self.console_config_callback_duration_combox.setFixedWidth(120)
-        self.console_config_callback_duration_combox.addItems(["50ms","100ms","200ms","500ms","1000ms"])
-        self.console_config_callback_duration_combox.setCurrentText(self.console_config_callback_duration)
-        self.console_config_callback_duration_combox.activated.connect(self.update_console_config_callback_duration)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.console_config_callback_duration_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.COMMAND_PROMPT,"控制台配置回调时长","控制台自动配置命令的延时回调时长")
+        card.addItems(["50ms","100ms","200ms","500ms","1000ms"])
+        card.setCurrentText(self.console_config_callback_duration)
+        card.activated.connect(self.update_console_config_callback_duration)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -2014,55 +1888,19 @@ class UiMixin(_MixinBase):
         # 启动页面动画标题
         self.setting_view_layout.addWidget(BodyLabel("启动页面"))
         # 设置启动页面动画时长卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        self.startup_animation_iconWidget = IconWidget()  # 启动动画图标界面
-        self.startup_animation_iconWidget.setFixedSize(24, 24)
+        self.startup_animation_duration_card = LayoutComboBoxSettingCard(FluentIcon.SPEED_OFF,"启动页面动画时长","程序初始化时的启动页面动画时长",150)
+        self.startup_animation_duration_card.addItems(self.startup_animation_high+self.startup_animation_medium+self.startup_animation_off)
+        self.startup_animation_duration_card.setCurrentText(self.startup_animation_duration)
+        self.startup_animation_duration_card.activated.connect(self.update_startup_animation_duration)
         self.update_set_startup_animation_duration_ico() # 更新图标
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("启动页面动画时长"))  # 文字标签
-        contentLabel = CaptionLabel("程序初始化时的启动页面动画时长")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.startup_animation_duration_combox = ComboBox()  # 下拉框
-        self.startup_animation_duration_combox.setFixedWidth(150)
-        self.startup_animation_duration_combox.addItems(self.startup_animation_high+self.startup_animation_medium+self.startup_animation_off)
-        self.startup_animation_duration_combox.setCurrentText(self.startup_animation_duration)
-        self.startup_animation_duration_combox.activated.connect(lambda index:self.update_startup_animation_duration(index))
-        hBoxLayout.addWidget(self.startup_animation_iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.startup_animation_duration_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.setting_view_layout.addWidget(self.startup_animation_duration_card)
         # 设置启动页面动画时长卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        self.startup_animation_iconWidget = IconWidget()  # 启动动画图标界面
-        self.startup_animation_iconWidget.setFixedSize(24, 24)
+        self.sstartup_ico_size_card = LayoutComboBoxSettingCard(FluentIcon.SPEED_OFF,"启动页面图标大小","程序初始化时的启动页面图标大小",150)
+        self.sstartup_ico_size_card.addItems(self.startup_ico_list)
+        self.sstartup_ico_size_card.setCurrentText(self.startup_ico_size)
+        self.sstartup_ico_size_card.activated.connect(self.update_startup_ico_size)
         self.update_set_startup_ico_size_ico() # 更新图标
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("启动页面图标大小"))  # 文字标签
-        contentLabel = CaptionLabel("程序初始化时的启动页面图标大小")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.startup_ico_size_combox = ComboBox()  # 下拉框
-        self.startup_ico_size_combox.setFixedWidth(150)
-        self.startup_ico_size_combox.addItems(self.startup_ico_list)
-        self.startup_ico_size_combox.setCurrentText(self.startup_ico_size)
-        self.startup_ico_size_combox.activated.connect(lambda index:self.update_startup_ico_size(index))
-        hBoxLayout.addWidget(self.startup_animation_iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.startup_ico_size_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.setting_view_layout.addWidget(self.sstartup_ico_size_card)
         # 关闭启动延迟卡片
         card = LayoutButtonSettingCard(FluentIcon.SPEED_HIGH, "关闭启动延迟", "关闭有关启动延时的设置","关闭延时")
         card.clickedChanged.connect(self.update_close_startup_delay)
@@ -2104,29 +1942,11 @@ class UiMixin(_MixinBase):
         card.clickedChanged.connect(self.restore_default_download_path)
         self.setting_view_layout.addWidget(card)
         # 最大并行下载卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        icon = IconWidget(FluentIcon.DOWNLOAD)  # 启动动画图标界面
-        icon.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("最大并行下载数"))  # 文字标签
-        contentLabel = CaptionLabel("下载列表最大并行下载数量")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.max_parallel_download_combox = ComboBox()  # 下拉框
-        self.max_parallel_download_combox.setFixedWidth(120)
-        self.max_parallel_download_combox.addItems(["1","2","3","4","5"])
-        self.max_parallel_download_combox.setCurrentText(self.max_parallel_download)
-        self.max_parallel_download_combox.activated.connect(self.update_max_parallel_download)
-        hBoxLayout.addWidget(icon)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.max_parallel_download_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.max_parallel_download_card = LayoutComboBoxSettingCard(FluentIcon.DOWNLOAD,"最大并行下载数","下载列表最大并行下载数量")
+        self.max_parallel_download_card.addItems(["1","2","3","4","5"])
+        self.max_parallel_download_card.setCurrentText(self.max_parallel_download)
+        self.max_parallel_download_card.activated.connect(self.update_max_parallel_download)
+        self.setting_view_layout.addWidget(self.max_parallel_download_card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -2228,106 +2048,34 @@ class UiMixin(_MixinBase):
         # 修复标题
         self.setting_view_layout.addWidget(BodyLabel("修复"))
         # 窗口过渡时长卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.DEVELOPER_TOOLS)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("窗口过渡时长"))  # 文字标签
-        contentLabel = CaptionLabel("修复Win7窗口过渡与任务栏图标异常")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.transition_duration_combox = ComboBox()  # 下拉框
-        self.transition_duration_combox.setFixedWidth(150)
-        self.transition_duration_combox.addItems(["0ms","10ms","20ms","30ms"])
-        self.transition_duration_combox.setCurrentText(self.transition_duration)
-        self.transition_duration_combox.activated.connect(self.update_transition_duration)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.transition_duration_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.transition_duration_card = LayoutComboBoxSettingCard(FluentIcon.DEVELOPER_TOOLS,"窗口过渡时长","修复Win7窗口过渡与任务栏图标异常",150)
+        self.transition_duration_card.addItems(["0ms","10ms","20ms","30ms"])
+        self.transition_duration_card.setCurrentText(self.transition_duration)
+        self.transition_duration_card.activated.connect(self.update_transition_duration)
+        self.setting_view_layout.addWidget(self.transition_duration_card)
         # 启动页面过渡时长卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.DEVELOPER_TOOLS)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("启动页面过渡时长"))  # 文字标签
-        contentLabel = CaptionLabel("修复Win7启动页面窗口过渡")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.startup_animation_transition_duration_combox = ComboBox()  # 下拉框
-        self.startup_animation_transition_duration_combox.setFixedWidth(150)
-        self.startup_animation_transition_duration_combox.addItems(["0ms","10ms","20ms","30ms"])
-        self.startup_animation_transition_duration_combox.setCurrentText(self.startup_animation_transition_duration)
-        self.startup_animation_transition_duration_combox.activated.connect(self.update_startup_animation_transition_duration)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.startup_animation_transition_duration_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.startup_animation_transition_duration_card = LayoutComboBoxSettingCard(FluentIcon.DEVELOPER_TOOLS,"启动页面过渡时长","修复Win7启动页面窗口过渡",150)
+        self.startup_animation_transition_duration_card.addItems(["0ms","10ms","20ms","30ms"])
+        self.startup_animation_transition_duration_card.setCurrentText(self.startup_animation_transition_duration)
+        self.startup_animation_transition_duration_card.activated.connect(self.update_startup_animation_transition_duration)
+        self.setting_view_layout.addWidget(self.startup_animation_transition_duration_card)
         # CMD坐标空间模式卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.DEVELOPER_TOOLS)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("CMD坐标空间模式"))  # 文字标签
-        contentLabel = CaptionLabel("修复CMD大小支持DPI")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.CMD_coordinate_space_mode_combox = ComboBox()  # 下拉框
-        self.CMD_coordinate_space_mode_combox.setFixedWidth(150)
-        self.CMD_coordinate_space_mode_combox.addItems(["逻辑像素模式","物理像素模式"])
-        self.CMD_coordinate_space_mode_combox.setCurrentText(self.CMD_coordinate_space_mode)
-        self.CMD_coordinate_space_mode_combox.activated.connect(self.update_CMD_coordinate_space_mode)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.CMD_coordinate_space_mode_combox)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        card = LayoutComboBoxSettingCard(FluentIcon.DEVELOPER_TOOLS,"CMD坐标空间模式","修复CMD大小支持DPI",150)
+        card.addItems(["逻辑像素模式","物理像素模式"])
+        card.setCurrentText(self.CMD_coordinate_space_mode)
+        card.activated.connect(self.update_CMD_coordinate_space_mode)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
 
         # 修复标题
         self.setting_view_layout.addWidget(BodyLabel("紧急修复"))
-        # CMD坐标空间模式卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.VPN)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("禁止创建原生控件同级窗口"))  # 文字标签
-        contentLabel = CaptionLabel("紧急修复FluentWindow窗口拉伸与Dialog和MessageBox焦点统一")  # 字幕标签
-        contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(contentLabel)
-        self.prohibit_creating_native_control_windows_same_level_switch = SwitchButton()  # 开关按钮
-        self.prohibit_creating_native_control_windows_same_level_switch.setChecked(self.prohibit_creating_native_control_windows_same_level)
-        self.prohibit_creating_native_control_windows_same_level_switch.setFixedWidth(80)
-        self.prohibit_creating_native_control_windows_same_level_switch.checkedChanged.connect(lambda key: self.update_prohibit_creating_native_control_windows_same_level(key))
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(self.prohibit_creating_native_control_windows_same_level_switch)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        # 禁止创建原生控件同级窗口卡片
+        self.prohibit_creating_native_control_windows_same_level_card = LayoutSwitchButtonSettingCard(FluentIcon.VPN,"禁止创建原生控件同级窗口","紧急修复FluentWindow窗口拉伸与Dialog和MessageBox焦点统一")
+        self.prohibit_creating_native_control_windows_same_level_card.setChecked(self.prohibit_creating_native_control_windows_same_level)
+        self.prohibit_creating_native_control_windows_same_level_card.checkedChanged.connect(self.update_prohibit_creating_native_control_windows_same_level)
+        self.setting_view_layout.addWidget(self.prohibit_creating_native_control_windows_same_level_card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -2347,16 +2095,16 @@ class UiMixin(_MixinBase):
         # Python卡片
         card = LayoutSettingCard(SIP.get("Python"), "Python", f"版本 v{self.Python__version__}")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
-        # 工具包卡片
+        # SDK卡片
         card = LayoutSettingCard(FluentIcon.INFO, "MetaverseSDK", f"版本 v{SDK__version__}")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
         # 关于卡片
         card = LayoutSettingCard(FluentIcon.INFO,"版本",f"VEM 虚拟环境管理器 {self.VEM_Version}")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
-        # 归属于卡片
+        # 系列卡片
         card = LayoutSettingCard(FluentIcon.INFO,"系列","Metaverse 4")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
-        # 归属于卡片
+        # 工作室卡片
         card = LayoutSettingCard(FluentIcon.INFO,"工作室","STD Studio")
         self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
 
@@ -2436,34 +2184,19 @@ class UiMixin(_MixinBase):
         # 备份标题
         self.setting_view_layout.addWidget(BodyLabel("备份"))
         # 关闭便携式环境的脱控通知卡片
-        card = SimpleCardWidget()
-        hBoxLayout = QHBoxLayout()  # 水平布局
-        hBoxLayout.setContentsMargins(20, 10, 10, 10)
-        hBoxLayout.setSpacing(15)
-        iconWidget = IconWidget(FluentIcon.HISTORY)  # 图标界面
-        iconWidget.setFixedSize(24, 24)
-        vBoxLayout = QVBoxLayout()  # 垂直布局
-        vBoxLayout.setSpacing(0)
-        vBoxLayout.addWidget(BodyLabel("备份路径"))  # 文字标签
-        self.backup_path_contentLabel = CaptionLabel(self.backup_path)  # 字幕标签
-        self.backup_path_contentLabel.setTextColor("#606060", "#d2d2d2")
-        vBoxLayout.addWidget(self.backup_path_contentLabel)
-        button = PushButton("选择路径")
-        button.setFixedWidth(120)
-        button.clicked.connect(self.update_backup_path)
-        hBoxLayout.addWidget(iconWidget)  # 添加到布局
-        hBoxLayout.addLayout(vBoxLayout)
-        hBoxLayout.addWidget(button)
-        card.setLayout(hBoxLayout)  # 设置卡片布局
-        card.setFixedHeight(70)
-        self.setting_view_layout.addWidget(card)  # 添加卡片到滚动窗口
+        self.backup_path_card = LayoutButtonSettingCard(FluentIcon.HISTORY,"备份路径",self.backup_path,"选择路径")
+        self.backup_path_card.clickedChanged.connect(self.update_backup_path)
+        self.setting_view_layout.addWidget(self.backup_path_card)
+        # 恢复默认备份路径卡片
         card = LayoutButtonSettingCard(FluentIcon.HISTORY,"恢复默认备份路径","恢复当前路径默认备份路径","恢复默认")
         card.clickedChanged.connect(self.restore_default_backup_path)
         self.setting_view_layout.addWidget(card)
+        # 完整备份卡片
         card = LayoutSwitchButtonSettingCard(FluentIcon.HISTORY,"完整备份","同时保存文件元数据")
         card.setChecked(self.full_backup)
         card.checkedChanged.connect(self.update_full_backup)
         self.setting_view_layout.addWidget(card)
+        # 备份配置卡片
         card = LayoutPrimaryButtonSettingCard(FluentIcon.HISTORY,"备份配置","立即备份当前配置文件","立即备份")
         card.clickedChanged.connect(self.backup_config_file)
         self.setting_view_layout.addWidget(card)
@@ -2473,17 +2206,14 @@ class UiMixin(_MixinBase):
 
         # 配置标题
         self.setting_view_layout.addWidget(BodyLabel("文件"))
-
         # 自述文件卡片
         card = LayoutHyperlinkLabelSettingCard(FluentIcon.INFO,"自述文件","打开 README.md")
         card.setFileUrl("README.md")
         self.setting_view_layout.addWidget(card)
-
         # 更新日志卡片
         card = LayoutHyperlinkLabelSettingCard(FluentIcon.HISTORY,"更新日志","打开 CHANGELOG.md")
         card.setFileUrl("CHANGELOG.md")
         self.setting_view_layout.addWidget(card)
-
         # Git忽略文件卡片
         card = LayoutHyperlinkLabelSettingCard(FluentIcon.DICTIONARY,"Git 忽略文件","打开 .gitignore")
         card.setFileUrl(".gitignore")
@@ -2494,18 +2224,23 @@ class UiMixin(_MixinBase):
 
         # 配置标题
         self.setting_view_layout.addWidget(BodyLabel("池"))
+        # 落盘池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"落盘池","将配置池保存到配置文件","落盘")
         card.clickedChanged.connect(self.write_disk_pool)
         self.setting_view_layout.addWidget(card)
+        # 配置池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"配置池","打开配置池","打开")
         card.clickedChanged.connect(self.open_jcp_pool)
         self.setting_view_layout.addWidget(card)
+        # CMD池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"CMD池","打开CMD池","打开")
         card.clickedChanged.connect(self.open_cmd_pool)
         self.setting_view_layout.addWidget(card)
+        # 矢量图池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"矢量图池","打开矢量图池","打开")
         card.clickedChanged.connect(self.open_sip_pool)
         self.setting_view_layout.addWidget(card)
+        # 音效池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"音效池","打开音效池","打开")
         card.clickedChanged.connect(self.open_bsp_pool)
         self.setting_view_layout.addWidget(card)

@@ -42,25 +42,25 @@ class UpdateMixin(_MixinBase):
     def update_set_startup_animation_duration_ico(self):
         # 慢
         if self.startup_animation_duration in self.startup_animation_off:
-            self.startup_animation_iconWidget.setIcon(FluentIcon.SPEED_OFF)
+            self.startup_animation_duration_card.setIcon(FluentIcon.SPEED_OFF)
         # 中
         elif self.startup_animation_duration in self.startup_animation_medium:
-            self.startup_animation_iconWidget.setIcon(FluentIcon.SPEED_MEDIUM)
+            self.startup_animation_duration_card.setIcon(FluentIcon.SPEED_MEDIUM)
         # 快
         elif self.startup_animation_duration in self.startup_animation_high:
-            self.startup_animation_iconWidget.setIcon(FluentIcon.SPEED_HIGH)
+            self.startup_animation_duration_card.setIcon(FluentIcon.SPEED_HIGH)
 
     # 更新设置启动图标大小
     def update_set_startup_ico_size_ico(self):
         # 小
         if self.startup_ico_size == "小-80px":
-            self.startup_animation_iconWidget.setIcon(FluentIcon.SPEED_OFF)
+            self.sstartup_ico_size_card.setIcon(FluentIcon.SPEED_OFF)
         # 中
         elif self.startup_ico_size == "中-120px":
-            self.startup_animation_iconWidget.setIcon(FluentIcon.SPEED_MEDIUM)
+            self.sstartup_ico_size_card.setIcon(FluentIcon.SPEED_MEDIUM)
         # 快
         elif self.startup_ico_size == "大-240px":
-            self.startup_animation_iconWidget.setIcon(FluentIcon.SPEED_HIGH)
+            self.sstartup_ico_size_card.setIcon(FluentIcon.SPEED_HIGH)
 
     # 更新启动动画时长
     def update_startup_animation_duration(self, index):
@@ -129,17 +129,17 @@ class UpdateMixin(_MixinBase):
     # 更新关闭启动延迟
     def update_close_startup_delay(self):
         # 设置启动页面时长
-        self.startup_animation_duration_combox.setCurrentIndex(0)
+        self.startup_animation_duration_card.setCurrentIndex(0)
         # 手动触发槽函数
         self.update_startup_animation_duration(0)
 
         # 设置窗口过渡时长
-        self.transition_duration_combox.setCurrentIndex(0)
+        self.transition_duration_card.setCurrentIndex(0)
         # 手动触发槽函数
         self.update_transition_duration(0)
 
         # 设置启动页面过渡时长
-        self.startup_animation_transition_duration_combox.setCurrentIndex(0)
+        self.startup_animation_transition_duration_card.setCurrentIndex(0)
         # 手动触发槽函数
         self.update_startup_animation_transition_duration(0)
 
@@ -1358,9 +1358,9 @@ class UpdateMixin(_MixinBase):
             # 取消
             else:
                 # 临时阻塞信号
-                self.prohibit_creating_native_control_windows_same_level_switch.blockSignals(True)  # 开始阻塞
-                self.prohibit_creating_native_control_windows_same_level_switch.setChecked(True)
-                self.prohibit_creating_native_control_windows_same_level_switch.blockSignals(False)  # 恢复信号
+                self.prohibit_creating_native_control_windows_same_level_card.blockSignals(True)  # 开始阻塞
+                self.prohibit_creating_native_control_windows_same_level_card.setChecked(True)
+                self.prohibit_creating_native_control_windows_same_level_card.blockSignals(False)  # 恢复信号
 
         else:
             InfoBar.info(
@@ -1466,7 +1466,7 @@ class UpdateMixin(_MixinBase):
 
     # 更新最大并行下载数
     def update_max_parallel_download(self, index):
-        self.max_parallel_download = self.max_parallel_download_combox.itemText(index)
+        self.max_parallel_download = self.max_parallel_download_card.itemText(index)
 
         JCP.update("config.json",["setting","max_parallel_download"], self.max_parallel_download)
         InfoBar.info(
@@ -1476,9 +1476,6 @@ class UpdateMixin(_MixinBase):
             position=InfoBarPosition.TOP,
             duration=1500
         )
-
-        # 更新图标
-        self.update_set_startup_animation_duration_ico()
 
     # 更新下载版本
     def update_download_version(self):
@@ -1740,14 +1737,14 @@ class UpdateMixin(_MixinBase):
                             duration=1500
                             )
             self.backup_path = path
-            self.backup_path_contentLabel.setText(path) # 更新字幕标签
+            self.backup_path_card.setContentText(path) # 更新字幕标签
             JCP.update("config.json",["setting","backup_path"],path)
 
     # 恢复默认备份路径
     def restore_default_backup_path(self):
         path = os.getcwd()+"\\Backup"
         self.backup_path = path
-        self.backup_path_contentLabel.setText(path)  # 更新字幕标签
+        self.backup_path_card.setContentText(path)  # 更新字幕标签
         JCP.update("config.json", ["setting", "backup_path"],path) # 更新配置
 
     # 更新完整备份
