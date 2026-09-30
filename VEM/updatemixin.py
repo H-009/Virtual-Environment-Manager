@@ -1707,6 +1707,28 @@ class UpdateMixin(_MixinBase):
         self.config_file_protect = key
         JCP.update("config.json", ["setting","config_file_protect"], key)
 
+    # 更新演示模式
+    def update_demo_mode(self,key):
+        if key:
+            dialog = Dialog("是否立即将池保存到配置?", "请注意 当前改动并未保存\n\n演示模式仅在当前生效一次 如需持久性生效需立即将池落盘"
+                                                       "\n是否将池落盘 否则演示模式仅生效一次", self)
+            if dialog.exec():
+                # 立即保存
+                JCP.update("config.json", ["setting", "demo_mode"], key)
+                JCP.save()
+                InfoBar.success(title="成功",
+                                content=f"配置落盘成功",
+                                parent=self,
+                                position=InfoBarPosition.TOP,
+                                duration=1500
+                                )
+
+            self.demo_mode = key
+        else:
+            self.demo_mode = key
+            JCP.update("config.json", ["setting", "demo_mode"], key)
+
+
     # 更新备份路径
     def update_backup_path(self):
         path = QFileDialog.getExistingDirectory(

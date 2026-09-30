@@ -387,6 +387,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.skip_exit_save = JCP.get("config.json", ["setting","skip_exit_save"], False)
         # 配置文件保护
         self.config_file_protect = JCP.get("config.json", ["setting","config_file_protect"], True)
+        # 演示模式
+        self.demo_mode = JCP.get("config.json", ["setting","demo_mode"], False)
         # 完整备份
         self.full_backup = JCP.get("config.json", ["setting","full_backup"], False)
 
@@ -963,22 +965,24 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         else:
             super().closeEvent(event)
 
-        # 跳过退出保存
-        if self.skip_exit_save:
-            # 判断是否修改
-            # 池中Json
-            new_json = JCP.read("config.json")
-            # 本地Json
-            old_json = JsonConfigTool.read_json("config.json")
-            # 是否相同
-            same = JsonConfigTool.json_equal(new_json,old_json)
-            # 不相同
-            if not same:
+        # 不在演示模式中
+        if not self.demo_mode:
+            # 跳过退出保存
+            if self.skip_exit_save:
+                # 判断是否修改
+                # 池中Json
+                new_json = JCP.read("config.json")
+                # 本地Json
+                old_json = JsonConfigTool.read_json("config.json")
+                # 是否相同
+                same = JsonConfigTool.json_equal(new_json,old_json)
+                # 不相同
+                if not same:
+                    # 保存池
+                    JCP.save()
+            else:
                 # 保存池
                 JCP.save()
-        else:
-            # 保存池
-            JCP.save()
 
     # 意外退出
     def unexpected_exit(self, item,cmd_name,path, state,obj,card):
@@ -4274,7 +4278,7 @@ if __name__ == "__main__":
 
 # 路径不统bug
 
-# 开启演示模式 不会保存任何配置
+# 文件锁
 
 # 虚拟环境快照
 

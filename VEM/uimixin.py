@@ -2416,6 +2416,11 @@ class UiMixin(_MixinBase):
         card.setChecked(self.config_file_protect)
         card.checkedChanged.connect(self.update_config_file_protect)
         self.setting_view_layout.addWidget(card)
+        # 演示模式卡片
+        card = LayoutSwitchButtonSettingCard(FluentIcon.SETTING,"演示模式","演示模式中不会保存任何配置")
+        card.setChecked(self.demo_mode)
+        card.checkedChanged.connect(self.update_demo_mode)
+        self.setting_view_layout.addWidget(card)
         # 强制退出卡片
         card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"强制退出","放弃本次保存强制退出程序","强制退出")
         card.clickedChanged.connect(self.force_quit)
