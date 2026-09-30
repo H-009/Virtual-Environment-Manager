@@ -1710,18 +1710,13 @@ class UpdateMixin(_MixinBase):
     # 更新演示模式
     def update_demo_mode(self,key):
         if key:
-            dialog = Dialog("是否立即将池保存到配置?", "请注意 当前改动并未保存\n\n演示模式仅在当前生效一次 如需持久性生效需立即将池落盘"
+            dialog = Dialog("是否立即将池保存到配置?", "请注意 当前改动并未保存\n\n演示模式仅在当前生效一次 如需持久化生效需立即将池落盘"
                                                        "\n是否将池落盘 否则演示模式仅生效一次", self)
             if dialog.exec():
                 # 立即保存
                 JCP.update("config.json", ["setting", "demo_mode"], key)
-                JCP.save()
-                InfoBar.success(title="成功",
-                                content=f"配置落盘成功",
-                                parent=self,
-                                position=InfoBarPosition.TOP,
-                                duration=1500
-                                )
+                # 落盘
+                self.write_disk_pool()
 
             self.demo_mode = key
         else:
@@ -1790,6 +1785,16 @@ class UpdateMixin(_MixinBase):
                         content=f"备份保存到 {file_path}",
                         parent=self,
                         position=InfoBarPosition.BOTTOM_RIGHT,
+                        duration=1500
+                        )
+
+    # 落盘池
+    def write_disk_pool(self):
+        JCP.save()
+        InfoBar.success(title="成功",
+                        content=f"配置落盘成功",
+                        parent=self,
+                        position=InfoBarPosition.TOP,
                         duration=1500
                         )
 

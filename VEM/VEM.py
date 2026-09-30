@@ -70,24 +70,6 @@ from updatemixin import UpdateMixin
 # if current_dir not in sys.path:
 #     sys.path.append(current_dir)
 
-# 导航栏徽章管理器
-@InfoBadgeManager.register("StableHiddenNav")
-class StableHiddenNavBadgeManager(InfoBadgeManager):
-
-    def eventFilter(self, obj, e):
-        if obj is not self.target:
-            return super().eventFilter(obj, e)
-
-        # 1️⃣ 如果徽章逻辑上是隐藏的，直接吃掉 Show 事件
-        if e.type() == QEvent.Show and not self.badge.isVisible():
-            return True
-
-        # 2️⃣ Resize / Move 始终参与定位（防止左上角）
-        if e.type() in (QEvent.Resize, QEvent.Move):
-            self.badge.move(self.position())
-
-        return super().eventFilter(obj, e)
-
 class FluentOverlayWindow(FramelessWindow):
     """
     浮层版 FluentWindow（类似 Win11 汉堡菜单）

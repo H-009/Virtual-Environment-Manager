@@ -2494,6 +2494,9 @@ class UiMixin(_MixinBase):
 
         # 配置标题
         self.setting_view_layout.addWidget(BodyLabel("池"))
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"落盘池","将配置池保存到配置文件","落盘")
+        card.clickedChanged.connect(self.write_disk_pool)
+        self.setting_view_layout.addWidget(card)
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"配置池","打开配置池","打开")
         card.clickedChanged.connect(self.open_jcp_pool)
         self.setting_view_layout.addWidget(card)
