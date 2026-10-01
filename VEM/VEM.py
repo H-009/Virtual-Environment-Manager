@@ -70,79 +70,6 @@ from updatemixin import UpdateMixin
 # if current_dir not in sys.path:
 #     sys.path.append(current_dir)
 
-class FluentOverlayWindow(FramelessWindow):
-    """
-    浮层版 FluentWindow（类似 Win11 汉堡菜单）
-    """
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.setTitleBar(StandardTitleBar(self))
-
-        # 主内容
-        self.stackWidget = QStackedWidget(self)
-
-        # 导航面板（浮层）
-        self.navPanel = NavigationPanel(self, True)
-        self.navPanel.setExpandWidth(240)
-        self.navPanel.setAcrylicEnabled(True)
-        self.navPanel.hide()
-
-        # 汉堡按钮
-        self.menuBtn = NavigationToolButton(FluentIcon.MENU, self.titleBar)
-        self.titleBar.hBoxLayout.insertWidget(3, self.menuBtn)
-        self.menuBtn.clicked.connect(self.toggleNav)
-
-        # 布局
-        self.container = QWidget(self)
-        self.vLayout = QVBoxLayout(self.container)
-        self.vLayout.setContentsMargins(0, 0, 0, 0)
-        self.vLayout.addWidget(self.stackWidget)
-
-        #self.setCentralWidget(self.container)
-
-        self.resize(960, 640)
-        self.setWindowTitle("Fluent Overlay Window")
-
-        self.stackWidget.currentChanged.connect(self._syncNav)
-
-    # ------------------ API ------------------
-
-    def addSubInterface(self, widget: QWidget, icon, text: str,
-                        position=NavigationItemPosition.TOP):
-        routeKey = widget.objectName() or text
-
-        self.stackWidget.addWidget(widget)
-
-        self.navPanel.addItem(
-            routeKey=routeKey,
-            icon=icon,
-            text=text,
-            onClick=lambda: self.switchTo(widget),
-            position=position
-        )
-
-    def switchTo(self, widget: QWidget):
-        self.stackWidget.setCurrentWidget(widget)
-
-    def toggleNav(self):
-        if self.navPanel.isVisible():
-            self.navPanel.collapse()
-        else:
-            self.navPanel.show()
-            self.navPanel.expand()
-
-    # ------------------ 内部 ------------------
-
-    def _syncNav(self, index):
-        widget = self.stackWidget.widget(index)
-        self.navPanel.setCurrentItem(widget.objectName())
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.navPanel.setFixedHeight(self.height())
-
 def install_click_debug(widget):
     """
     给任意 QWidget 安装点击调试：
@@ -373,6 +300,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.demo_mode = JCP.get("config.json", ["setting","demo_mode"], False)
         # 完整备份
         self.full_backup = JCP.get("config.json", ["setting","full_backup"], False)
+        # 排序池
+        self.sort_jcp_pool = JCP.get("config.json", ["setting","sort_jcp_pool"], False)
 
         # 初始化音效池
         BSP.load("Warning",MetaverseOGG.Warning)
@@ -4263,7 +4192,5 @@ if __name__ == "__main__":
 # 文件锁
 
 # 虚拟环境快照
-
-# 落盘池
 
 # 开启cmd后 布局刷新策略变更

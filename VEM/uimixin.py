@@ -2228,6 +2228,11 @@ class UiMixin(_MixinBase):
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"落盘池","将配置池保存到配置文件","落盘")
         card.clickedChanged.connect(self.write_disk_pool)
         self.setting_view_layout.addWidget(card)
+        # 排序池卡片
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.InternalData,"排序池","打开配置池时排序显示")
+        card.setChecked(self.sort_jcp_pool)
+        card.checkedChanged.connect(self.update_sort_jcp_pool)
+        self.setting_view_layout.addWidget(card)
         # 配置池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"配置池","打开配置池","打开")
         card.clickedChanged.connect(self.open_jcp_pool)

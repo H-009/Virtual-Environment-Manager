@@ -1795,6 +1795,12 @@ class UpdateMixin(_MixinBase):
                         duration=1500
                         )
 
+    # 排序池
+    def update_sort_jcp_pool(self,key):
+        self.sort_jcp_pool = key
+        JCP.update("config.json", ["setting","sort_jcp_pool"], key)
+
+
     # 打开配置池
     def open_jcp_pool(self):
         w = TextEditDialog(
@@ -1803,7 +1809,12 @@ class UpdateMixin(_MixinBase):
             parent=self
         )
 
-        w.line.setText(str(JCP.all()))
+        # 排序池
+        if not self.sort_jcp_pool:
+            w.line.setText(str(JCP.all()))
+        else:
+            w.line.setText(str(JCP.sort()))
+
         w.line.setReadOnly(True)
         w.cancelButton.hide()
         w.line.setFixedSize(800,500)
