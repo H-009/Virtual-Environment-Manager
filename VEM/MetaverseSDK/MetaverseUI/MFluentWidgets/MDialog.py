@@ -12,8 +12,6 @@ from qframelesswindow import FramelessDialog
 
 # 快速命令对话框
 class QuickCommandDialog(FramelessDialog, Ui_MessageBox):
-    """ Dialog box """
-
     yesSignal = Signal()
     cancelSignal = Signal()
 

@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QParallelAnimationGroup, QEasingCurve, QAbstractAnimation, QPropertyAnimation
-from PyQt5.QtWidgets import QSizePolicy
+from qtpy.QtCore import QParallelAnimationGroup, QEasingCurve, QAbstractAnimation, QPropertyAnimation
+from qtpy.QtWidgets import QSizePolicy
 from qfluentwidgets import SimpleCardWidget
 
 

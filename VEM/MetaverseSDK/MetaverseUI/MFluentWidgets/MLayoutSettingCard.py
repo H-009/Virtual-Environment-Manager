@@ -1,7 +1,7 @@
 from qtpy.QtCore import Qt,QUrl,Signal
 from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
 from qfluentwidgets import SimpleCardWidget, IconWidget, BodyLabel, CaptionLabel, SwitchButton, HyperlinkButton, \
-    HyperlinkLabel, PushButton, PrimaryPushButton
+    HyperlinkLabel, PushButton, PrimaryPushButton, ComboBox
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MButton import DangerButton
 
 
@@ -25,6 +25,12 @@ class LayoutSettingCard(SimpleCardWidget):
         self.hBoxLayout.addLayout(self.vBoxLayout)
         self.setLayout(self.hBoxLayout)  # 设置卡片布局
         self.setFixedHeight(70)
+
+    def setContentText(self,text):
+        self.contentLabel.setText(text)
+
+    def setIcon(self,icon):
+        self.iconWidget.setIcon(icon)
 
 # 布局式开关按钮设置卡片
 class LayoutSwitchButtonSettingCard(LayoutSettingCard):
@@ -60,6 +66,39 @@ class LayoutButtonSettingCard(LayoutSettingCard):
 
     def onClickedChanged(self,isChanged):
         self.clickedChanged.emit(isChanged)
+
+# 布局式组合框设置卡片
+class LayoutComboBoxSettingCard(LayoutSettingCard):
+
+    currentTextChanged = Signal(str)
+    activated = Signal(int)
+
+    def __init__(self, ico, title, content,width=120):
+        super().__init__(ico, title, content)
+
+        self.box = ComboBox()
+        self.box.setFixedWidth(width)
+        self.box.currentTextChanged.connect(self.onCurrentTextChanged)
+        self.box.activated.connect(self.onActivated)
+        self.hBoxLayout.addWidget(self.box)
+
+    def onCurrentTextChanged(self,isChanged):
+        self.currentTextChanged.emit(isChanged)
+
+    def onActivated(self,isChanged):
+        self.activated.emit(isChanged)
+
+    def addItems(self,items):
+        self.box.addItems(items)
+
+    def setCurrentText(self,text):
+        self.box.setCurrentText(text)
+
+    def setCurrentIndex(self,index):
+        self.box.setCurrentIndex(index)
+
+    def itemText(self,index):
+        return self.box.itemText(index)
 
 # 布局式主题色按钮设置卡片
 class LayoutPrimaryButtonSettingCard(LayoutSettingCard):

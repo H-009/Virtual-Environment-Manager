@@ -26,6 +26,10 @@ class JsonConfigPool:
 
     def all(self):
         """获取格式化后的整个池 all()"""
+        return json.dumps(self.pool, indent=4, ensure_ascii=False)
+
+    def sort(self):
+        """获取格式化排序后的整个池 sort()"""
         return json.dumps(self.pool, indent=4, ensure_ascii=False, sort_keys=True)
 
     def older(self):

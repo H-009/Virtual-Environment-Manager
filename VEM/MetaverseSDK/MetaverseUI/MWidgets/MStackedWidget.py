@@ -1,10 +1,9 @@
 from typing import Optional
 from functools import partial
 
-from PyQt5.QtWidgets import QSizePolicy
 from qtpy.QtCore import QElapsedTimer
 from qtpy.QtCore import Signal, QParallelAnimationGroup, QPropertyAnimation, QEasingCurve, QPoint, QTimer, Qt, QVariantAnimation
-from qtpy.QtWidgets import QStackedWidget, QWidget, QGraphicsOpacityEffect, QScrollArea, QApplication
+from qtpy.QtWidgets import QStackedWidget, QWidget, QGraphicsOpacityEffect, QScrollArea, QApplication,QSizePolicy
 
 
 # 动画堆叠窗口

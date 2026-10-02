@@ -1,10 +1,12 @@
 from ctypes import wintypes
 from typing import Union
-
-from qtpy.QtWidgets import QWidget, QHBoxLayout
+from qfluentwidgets.components.widgets.frameless_window import FramelessWindow
+from qframelesswindow import StandardTitleBar
+from qtpy.QtWidgets import QWidget, QHBoxLayout,QStackedWidget, QVBoxLayout
 from qtpy.QtGui import QIcon
 
-from qfluentwidgets import NavigationItemPosition, FluentIconBase, NavigationTreeWidget, NavigationInterface, qrouter
+from qfluentwidgets import NavigationItemPosition, FluentIconBase, NavigationTreeWidget, NavigationInterface, qrouter, \
+    NavigationPanel, NavigationToolButton, FluentIcon
 from qfluentwidgets.window.fluent_window import FluentWindowBase, FluentTitleBar
 from win32con import WM_SYSCOMMAND, SC_MINIMIZE
 
@@ -149,3 +151,68 @@ class FixedBorderlessFluentWindow(BorderlessFluentWindow):
 
         # 其他消息交给默认处理
         return super().nativeEvent(eventType, message)
+
+# 流畅浮层窗口
+class FluentOverlayWindow(FramelessWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setTitleBar(StandardTitleBar(self))
+
+        # 主内容
+        self.stackWidget = QStackedWidget(self)
+
+        # 导航面板（浮层）
+        self.navPanel = NavigationPanel(self, True)
+        self.navPanel.setExpandWidth(240)
+        self.navPanel.setAcrylicEnabled(True)
+        self.navPanel.hide()
+
+        # 汉堡按钮
+        self.menuBtn = NavigationToolButton(FluentIcon.MENU, self.titleBar)
+        self.titleBar.hBoxLayout.insertWidget(3, self.menuBtn)
+        self.menuBtn.clicked.connect(self.toggleNav)
+
+        # 布局
+        self.container = QWidget(self)
+        self.vLayout = QVBoxLayout(self.container)
+        self.vLayout.setContentsMargins(0, 0, 0, 0)
+        self.vLayout.addWidget(self.stackWidget)
+
+        self.resize(960, 640)
+
+        self.stackWidget.currentChanged.connect(self._syncNav)
+
+    # ------------------ API ------------------
+    def addSubInterface(self, widget: QWidget, icon, text: str,
+                        position=NavigationItemPosition.TOP):
+        routeKey = widget.objectName() or text
+
+        self.stackWidget.addWidget(widget)
+
+        self.navPanel.addItem(
+            routeKey=routeKey,
+            icon=icon,
+            text=text,
+            onClick=lambda: self.switchTo(widget),
+            position=position
+        )
+
+    def switchTo(self, widget: QWidget):
+        self.stackWidget.setCurrentWidget(widget)
+
+    def toggleNav(self):
+        if self.navPanel.isVisible():
+            self.navPanel.collapse()
+        else:
+            self.navPanel.show()
+            self.navPanel.expand()
+
+    # ------------------ 内部 ------------------
+    def _syncNav(self, index):
+        widget = self.stackWidget.widget(index)
+        self.navPanel.setCurrentItem(widget.objectName())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.navPanel.setFixedHeight(self.height())
