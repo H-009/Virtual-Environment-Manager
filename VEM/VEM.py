@@ -16,15 +16,12 @@ from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
 from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QStackedWidget,QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem,QFileDialog
 from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject
 from pathvalidate import is_valid_filepath
 from qfluentwidgets import FluentWindow, setTheme, FluentIcon, NavigationItemPosition, setThemeColor, SimpleCardWidget,\
     InfoBar, InfoBarPosition, Dialog, RoundMenu, Action, ListWidget,\
-    FluentTranslator, LineEdit,SplashScreen, NavigationPanel, NavigationToolButton, \
-    Flyout, FlyoutAnimationType, FlyoutView, InfoBadge, InfoBadgePosition, InfoBadgeManager
-from qfluentwidgets.components.widgets.frameless_window import FramelessWindow
-from qframelesswindow import StandardTitleBar
+    FluentTranslator, LineEdit,SplashScreen, Flyout, FlyoutAnimationType, FlyoutView, InfoBadge, InfoBadgePosition
 
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressRingDialog import CometTailIndeterminateProgressRingDialog,\
     FixedLengthIndeterminateProgressRingDialog,SegmentedArcIndeterminateProgressRingDialog,IndeterminateProgressRingDialog
@@ -50,25 +47,6 @@ from MetaverseSDK.MetaverseResource.MetaverseFluentIcon import MetaverseFluentIc
 
 from uimixin import UiMixin
 from updatemixin import UpdateMixin
-
-
-# 全局配置OpenGL渲染参数
-# 额外开启Qt的OpenGL硬件渲染后端，将所有UI绘制任务直接交给GPU处理，大幅降低CPU渲染负载
-# 部分老旧集成显卡可能不支持OpenGL 3.3核心模式，可以降级到setVersion(2, 0)保证兼容性
-# 不要和Qt的软件渲染后端同时启用，避免出现渲染冲突导致界面闪烁
-# fmt = QSurfaceFormat()
-# fmt.setVersion(3, 3)  # 指定OpenGL 3.3版本，兼容性和性能平衡最优
-# fmt.setProfile(QSurfaceFormat.CoreProfile)  # 使用核心模式，移除废弃API
-# fmt.setSamples(4)  # 开启4倍抗锯齿，提升画面质感
-# QSurfaceFormat.setDefaultFormat(fmt)
-
-
-# # 跨工作目录
-# # 获取当前脚本所在目录
-# current_dir = os.path.dirname(os.path.abspath(__file__))
-# # 将当前目录添加到Python模块搜索路径
-# if current_dir not in sys.path:
-#     sys.path.append(current_dir)
 
 def install_click_debug(widget):
     """
@@ -159,7 +137,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.16.1"
+        self.VEM_Version = "v1.16.2"
         self.CMD_Version = "v0.8.0"
 
         # 预制图标
