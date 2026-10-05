@@ -262,6 +262,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.startup_animation_transition_duration = JCP.get("config.json",["setting","startup_animation_transition_duration"],"10ms")
         # CMD坐标空间模式
         self.CMD_coordinate_space_mode = JCP.get("config.json", ["setting","CMD_coordinate_space_mode"], "物理像素模式")
+        # CMD消息投递模式
+        self.CMD_message_delivery_mode = JCP.get("config.json", ["setting","CMD_message_delivery_mode"], "字符消息模式")
         # 平滑滚动区域
         self.smooth_scrolling_area = JCP.get("config.json", ["setting","smooth_scrolling_area"], False)
         # 上下翻页堆叠部件
@@ -330,7 +332,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         # 如果不是不显示-0ms 结束
         if self.startup_animation_duration != "不显示-0ms":
-            startup_animation_duration = {"0ms": 0, "10ms": 10, "20ms": 20, "30ms": 30}.get(self.startup_animation_transition_duration, 0)
+            startup_animation_duration = {"0ms": 0, "10ms": 10, "20ms": 20, "30ms": 30}.get(self.startup_animation_transition_duration, 10)
             # 提前显示主窗口 防止启动页面饿死 并延时显示防止出现Win7窗口
             time = QTimer()
             time.singleShot(startup_animation_duration, lambda: self.show())
@@ -669,14 +671,19 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 delay = {"0ms": 0, "50ms": 50, "100ms": 100, "250ms": 250, "500ms": 500}.get(self.delay_cmd, 0)
                 frequency = {"0.5s": 0.5, "1.0s": 1, "2.0s": 2, "5.0s": 5}.get(self.frequency_cmd, 0.5) # 最低0.5s 防止阻塞
                 pullback_duration = {"0ms": 0, "10ms": 10, "50ms": 50, "100ms": 100,"250ms": 250,"500ms": 500}.get(self.pullback_duration, 0)
-                coordinate_space = {"逻辑像素模式":False,"物理像素模式":True}.get(self.CMD_coordinate_space_mode,False)
+                coordinate_space = {"逻辑像素模式":False,"物理像素模式":True}.get(self.CMD_coordinate_space_mode,True)
+                message_delivery = {"虚拟键消息模式":False,"字符消息模式":True}.get(self.CMD_message_delivery_mode,True)
                 # 获取项内数据
                 data = item.data(0, Qt.UserRole)
 
                 # 进入盘符 防止bug
                 pt = os.path.splitdrive(data.get("start_parameter"))
                 # 添加CMD
-                cmd = CmdEmbedWidget(self,workdir=pt[0], mode="timer", delay=delay, frequency=frequency,physical_pixels=coordinate_space)
+                cmd = CmdEmbedWidget(
+                    self,workdir=pt[0], mode="timer", delay=delay, frequency=frequency,
+                    physical_pixels=coordinate_space,
+                    message_delivery=message_delivery
+                )
                 cmd_card_vlayout.addWidget(cmd)
 
                 # 添加CMD对象字典
@@ -963,9 +970,14 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     delay = {"0ms": 0, "50ms": 50, "100ms": 100, "250ms": 250, "500ms": 500}.get(self.delay_cmd, 0)
                     frequency = {"0.5s": 0.5, "1.0s": 1, "2.0s": 2, "5.0s": 5}.get(self.frequency_cmd, 0.5) # 最低0.5s 防止阻塞
                     coordinate_space = {"逻辑像素模式":False,"物理像素模式":True}.get(self.CMD_coordinate_space_mode,False)
+                    message_delivery = {"虚拟键消息模式": False, "字符消息模式": True}.get(self.CMD_message_delivery_mode, True)
 
                     # 添加CMD
-                    cmd = CmdEmbedWidget(self,workdir=dir_name, mode="timer", delay=delay, frequency=frequency,physical_pixels=coordinate_space)
+                    cmd = CmdEmbedWidget(
+                        self,workdir=dir_name, mode="timer", delay=delay, frequency=frequency,
+                        physical_pixels=coordinate_space,
+                        message_delivery=message_delivery
+                    )
                     cmd_card_vlayout.addWidget(cmd)
 
                     # 添加CMD对象字典
@@ -4091,7 +4103,7 @@ if __name__ == "__main__":
     mainWin = MainUI()
 
     transition_duration = JCP.get("config.json", ["setting","transition_duration"],"0ms")
-    duration = {"0ms": 0, "10ms": 10, "20ms": 20, "30ms": 30}.get(transition_duration,0)
+    duration = {"0ms": 0, "10ms": 10, "20ms": 20, "30ms": 30}.get(transition_duration,10)
     # 延时显示 解决Win7窗口过渡
     timer = QTimer()
     if JCP.get("config.json", ["setting","full_screen_after_startup"],False):
@@ -4173,3 +4185,18 @@ if __name__ == "__main__":
 
 # 开启cmd后 布局刷新策略变更
 # 图标有时失效
+
+# ex_style |= (
+#         win32con.WS_EX_TOOLWINDOW | win32con.WS_EX_NOACTIVATE
+# )
+# 去前台焦点 GWL_EXSTYLE 设置
+#
+# WS_EX_TOOLWINDOW
+# Window Style Extended Tool Window
+# 不显示在任务栏/Alt+Tab
+# WS_EX_NOACTIVATE
+# Window Style Extended No Activate
+# 点击不抢焦点
+# WS_EX_WINDOWEDGE
+# Window Style Extended Window Edge
+# 立体边框（你已去掉）

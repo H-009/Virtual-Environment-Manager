@@ -1294,6 +1294,21 @@ class UpdateMixin(_MixinBase):
             duration=1500
         )
 
+    # 更新CMD消息投递模式
+    def update_CMD_message_delivery_mode(self,index):
+        if index == 0:
+            self.CMD_message_delivery_mode = "虚拟键消息模式"
+        elif index == 1:
+            self.CMD_message_delivery_mode = "字符消息模式"
+        JCP.update("config.json", ["setting","CMD_message_delivery_mode"],self.CMD_message_delivery_mode)
+        InfoBar.info(
+            title="通知",
+            content=f"模式已切换为 {self.CMD_message_delivery_mode} 重启CMD生效",
+            parent=self,
+            position=InfoBarPosition.TOP,
+            duration=1500
+        )
+
     # 更新窗口过渡时长
     def update_transition_duration(self,index):
         if index == 0:

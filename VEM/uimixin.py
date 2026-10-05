@@ -2065,6 +2065,12 @@ class UiMixin(_MixinBase):
         card.setCurrentText(self.CMD_coordinate_space_mode)
         card.activated.connect(self.update_CMD_coordinate_space_mode)
         self.setting_view_layout.addWidget(card)
+        # CMD消息投递模式卡片
+        card = LayoutComboBoxSettingCard(FluentIcon.DEVELOPER_TOOLS,"CMD消息投递模式","修复CMD支持全部字符",150)
+        card.addItems(["虚拟键消息模式","字符消息模式"])
+        card.setCurrentText(self.CMD_message_delivery_mode)
+        card.activated.connect(self.update_CMD_message_delivery_mode)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
