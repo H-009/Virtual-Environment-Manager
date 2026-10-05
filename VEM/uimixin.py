@@ -1233,6 +1233,7 @@ class UiMixin(_MixinBase):
         download_version_layout = QHBoxLayout() # 下载版本布局
         download_version_layout.addWidget(BodyLabel("版本:"))
         self.download_version_combox = EditableComboBox()  # 可编辑下拉框
+        self.download_version_combox.setPlaceholderText("3.10.1")
         download_version_layout.addWidget(self.download_version_combox,QSizePolicy.Expanding) # 吃掉剩下
         self.download_version_update_button = ToolButton()
         self.download_version_update_button.setIcon(FluentIcon.SYNC)
@@ -1242,6 +1243,7 @@ class UiMixin(_MixinBase):
         download_file_layout = QHBoxLayout() # 下载文件布局
         download_file_layout.addWidget(BodyLabel("文件:"))
         self.download_file_combox = EditableComboBox()  # 可编辑下拉框
+        self.download_file_combox.setPlaceholderText("python.exe")
         self.download_file_combox.textChanged.connect(self.update_download_direct_link)
         download_file_layout.addWidget(self.download_file_combox,QSizePolicy.Expanding) # 吃掉剩下
         self.download_file_update_button = ToolButton()
