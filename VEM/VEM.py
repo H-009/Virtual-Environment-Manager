@@ -257,11 +257,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # 重要提示音效
         self.play_sound_important_tip = JCP.get("config.json", ["setting","play_sound_important_tip"], False)
         # 过渡时长
-        self.transition_duration = JCP.get("config.json", ["setting","transition_duration"], "0ms")
+        self.transition_duration = JCP.get("config.json", ["setting","transition_duration"], "10ms")
         # 启动页面过渡时长
-        self.startup_animation_transition_duration = JCP.get("config.json",["setting","startup_animation_transition_duration"],"0ms")
+        self.startup_animation_transition_duration = JCP.get("config.json",["setting","startup_animation_transition_duration"],"10ms")
         # CMD坐标空间模式
-        self.CMD_coordinate_space_mode = JCP.get("config.json", ["setting","CMD_coordinate_space_mode"], "逻辑像素模式")
+        self.CMD_coordinate_space_mode = JCP.get("config.json", ["setting","CMD_coordinate_space_mode"], "物理像素模式")
         # 平滑滚动区域
         self.smooth_scrolling_area = JCP.get("config.json", ["setting","smooth_scrolling_area"], False)
         # 上下翻页堆叠部件
@@ -4172,3 +4172,4 @@ if __name__ == "__main__":
 # 虚拟环境快照
 
 # 开启cmd后 布局刷新策略变更
+# 图标有时失效
