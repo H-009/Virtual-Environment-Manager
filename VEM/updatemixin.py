@@ -11,6 +11,7 @@ from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
 from MetaverseSDK.MetaverseAPI.UrlKey import ContributorKey, RepoKey
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
+from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MCore.MThread.MNetWorker import GetPythonVersions, GetPythonFile, GetGitHubReleaseThread
@@ -1845,6 +1846,21 @@ class UpdateMixin(_MixinBase):
         )
 
         w.line.setText(str(self.cmd_obj_dict)+"\n"+str(self.console_obj_dict))
+        w.line.setReadOnly(True)
+        w.cancelButton.hide()
+        w.line.setFixedSize(800,500)
+
+        w.exec()
+
+    # 打开图标池
+    def open_bip_pool(self):
+        w = TextEditDialog(
+            title='图标池',
+            content="查看在内存中的图标池",
+            parent=self
+        )
+
+        w.line.setText(str(BIP.older()))
         w.line.setReadOnly(True)
         w.cancelButton.hide()
         w.line.setFixedSize(800,500)

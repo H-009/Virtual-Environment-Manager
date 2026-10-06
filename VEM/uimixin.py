@@ -2250,6 +2250,10 @@ class UiMixin(_MixinBase):
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"CMD池","打开CMD池","打开")
         card.clickedChanged.connect(self.open_cmd_pool)
         self.setting_view_layout.addWidget(card)
+        # 图标池卡片
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"图标池","打开图标池","打开")
+        card.clickedChanged.connect(self.open_bip_pool)
+        self.setting_view_layout.addWidget(card)
         # 矢量图池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"矢量图池","打开矢量图池","打开")
         card.clickedChanged.connect(self.open_sip_pool)
