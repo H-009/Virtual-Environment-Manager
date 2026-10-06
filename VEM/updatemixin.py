@@ -12,6 +12,7 @@ from MetaverseSDK.MetaverseAPI.UrlKey import ContributorKey, RepoKey
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
+from MetaverseSDK.MetaverseUI.MCore.MPool.MBasePixmapPool import BPP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MCore.MThread.MNetWorker import GetPythonVersions, GetPythonFile, GetGitHubReleaseThread
@@ -1861,6 +1862,21 @@ class UpdateMixin(_MixinBase):
         )
 
         w.line.setText(str(BIP.older()))
+        w.line.setReadOnly(True)
+        w.cancelButton.hide()
+        w.line.setFixedSize(800,500)
+
+        w.exec()
+
+    # 打开图像池
+    def open_bpp_pool(self):
+        w = TextEditDialog(
+            title='图像池',
+            content="查看在内存中的图像池",
+            parent=self
+        )
+
+        w.line.setText(str(BPP.older()))
         w.line.setReadOnly(True)
         w.cancelButton.hide()
         w.line.setFixedSize(800,500)
