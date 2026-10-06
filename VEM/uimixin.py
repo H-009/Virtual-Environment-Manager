@@ -4,6 +4,7 @@ from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
 from MetaverseSDK.MetaverseAPI.UrlKey import ContributorKey, RepoKey
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
+from MetaverseSDK.MetaverseUI.MCore.MPool.MBasePixmapPool import BPP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MCard import HorizontalFoldCard
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MColorPickerButton import NoMaskColorPickerButton
@@ -17,8 +18,8 @@ from MetaverseSDK.MetaverseUI.MFluentWidgets.MTreeWidget import AllKeyProhibited
 from MetaverseSDK.MetaverseUI.MGui.MValidator import PromotionValidator, OperatorValidator, PromotionPlaceholderValidator
 from MetaverseSDK.MetaverseUI.MWidgets.MLabel import HyperlinkFileLabel, ImageLabel
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel, CaptionLabel,TitleLabel
-from PyQt5.QtGui import QIcon, QFont, QDesktopServices, QPixmap
-from PyQt5.QtWidgets import QHeaderView, QSizePolicy, QSpacerItem, QGridLayout, QCompleter
+from PyQt5.QtGui import QIcon, QFont, QDesktopServices
+from PyQt5.QtWidgets import QHeaderView, QSizePolicy, QSpacerItem, QGridLayout
 from qfluentwidgets import FluentIcon, SimpleCardWidget, EditableComboBox, ListWidget, IconWidget, ToolButton, \
     PopUpAniStackedWidget, Pivot, LineEdit, SegmentedWidget, PushButton, ComboBox, CheckBox, TextEdit, \
     SmoothScrollArea, SwitchButton, getFont, ToolTipFilter
@@ -56,7 +57,7 @@ class UiMixin(_MixinBase):
         # 顶部弹簧
         vlayout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
 
-        vlayout.addWidget(ImageLabel(BIP.get("VEM").pixmap(180,180),180,180),alignment=Qt.AlignCenter)
+        vlayout.addWidget(ImageLabel(BPP.get("VEM"),180,180),alignment=Qt.AlignCenter)
         vlayout.addWidget(TitleLabel("Virtual Environment Manager"),alignment=Qt.AlignCenter)
 
         vlayout.addWidget(BodyLabel(f"VEM | 版本 {self.VEM_Version}"),alignment=Qt.AlignCenter)
@@ -2253,6 +2254,10 @@ class UiMixin(_MixinBase):
         # 图标池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"图标池","打开图标池","打开")
         card.clickedChanged.connect(self.open_bip_pool)
+        self.setting_view_layout.addWidget(card)
+        # 图像池卡片
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"图像池","打开图像池","打开")
+        card.clickedChanged.connect(self.open_bpp_pool)
         self.setting_view_layout.addWidget(card)
         # 矢量图池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"矢量图池","打开矢量图池","打开")

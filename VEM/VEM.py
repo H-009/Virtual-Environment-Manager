@@ -10,6 +10,7 @@ import psutil
 import pywintypes
 from MetaverseSDK.MetaverseTool.Config import JsonConfigTool
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
+from MetaverseSDK.MetaverseUI.MCore.MPool.MBasePixmapPool import BPP
 
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
@@ -37,7 +38,7 @@ from MetaverseSDK.MetaverseUI.MSpecial.MCmdEmbedWidget import CmdEmbedWidget
 
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 
-from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG, MetaverseICO
+from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG, MetaverseICO, MetaversePNG
 
 import Threads
 import tool
@@ -162,6 +163,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         SIP.load("Python",MetaverseSVG.Python)
         # 载入图标池
         BIP.load("VEM",MetaverseICO.VEM)
+        # 载入图像池
+        BPP.load("VEM",MetaversePNG.VEM)
 
         # 读取主题色
         self.theme_model = JCP.get("config.json", ["setting","theme_model"],"LIGHT")
