@@ -9,6 +9,7 @@ import darkdetect
 import psutil
 import pywintypes
 from MetaverseSDK.MetaverseTool.Config import JsonConfigTool
+from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
 
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
@@ -36,10 +37,9 @@ from MetaverseSDK.MetaverseUI.MSpecial.MCmdEmbedWidget import CmdEmbedWidget
 
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 
-from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG
+from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG, MetaverseICO
 
 import Threads
-import ico
 import tool
 import objgraph
 
@@ -137,8 +137,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.16.2"
-        self.CMD_Version = "v0.8.0"
+        self.VEM_Version = "v1.17.0"
+        self.CMD_Version = "v0.9.0"
 
         # 预制图标
         # 绿色开始
@@ -160,11 +160,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         # 载入资源池
         SIP.load("Python",MetaverseSVG.Python)
-
-        # 资源
-        pixmap_VEM = QPixmap()
-        pixmap_VEM.loadFromData(ico.VEM)
-        self.resource_VEM = QIcon(pixmap_VEM)
+        # 载入图标池
+        BIP.load("VEM",MetaverseICO.VEM)
 
         # 读取主题色
         self.theme_model = JCP.get("config.json", ["setting","theme_model"],"LIGHT")
@@ -302,7 +299,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     def init_window(self):
         # 基础属性
         self.setWindowTitle("VEM 虚拟环境管理器")
-        self.setWindowIcon(self.resource_VEM)
+        self.setWindowIcon(BIP.get("VEM"))
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VEM")
 
         # 更新云母效果
@@ -4200,3 +4197,15 @@ if __name__ == "__main__":
 # WS_EX_WINDOWEDGE
 # Window Style Extended Window Edge
 # 立体边框（你已去掉）
+
+# items = ['shoko', '西宫硝子', '宝多六花', '小鸟游六花']
+# completer = QCompleter(items, self.download_version_combox)
+#
+# # 设置显示的选项数
+# completer.setMaxVisibleItems(10)
+#
+# # 设置补全器
+# self.download_version_combox.setCompleter(completer)
+# # 补全
+
+# 更换编辑下拉框 默认回车添加新控件
