@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 import psutil
-from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
+from MetaverseSDK.MetaverseAPI.Url import UrlBuilder, UrlSynthesizer
 from MetaverseSDK.MetaverseAPI.UrlKey import ContributorKey, RepoKey
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
@@ -876,6 +876,27 @@ class UpdateMixin(_MixinBase):
             self.allow_overlay_callback_duration = False
             JCP.update("config.json", ["setting","allow_overlay_callback_duration"], False)
 
+    # 更新双击执行电源
+    def update_double_power(self,key):
+        if key:
+            InfoBar.info(
+                title="已开启",
+                content="开启双击执行电源 重启生效",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_double_power_switch = True
+            JCP.update("config.json", ["setting","enable_double_power_switch"], True)
+        else:
+            InfoBar.info(
+                title="已关闭",
+                content="禁用双击执行电源 重启生效",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_double_power_switch = False
+            JCP.update("config.json", ["setting","enable_double_power_switch"], False)
+
     # 更新最大上限
     def update_maximum_limit(self,text):
         if len(text) < 4000:
@@ -1494,13 +1515,39 @@ class UpdateMixin(_MixinBase):
             duration=1500
         )
 
+    # 更新资源站
+    def update_resource_site(self,index):
+        self.resource_site = self.twist_resource_site_dict.get(self.resource_site_card.itemText(index),"官方资源站")
+        self.resource_site_card.setContentText(self.resource_site)
+        JCP.update("config.json", ["setting","resource_site"], self.resource_site)
+
+        # 更新直链
+        self.update_download_direct_link()
+
+        InfoBar.info(
+            title="通知",
+            content=f"资源站更完成",
+            parent=self,
+            position=InfoBarPosition.TOP,
+            duration=1500
+        )
+
+    # 更新站点同步
+    def update_site_sync(self,key):
+        self.site_sync = key
+        JCP.update("config.json", ["setting","site_sync"], key)
+
     # 更新下载版本
     def update_download_version(self):
         dialog = IndeterminateProgressBarDialog("获取Python全部版本...", self)
         dialog.show()
 
-        # 获取版本
-        self.get_python_thread = GetPythonVersions(UrlBuilder.PythonAllVersions())
+        # 站点同步
+        if self.site_sync:
+            # 获取版本
+            self.get_python_thread = GetPythonVersions(self.resource_site)
+        else:
+            self.get_python_thread = GetPythonVersions(UrlBuilder.PythonAllVersions())
         self.get_python_thread.error.connect(lambda s: self.uninstall_venv_error(s, dialog, self.get_python_thread))
         self.get_python_thread.finished.connect(lambda v:self.update_download_version_list(dialog,self.get_python_thread,v))
         self.get_python_thread.start()
@@ -1540,8 +1587,12 @@ class UpdateMixin(_MixinBase):
             dialog = IndeterminateProgressBarDialog(f"获取Python {self.download_version_combox.text()} 全部文件...", self)
             dialog.show()
 
-            # 获取版本
-            self.get_python_file_thread = GetPythonFile(UrlBuilder.PythonVersionsAllFile(version))
+            # 站点同步
+            if self.site_sync:
+                # 获取版本
+                self.get_python_file_thread = GetPythonFile(UrlSynthesizer.PythonVersionsFile(self.resource_site,version))
+            else:
+                self.get_python_file_thread = GetPythonFile(UrlSynthesizer.PythonVersionsFile(UrlBuilder.PythonAllVersions(), version))
             self.get_python_file_thread.error.connect(lambda s: self.uninstall_venv_error(s, dialog, self.get_python_file_thread))
             self.get_python_file_thread.finished.connect(lambda v:self.update_download_file_list(dialog,self.get_python_file_thread,v))
             self.get_python_file_thread.start()
@@ -1577,7 +1628,9 @@ class UpdateMixin(_MixinBase):
         text = self.download_version_combox.text()
         text2 = self.download_file_combox.text()
 
-        self.direct_link_line.setText(f"https://www.python.org/ftp/python/{text}/{text2}")
+        # 两个参数不为空时刷新
+        if text != "" and text2 != "":
+            self.direct_link_line.setText(f"{self.resource_site}{text}/{text2}")
 
     # 强制退出
     def force_quit(self):
@@ -1641,8 +1694,6 @@ class UpdateMixin(_MixinBase):
         else:
             w = NotificationDialog("操作被阻止❌","为了保护配置文件 当前删除操作被配置文件保护阻止\n如果需要删除配置文件\n\n前往👉设置-配置-配置文件保护",self)
             w.exec()
-
-
 
     # 获取新版本
     def get_new_version(self):
@@ -1737,7 +1788,6 @@ class UpdateMixin(_MixinBase):
             self.demo_mode = key
             JCP.update("config.json", ["setting", "demo_mode"], key)
 
-
     # 更新备份路径
     def update_backup_path(self):
         path = QFileDialog.getExistingDirectory(
@@ -1816,7 +1866,6 @@ class UpdateMixin(_MixinBase):
     def update_sort_jcp_pool(self,key):
         self.sort_jcp_pool = key
         JCP.update("config.json", ["setting","sort_jcp_pool"], key)
-
 
     # 打开配置池
     def open_jcp_pool(self):

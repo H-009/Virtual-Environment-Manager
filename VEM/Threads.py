@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 
 import requests
-from PyQt5.QtCore import QThread, pyqtSignal, QObject, Qt
+from PyQt5.QtCore import QThread, pyqtSignal, QObject, Qt, QElapsedTimer
 from typing import List, Tuple, Dict
 
 import tool
@@ -318,16 +318,23 @@ class DownloadThread(QThread):
         self._is_running = True
 
     def run(self):
+        timer = QElapsedTimer()
+        timer.start()
+
         try:
             save_path = Path(self.save_dir) / self.filename
             save_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with requests.get(self.url, stream=True, timeout=30) as r:
+            with requests.get(
+                self.url, stream=True, timeout=30) as r:
+                if r.status_code in (403, 404, 429):
+                    raise requests.HTTPError(
+                        f"{r.status_code} {r.reason} for url: {self.url}"
+                    )
                 r.raise_for_status()
-                total = int(r.headers.get("content-length", 0))
 
+                total = int(r.headers.get("content-length", 0))
                 downloaded = 0
-                start_time = self.msecsElapsed() / 1000
 
                 with open(save_path, "wb") as f:
                     for chunk in r.iter_content(chunk_size=8192):
@@ -339,9 +346,10 @@ class DownloadThread(QThread):
                         f.write(chunk)
                         downloaded += len(chunk)
 
-                        now = self.msecsElapsed() / 1000
-                        if now - start_time > 0:
-                            sp = downloaded / (now - start_time)
+                        # 使用 Qt 计时器
+                        elapsed_sec = timer.elapsed() / 1000.0
+                        if elapsed_sec > 0:
+                            sp = downloaded / elapsed_sec
                             if sp > 1024 * 1024:
                                 sp_str = f"{sp / 1024 / 1024:.2f} MB/s"
                             else:
@@ -351,23 +359,24 @@ class DownloadThread(QThread):
                         if total:
                             self.progress.emit(int(downloaded / total * 100))
 
-                if self._is_running:
-                    self.finished.emit(str(save_path))
-                else:
-                    try:
-                        save_path.unlink(missing_ok=True)
-                    except:
-                        pass
+            if not self._is_running:
+                try:
+                    save_path.unlink(missing_ok=True)
+                except Exception:
+                    pass
+                return
+
+            if total and downloaded != total:
+                raise IOError(f"下载不完整：{downloaded}/{total} bytes")
+
+            self.progress.emit(100)
+            self.finished.emit(str(save_path))
 
         except Exception as e:
             self.error.emit(str(e))
 
     def stop(self):
         self._is_running = False
-
-    def msecsElapsed(self):
-        import time
-        return int(time.time() * 1000)
 
 class DownloadManager(QObject):
     """
@@ -535,8 +544,8 @@ class DownloadManager(QObject):
 
         self._running = max(0, self._running - 1)
 
-        # ✅ 一定先发信号（别在前面炸）
+        # 一定先发信号（别在前面炸）
         self.finished.emit(tid, path)
 
-        # ✅ 再调度下一个
+        # 再调度下一个
         self._try_start()

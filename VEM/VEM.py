@@ -8,10 +8,10 @@ from pathlib import Path
 import darkdetect
 import psutil
 import pywintypes
+from MetaverseSDK.MetaverseAPI.Url import UrlBuilder
 from MetaverseSDK.MetaverseTool.Config import JsonConfigTool
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBasePixmapPool import BPP
-
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
@@ -121,9 +121,13 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # 预设命令字典
         self.preset_scripts_dict = {}
         # 主题映射表
-        self.theme_map = {"明亮": "LIGHT", "黑暗": "DARK", "自动": "AUTO", }
+        self.theme_map = {"明亮": "LIGHT", "黑暗": "DARK", "自动": "AUTO"}
         # 反转主题映射表
-        self.twist_theme_map = {"LIGHT": "明亮", "DARK": "黑暗", "AUTO": "自动", }
+        self.twist_theme_map = {"LIGHT": "明亮", "DARK": "黑暗", "AUTO": "自动"}
+        # 资源站射表
+        self.resource_site_dict = {UrlBuilder.PythonAllVersions(): "官方资源站", UrlBuilder.PythonAllVersionsTsinghuaMirrorSite(): "清华镜像站",UrlBuilder.PythonAllVersionsHuaweiMirrorSite(): "华为镜像站"}
+        # 反转资源站射表
+        self.twist_resource_site_dict = {"官方资源站":UrlBuilder.PythonAllVersions(), "清华镜像站":UrlBuilder.PythonAllVersionsTsinghuaMirrorSite(),"华为镜像站":UrlBuilder.PythonAllVersionsHuaweiMirrorSite()}
         # 新建虚拟环境命令批处理列表
         self.python_batch_list = []
         # 配置虚拟环境命令批处理列表
@@ -234,6 +238,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.console_config_callback_duration = JCP.get("config.json", ["setting","console_config_callback_duration"], "50ms")
         # 允许叠加回调时长
         self.allow_overlay_callback_duration = JCP.get("config.json", ["setting","allow_overlay_callback_duration"], False)
+        # 双击执行电源
+        self.enable_double_power_switch = JCP.get("config.json", ["setting","enable_double_power_switch"], True)
         # 启动动画时长
         self.startup_animation_duration = JCP.get("config.json", ["setting","startup_animation_duration"], "常规-1000ms")
         # 启动图标大小
@@ -246,6 +252,10 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.backup_path = JCP.get("config.json", ["setting","backup_path"],os.getcwd()+"\\Backup")
         # 最大并行下载数
         self.max_parallel_download = JCP.get("config.json", ["setting","max_parallel_download"], "3")
+        # 资源站
+        self.resource_site = JCP.get("config.json", ["setting","resource_site"], UrlBuilder.PythonAllVersions())
+        # 站点同步
+        self.site_sync = JCP.get("config.json", ["setting","site_sync"], False)
         # 播放音效
         self.play_sound = JCP.get("config.json", ["setting","play_sound"], False)
         # 警告音效
@@ -803,6 +813,25 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 parent=self,
                 position=InfoBarPosition.TOP
             )
+
+    # 双击开机
+    def double_power(self,item):
+        if not item:
+            return
+        # 有子节点 = 文件夹 排除
+        if item.childCount() > 0:
+            return
+        # 是python 单独设置后排除
+        type_item = item.data(0, Qt.UserRole)
+        if type_item["type"] == "python":
+            return
+        # 是emb 单独设置后排除
+        if type_item["type"] == "emb":
+            return
+
+        # 执行电源
+        self.power_on_off()
+
 
     # 关闭事件
     def closeEvent(self, event):

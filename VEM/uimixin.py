@@ -61,7 +61,7 @@ class UiMixin(_MixinBase):
         vlayout.addWidget(TitleLabel("Virtual Environment Manager"),alignment=Qt.AlignCenter)
 
         vlayout.addWidget(BodyLabel(f"VEM | 版本 {self.VEM_Version}"),alignment=Qt.AlignCenter)
-        vlayout.addWidget(BodyLabel("更加可读,快捷的管理Python环境"),alignment=Qt.AlignCenter)
+        vlayout.addWidget(BodyLabel("更加可读,快捷,方便的管理Python环境"),alignment=Qt.AlignCenter)
 
         # 间隔弹簧
         vlayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
@@ -109,6 +109,7 @@ class UiMixin(_MixinBase):
         # 创建树状表
         self.venv_tree = AllKeyProhibitedTreeWidget()
         self.venv_tree.clicked.connect(lambda index: self.select_venv_item(index))
+        self.venv_tree.itemDoubleClicked.connect(self.double_power)
         self.venv_tree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.venv_tree.customContextMenuRequested.connect(self.show_venv_tree_menu)
         # 隐藏表头
@@ -1774,8 +1775,10 @@ class UiMixin(_MixinBase):
         contentLabel.setTextColor("#606060", "#d2d2d2")
         vBoxLayout.addWidget(contentLabel)
         self.overlay_callback_duration_switch = SwitchButton()
-        self.overlay_callback_duration_switch.setChecked(self.allow_overlay_callback_duration)
         self.overlay_callback_duration_switch.checkedChanged.connect(lambda key: self.update_allow_overlay_callback_duration(key))
+        # 开启双击执行电源
+        if self.enable_double_power_switch:
+            self.overlay_callback_duration_switch.setChecked(self.allow_overlay_callback_duration)
         self.overlay_callback_duration_switch.setFixedWidth(80)
         hBoxLayout.addWidget(iconWidget)  # 添加到布局
         hBoxLayout.addLayout(vBoxLayout)
@@ -1788,6 +1791,11 @@ class UiMixin(_MixinBase):
         card.addItems(["50ms","100ms","200ms","500ms","1000ms"])
         card.setCurrentText(self.console_config_callback_duration)
         card.activated.connect(self.update_console_config_callback_duration)
+        self.setting_view_layout.addWidget(card)
+        # 启用双击执行电源
+        card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT, "启用双击执行电源", "双击快速执行电源操作")
+        card.setChecked(self.enable_double_power_switch)
+        card.checkedChanged.connect(self.update_double_power)
         self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
@@ -1951,6 +1959,17 @@ class UiMixin(_MixinBase):
         self.max_parallel_download_card.setCurrentText(self.max_parallel_download)
         self.max_parallel_download_card.activated.connect(self.update_max_parallel_download)
         self.setting_view_layout.addWidget(self.max_parallel_download_card)
+        # 资源站卡片
+        self.resource_site_card = LayoutComboBoxSettingCard(FluentIcon.DOWNLOAD,"资源站",self.resource_site)
+        self.resource_site_card.addItems(["官方资源站","清华镜像站","华为镜像站"])
+        self.resource_site_card.setCurrentText(self.resource_site_dict.get(self.resource_site,"官方资源站"))
+        self.resource_site_card.activated.connect(self.update_resource_site)
+        self.setting_view_layout.addWidget(self.resource_site_card)
+        # 站点同步卡片
+        card = LayoutSwitchButtonSettingCard(FluentIcon.DOWNLOAD, "站点同步", "获取版本与文件时使用镜像站")
+        card.setChecked(self.site_sync)
+        card.checkedChanged.connect(self.update_site_sync)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
