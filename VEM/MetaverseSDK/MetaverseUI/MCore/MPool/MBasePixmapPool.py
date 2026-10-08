@@ -38,6 +38,9 @@ class BasePixmapPool:
         """获取 QPixmap 对象"""
         return self.pool.get(name, default)
 
+    def older(self):
+        """获取原始池 older()"""
+        return self.pool
 
 # 单例
 BPP = BasePixmapPool()

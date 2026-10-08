@@ -30,7 +30,7 @@ class CmdWindowFinder(QThread):
                 self._embedded = True
                 self.found.emit(hwnd)
                 self.finished_once.emit()
-                # 如果你只嵌一次就停，这里 return
+                # 如果只嵌一次就停，这里 return
                 return
 
             time.sleep(0.01)
@@ -62,7 +62,7 @@ class CmdMonitorThread(QThread):
                     alive = False
 
             if not alive:
-                # ✅ 只发射一次 False
+                # 只发射一次 False
                 self.running_changed.emit(False)
                 self._alive = False
                 break
@@ -85,7 +85,7 @@ class CmdMonitorThread(QThread):
 # CmdEmbed（嵌入 + 自动输入）
 # ===================================================
 class CmdEmbedWidget(QWidget):
-    def __init__(self, parent=None, workdir="C:\\", mode="finder",delay=500,frequency=0.5,physical_pixels=False):
+    def __init__(self, parent=None, workdir="C:\\", mode="finder",delay=500,frequency=0.5,physical_pixels=False,message_delivery=False):
         super().__init__(parent)
         self.mode = mode
         self.time = delay
@@ -97,7 +97,9 @@ class CmdEmbedWidget(QWidget):
         self.finder_thread = None
         self.monitor_thread = None
         self._cmd_full_screen = False
+
         self.physical_pixels = physical_pixels
+        self.message_delivery = message_delivery
 
         self.start_cmd()
 
@@ -112,11 +114,11 @@ class CmdEmbedWidget(QWidget):
             startupinfo=si,
             creationflags=subprocess.CREATE_NEW_CONSOLE
         )
-        # ✅ 启动存活监控线程
+        # 启动存活监控线程
         self.monitor_thread = CmdMonitorThread(self.proc,frequency=self.frequency)
         self.monitor_thread.start()
 
-        # ✅ 选择嵌入方式
+        # 选择嵌入方式
         if self.mode == "finder":
             self.start_finder()
         elif self.mode == "timer":
@@ -257,11 +259,8 @@ class CmdEmbedWidget(QWidget):
             # 使用物理像素
             self.resize_cmd_physical_pixels()
 
-    def send_command(self, text: str):
+    def send_virtual_key(self, text: str):
         """虚拟按键模拟自动输入"""
-        if not self.cmd_hwnd:
-            return
-
         VK_SHIFT = win32con.VK_SHIFT
 
         for ch in text:
@@ -321,6 +320,34 @@ class CmdEmbedWidget(QWidget):
             win32con.VK_RETURN,
             0xC0000001
         )
+
+    def send_character(self, text: str):
+        """直接向 CMD 发送字符"""
+        for ch in text:
+            win32gui.PostMessage(
+                self.cmd_hwnd,
+                win32con.WM_CHAR,
+                ord(ch),
+                0
+            )
+
+        # 回车
+        win32gui.PostMessage(
+            self.cmd_hwnd,
+            win32con.WM_CHAR,
+            ord('\r'),
+            0
+        )
+
+    def send_command(self, text: str):
+        if not self.cmd_hwnd:
+            return
+
+        # 使用虚拟键消息
+        if not self.message_delivery:
+            self.send_virtual_key(text)
+        else:
+            self.send_character(text)
 
     def refresh(self):
         """

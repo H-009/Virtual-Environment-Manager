@@ -40,5 +40,9 @@ class BaseIconPool:
         """获取 QIcon 对象"""
         return self.pool.get(name, default)
 
+    def older(self):
+        """获取原始池 older()"""
+        return self.pool
+
 # 单例
 BIP = BaseIconPool()

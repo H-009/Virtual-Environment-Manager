@@ -6,10 +6,15 @@ class UrlBuilder:
     def PythonAllVersions():
         return "https://www.python.org/ftp/python/"
 
-    # 获取Python版本全部文件
+    # 获取Python全部版本 清华镜像站
     @staticmethod
-    def PythonVersionsAllFile(v):
-        return f"https://www.python.org/ftp/python/{v}/"
+    def PythonAllVersionsTsinghuaMirrorSite():
+        return "https://mirrors.tuna.tsinghua.edu.cn/python/"
+
+    # 获取Python全部版本 华为镜像站
+    @staticmethod
+    def PythonAllVersionsHuaweiMirrorSite():
+        return "https://mirrors.huaweicloud.com/python/"
 
     # 获取Github仓库
     @staticmethod
@@ -30,3 +35,10 @@ class UrlBuilder:
     @staticmethod
     def GithubRepoReleases(owner, repo):
         return f"https://github.com/{owner}/{repo}/releases/latest"
+
+# Url合成器
+class UrlSynthesizer:
+    # 拼接Python版本文件
+    @staticmethod
+    def PythonVersionsFile(base,v):
+        return f"{base}/{v}/"
