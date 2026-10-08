@@ -1670,7 +1670,7 @@ class UpdateMixin(_MixinBase):
                           content=error,
                           parent=self,
                           position=InfoBarPosition.BOTTOM_RIGHT,
-                          duration=-1
+                          duration=3000
                           )
             # 销毁状态提示
             self.new_version_state_tooltip.setTitle("获取失败")
@@ -1799,7 +1799,7 @@ class UpdateMixin(_MixinBase):
                           content=str(a),
                           parent=self,
                           position=InfoBarPosition.BOTTOM_RIGHT,
-                          duration=-1
+                          duration=3000
                           )
 
     # 落盘池
