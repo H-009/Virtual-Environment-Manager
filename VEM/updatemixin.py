@@ -1771,15 +1771,15 @@ class UpdateMixin(_MixinBase):
 
     # 备份配置文件
     def backup_config_file(self):
-        # 获取格式化时间戳
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "-" + datetime.now().strftime("%f")[:3]
-        file_name = f"config_backup_{timestamp}.json.bak"
-        file_path = self.backup_path+"\\"+file_name
-
-        # 目录不存在则创建目录
-        os.makedirs(self.backup_path, exist_ok=True)
-
         try:
+            # 获取格式化时间戳
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "-" + datetime.now().strftime("%f")[:3]
+            file_name = f"config_backup_{timestamp}.json.bak"
+            file_path = self.backup_path+"\\"+file_name
+
+            # 目录不存在则创建目录
+            os.makedirs(self.backup_path, exist_ok=True)
+
             # 完整备份
             if not self.full_backup:
                 # 复制
@@ -1787,20 +1787,20 @@ class UpdateMixin(_MixinBase):
             else:
                 # 完整复制
                 shutil.copy2("config.json",file_path)
+
+            InfoBar.success(title="成功",
+                            content=f"备份保存到 {file_path}",
+                            parent=self,
+                            position=InfoBarPosition.BOTTOM_RIGHT,
+                            duration=1500
+                            )
         except Exception as a:
             InfoBar.error(title="错误",
-                          content=a,
+                          content=str(a),
                           parent=self,
                           position=InfoBarPosition.BOTTOM_RIGHT,
                           duration=-1
                           )
-
-        InfoBar.success(title="成功",
-                        content=f"备份保存到 {file_path}",
-                        parent=self,
-                        position=InfoBarPosition.BOTTOM_RIGHT,
-                        duration=1500
-                        )
 
     # 落盘池
     def write_disk_pool(self):
