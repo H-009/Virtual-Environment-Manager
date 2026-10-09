@@ -1266,6 +1266,9 @@ class UiMixin(_MixinBase):
         self.installation_download_now = PushButton("立即下载")# 添加现有按钮
         self.installation_download_now.setFixedSize(100,30)
         self.installation_download_now.clicked.connect(self.download_now)
+        self.external_download = PushButton("外部下载")# 添加现有按钮
+        self.external_download.setFixedSize(100,30)
+        self.external_download.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self.direct_link_line.text())))
         self.reset_existence_venv = PushButton("重置")# 重置现有按钮
         self.reset_existence_venv.setFixedSize(100,30)
         self.reset_existence_venv.clicked.connect(self.reset_download)
@@ -1273,6 +1276,7 @@ class UiMixin(_MixinBase):
         button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))# 水平居中弹簧
         button_layout.addWidget(self.add_download_list)
         button_layout.addWidget(self.installation_download_now)
+        button_layout.addWidget(self.external_download)
         button_layout.addWidget(self.reset_existence_venv)
         button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))# 水平居中弹簧
         card_layout.addLayout(button_layout)
@@ -1697,6 +1701,11 @@ class UiMixin(_MixinBase):
         card.addItems(["0ms","10ms", "50ms", "100ms", "250ms","500ms"])
         card.setCurrentText(self.pullback_duration)
         card.activated.connect(self.update_auto_enter_venv_pullback_duration)
+        self.setting_view_layout.addWidget(card)
+        # 回调时长卡片
+        card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT,"允许回调时长叠加嵌入时长","允许虚拟环境回调时长同步叠加延时嵌入时长")
+        card.setChecked(self.overlay_pullback_duration_delay_switch)
+        card.checkedChanged.connect(self.update_overlay_pullback_duration_delay_switch)
         self.setting_view_layout.addWidget(card)
         # CMD被动关机卡片
         card = SimpleCardWidget()

@@ -142,7 +142,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.17.0"
+        self.VEM_Version = "v1.17.1"
         self.CMD_Version = "v0.9.0"
 
         # 预制图标
@@ -226,6 +226,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.frequency_cmd = JCP.get("config.json", ["setting","frequency"], "0.5s") # 防止CMD阻塞UI
         # 回调时长
         self.pullback_duration = JCP.get("config.json", ["setting","pullback_duration"], "10ms")
+        # 允许回调时长叠加嵌入时长
+        self.overlay_pullback_duration_delay_switch = JCP.get("config.json", ["setting","overlay_pullback_duration_delay_switch"], True)
         # CMD被动关机决定
         self.CMD_passive_shutdown = JCP.get("config.json", ["setting","CMD_passive_shutdown"], True)
         # 自动决定下的CMD被动关机通知
@@ -721,8 +723,13 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 if self.auto_enter_venv:
                     # 回调时长使用CMD的延时
                     # 回调时长叠加
+                    if self.overlay_pullback_duration_delay_switch:
+                        t = delay+pullback_duration
+                    else:
+                        t = pullback_duration
+
                     auto_enter_timer = QTimer()
-                    auto_enter_timer.singleShot(delay+pullback_duration, lambda:cmd.send_command(pt[1]))
+                    auto_enter_timer.singleShot(t, lambda:cmd.send_command('"'+pt[1]+'"')) # 拼接CMD引号
 
                 self.switch_power_bool = False
             elif self.switch_power_bool is False and item is not None:
@@ -831,7 +838,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         # 执行电源
         self.power_on_off()
-
 
     # 关闭事件
     def closeEvent(self, event):
@@ -4241,3 +4247,13 @@ if __name__ == "__main__":
 # # 补全
 
 # 更换编辑下拉框 默认回车添加新控件
+
+# 强制退出关闭计时
+
+# 下载列表快导致徽章计时多2
+
+# 配置同步 把配置放到appdata
+
+# 自动保存
+
+# 外部下载重置

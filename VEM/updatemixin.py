@@ -788,6 +788,11 @@ class UpdateMixin(_MixinBase):
             self.pullback_duration = "500ms"
         JCP.update("config.json", ["setting","pullback_duration"], self.pullback_duration)
 
+    # 更新允许回调时长叠加嵌入时长
+    def update_overlay_pullback_duration_delay_switch(self,key):
+        self.overlay_pullback_duration_delay_switch = key
+        JCP.update("config.json", ["setting","overlay_pullback_duration_delay_switch"], key)
+
     # CMD被动关机决定
     def update_CMD_passive_shutdown(self,key):
         # 开启
@@ -1526,7 +1531,7 @@ class UpdateMixin(_MixinBase):
 
         InfoBar.info(
             title="通知",
-            content=f"资源站更完成",
+            content=f"资源站更新完成",
             parent=self,
             position=InfoBarPosition.TOP,
             duration=1500
