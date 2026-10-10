@@ -549,8 +549,13 @@ def safe_delete_item_close(item: QTreeWidgetItem):
     item.setData(0, Qt.UserRole, None)
     del item
 
-# 切换页面防抖
-def switch_widget_debounce(stackedWidget,widget):
-    if stackedWidget.currentWidget() is widget:
-        return
-    stackedWidget.setCurrentWidget(widget)
+# 后台运行cmd
+def run_backend_command(exe_path):
+    """
+    完全后台启动 exe，不阻塞，不显示控制台窗口（Windows）
+    """
+    subprocess.Popen(
+        exe_path,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )

@@ -1268,11 +1268,10 @@ class UiMixin(_MixinBase):
         self.installation_download_now.clicked.connect(self.download_now)
         self.external_download = PushButton("外部下载")# 添加现有按钮
         self.external_download.setFixedSize(100,30)
-        self.external_download.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self.direct_link_line.text())))
+        self.external_download.clicked.connect(lambda :(QDesktopServices.openUrl(QUrl(self.direct_link_line.text())),self.reset_download())) # 复合表达式
         self.reset_existence_venv = PushButton("重置")# 重置现有按钮
         self.reset_existence_venv.setFixedSize(100,30)
         self.reset_existence_venv.clicked.connect(self.reset_download)
-        self.reset_existence_venv.clicked.connect(lambda :(self.venv_dir_line.setText(""), self.start_parameter_line.setText(""))) # 复合表达式
         button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))# 水平居中弹簧
         button_layout.addWidget(self.add_download_list)
         button_layout.addWidget(self.installation_download_now)
@@ -1346,8 +1345,7 @@ class UiMixin(_MixinBase):
         self.add_existence_venv.clicked.connect(self.add_venv)
         self.reset_existence_venv = PushButton("重置")  # 重置现有按钮
         self.reset_existence_venv.setFixedSize(100, 30)
-        self.reset_existence_venv.clicked.connect(
-            lambda: (self.venv_dir_line.setText(""), self.start_parameter_line.setText("")))  # 复合表达式
+        self.reset_existence_venv.clicked.connect(lambda: (self.venv_dir_line.setText(""), self.start_parameter_line.setText("")))  # 复合表达式
         button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 水平居中弹簧
         button_layout.addWidget(self.add_existence_venv)
         button_layout.addWidget(self.reset_existence_venv)
@@ -1383,49 +1381,112 @@ class UiMixin(_MixinBase):
 
         # 分段导航栏
         segmented = SegmentedWidget()
-        segmented.addItem("静默安装", "静默安装")
-        segmented.addItem("批量安装", "批量安装")
-        segmented.setCurrentItem("静默安装")  # 默认选中
+        segmented.addItem("快速", "快速")
+        segmented.addItem("完全", "完全")
+        segmented.addItem("静默", "静默")
+        segmented.addItem("批量", "批量")
+        segmented.setCurrentItem("快速")  # 默认选中
         segmented.currentItemChanged.connect(self.segmented_stacked_update)
         vBoxLayout.addWidget(segmented, alignment=Qt.AlignHCenter)
 
         # 子堆叠窗口
-        self.segmented_download_stacked = PopUpAniStackedWidget()
-        vBoxLayout.addWidget(self.segmented_download_stacked)
+        self.segmented_install_stacked = PopUpAniStackedWidget()
+        vBoxLayout.addWidget(self.segmented_install_stacked)
 
-        # 现有卡片
-        existence_card = SimpleCardWidget()
-        existence_card_layout = QVBoxLayout()
-        existence_card.setLayout(existence_card_layout)
-        venv_dir_layout = QHBoxLayout()  # 环境目录布局
-        venv_dir_layout.addWidget(BodyLabel("环境文件:"))
-        self.venv_dir_line = LineEdit()  # 行输入框
-        self.venv_dir_line.setPlaceholderText("pyvenv.cfg")
-        self.venv_dir_line.textChanged.connect(self.update_existence_start_parameter)
-        venv_dir_layout.addWidget(self.venv_dir_line)
-        self.venv_dir_button = ToolButton(FluentIcon.FOLDER)  # 图标按钮
-        self.venv_dir_button.clicked.connect(self.open_add_venv_window)
-        venv_dir_layout.addWidget(self.venv_dir_button)
-        existence_card_layout.addLayout(venv_dir_layout)  # 添加子布局到父布局
-        start_parameter_layout = QHBoxLayout()  # 启动参数布局
-        start_parameter_layout.addWidget(BodyLabel("启动参数:"))
-        self.start_parameter_line = LineEdit()  # 行输入框
-        start_parameter_layout.addWidget(self.start_parameter_line)
-        existence_card_layout.addLayout(start_parameter_layout)  # 添加子布局到父布局
+        # 快速卡片
+        card = SimpleCardWidget()
+        card_layout = QVBoxLayout()
+        card.setLayout(card_layout)
+        card_grid_layout = QGridLayout()  # 格栅布局
+        card_layout.addLayout(card_grid_layout)
+        card_grid_layout.addWidget(BodyLabel("安装包:"),0,0)
+        self.install_dir_line = LineEdit()  # 行输入框
+        self.install_dir_line.setPlaceholderText("python-3.10.1.exe")
+        self.install_dir_line.textChanged.connect(self.update_fast_install_venv_command)
+        card_grid_layout.addWidget(self.install_dir_line,0,1)
+        self.install_dir_button = ToolButton(FluentIcon.FOLDER)  # 图标按钮
+        self.install_dir_button.clicked.connect(self.open_fast_install_window)
+        card_grid_layout.addWidget(self.install_dir_button,0,2)
+        self.install_all_users_box = CheckBox()
+        self.install_all_users_box.setText("为所有用户安装(管理员)")
+        self.install_all_users_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"InstallAllUsers=1"))
+        card_grid_layout.addWidget(self.install_all_users_box,1,0,1,3)
+        self.add_front_PATH_box = CheckBox()
+        self.add_front_PATH_box.setText("追加到PATH前面")
+        self.add_front_PATH_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"PrependPath=1"))
+        card_grid_layout.addWidget(self.add_front_PATH_box,2,0,1,3)
+        self.add_after_PATH_box = CheckBox()
+        self.add_after_PATH_box.setText("追加到PATH后面")
+        self.add_after_PATH_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"AppendPath=1"))
+        card_grid_layout.addWidget(self.add_after_PATH_box,3,0,1,3)
+        self.not_create_start_menu_shortcuts_box = CheckBox()
+        self.not_create_start_menu_shortcuts_box.setText("不创建开始菜单快捷方式")
+        self.not_create_start_menu_shortcuts_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Shortcuts=0"))
+        card_grid_layout.addWidget(self.not_create_start_menu_shortcuts_box,4,0,1,3)
+        self.not_install_python_box = CheckBox()
+        self.not_install_python_box.setText("不安装python.exe")
+        self.not_install_python_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_exe=0"))
+        card_grid_layout.addWidget(self.not_install_python_box,5,0,1,3)
+        self.not_install_standard_library_box = CheckBox()
+        self.not_install_standard_library_box.setText("不安装标准库")
+        self.not_install_standard_library_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_lib=0"))
+        card_grid_layout.addWidget(self.not_install_standard_library_box,6,0,1,3)
+        self.not_install_pip_box = CheckBox()
+        self.not_install_pip_box.setText("不安装pip")
+        self.not_install_pip_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_pip=0"))
+        card_grid_layout.addWidget(self.not_install_pip_box,7,0,1,3)
+        self.not_install_dev_file_box = CheckBox()
+        self.not_install_dev_file_box.setText("不安装开发文件")
+        self.not_install_dev_file_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_dev=0"))
+        card_grid_layout.addWidget(self.not_install_dev_file_box,8,0,1,3)
+        self.not_install_launcher_box = CheckBox()
+        self.not_install_launcher_box.setText("不安装启动器")
+        self.not_install_launcher_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_launcher=0"))
+        card_grid_layout.addWidget(self.not_install_launcher_box,9,0,1,3)
+        self.not_install_Tcl_Tk_IDLE_box = CheckBox()
+        self.not_install_Tcl_Tk_IDLE_box.setText("不安装Tcl/Tk和IDLE")
+        self.not_install_Tcl_Tk_IDLE_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_tcltk=1"))
+        card_grid_layout.addWidget(self.not_install_Tcl_Tk_IDLE_box,10,0,1,3)
+        self.not_install_standard_library_test_suite_box = CheckBox()
+        self.not_install_standard_library_test_suite_box.setText("不安装标准库测试套件")
+        self.not_install_standard_library_test_suite_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_test=1"))
+        card_grid_layout.addWidget(self.not_install_standard_library_test_suite_box,11,0,1,3)
+        self.not_install_doc_box = CheckBox()
+        self.not_install_doc_box.setText("不安装本地文档")
+        self.not_install_doc_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_doc=0"))
+        card_grid_layout.addWidget(self.not_install_doc_box,12,0,1,3)
+        self.not_install_tool_scripts_box = CheckBox()
+        self.not_install_tool_scripts_box.setText("不安装工具脚本")
+        self.not_install_tool_scripts_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_tools=0"))
+        card_grid_layout.addWidget(self.not_install_tool_scripts_box,13,0,1,3)
+        self.customize_install_path_box = CheckBox() # 自定义安装位置
+        self.customize_install_path_box.setText("自定义安装路径")
+        self.install_path_line = LineEdit()  # 行输入框
+        self.install_path_line.setEnabled(False) # 初始禁用
+        card_grid_layout.addWidget(self.customize_install_path_box,14,0,1,3)
+        card_grid_layout.addWidget(BodyLabel("安装路径:"), 15,0)
+        card_grid_layout.addWidget(self.install_path_line,15,1,1,3)
+        card_grid_layout.addWidget(BodyLabel("安装命令:"),16,0)
+        self.install_comm_line = LineEdit()  # 行输入框
+        card_grid_layout.addWidget(self.install_comm_line,16,1,1,3)
         button_layout = QHBoxLayout()  # 按钮布局
-        self.add_existence_venv = PrimaryPushButton("添加")  # 添加现有按钮
-        self.add_existence_venv.setFixedSize(100, 30)
-        self.add_existence_venv.clicked.connect(self.add_venv)
-        self.reset_existence_venv = PushButton("重置")  # 重置现有按钮
-        self.reset_existence_venv.setFixedSize(100, 30)
-        self.reset_existence_venv.clicked.connect(lambda: (self.venv_dir_line.setText(""), self.start_parameter_line.setText("")))  # 复合表达式
+        self.add_existence_install = PrimaryPushButton("安装")
+        self.add_existence_install.setFixedSize(100, 30)
+        self.add_existence_install.clicked.connect(self.add_venv)
+        self.manual_install = PushButton("手动安装")
+        self.manual_install.clicked.connect(self.manual_fast_install)
+        self.manual_install.setFixedSize(100, 30)
+        self.reset_existence_install = PushButton("重置")
+        self.reset_existence_install.setFixedSize(100, 30)
+        self.reset_existence_install.clicked.connect(self.reset_fast_install)  # 复合表达式
         button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 水平居中弹簧
-        button_layout.addWidget(self.add_existence_venv)
-        button_layout.addWidget(self.reset_existence_venv)
+        button_layout.addWidget(self.add_existence_install)
+        button_layout.addWidget(self.manual_install)
+        button_layout.addWidget(self.reset_existence_install)
         button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 水平居中弹簧
-        existence_card_layout.addLayout(button_layout)
-        existence_card_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))  # 底部弹簧
-        self.segmented_download_stacked.addWidget(existence_card)  # 添加现有页
+        card_layout.addLayout(button_layout)
+        card_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))  # 底部弹簧
+        self.segmented_install_stacked.addWidget(card)  # 添加现有页
 
     # 初始化设置
     def init_setting(self):

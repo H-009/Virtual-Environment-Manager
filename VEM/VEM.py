@@ -17,16 +17,19 @@ from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
-from PyQt5.QtGui import QIcon, QPixmap, QColor
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QDesktopServices
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem,QFileDialog
-from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject
+from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject, QUrl
 from pathvalidate import is_valid_filepath
 from qfluentwidgets import FluentWindow, setTheme, FluentIcon, NavigationItemPosition, setThemeColor, SimpleCardWidget,\
     InfoBar, InfoBarPosition, Dialog, RoundMenu, Action, ListWidget,\
     FluentTranslator, LineEdit,SplashScreen, Flyout, FlyoutAnimationType, FlyoutView, InfoBadge, InfoBadgePosition
 
-from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressRingDialog import CometTailIndeterminateProgressRingDialog,\
-    FixedLengthIndeterminateProgressRingDialog,SegmentedArcIndeterminateProgressRingDialog,IndeterminateProgressRingDialog
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressRingDialog import \
+    CometTailIndeterminateProgressRingDialog, \
+    FixedLengthIndeterminateProgressRingDialog, SegmentedArcIndeterminateProgressRingDialog, \
+    IndeterminateProgressRingDialog, DualRingIndeterminateProgressRingDialog, DotWaveIndeterminateProgressRingDialog, \
+    NeonGlowIndeterminateProgressRingDialog
 
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MProgressBarDialog import ProgressBarDialog
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MProgressRingDialog import ByteProgressRingDialog,ProgressRingDialog
@@ -132,6 +135,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.python_batch_list = []
         # 配置虚拟环境命令批处理列表
         self.config_python_batch_list = []
+        # 快速安装命令批处理列表
+        self.fast_install_batch_list = []
         # 下载列表
         self.download_list = []
         # 便携式环境批处理集合
@@ -1442,7 +1447,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         elif page == "图钉":
             self.created_stacked.setCurrentIndex(5)
 
-    # 切换分段创建虚拟环境窗口
+    # 切换分段创建窗口
     def segmented_stacked_update(self,page):
         if page == "现有":
             self.segmented_venv_stacked.setCurrentIndex(0)
@@ -1450,6 +1455,15 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             self.segmented_venv_stacked.setCurrentIndex(1)
         if page == "配置":
             self.segmented_venv_stacked.setCurrentIndex(2)
+
+        if page == "快速":
+            self.segmented_install_stacked.setCurrentIndex(0)
+        if page == "完全":
+            self.segmented_install_stacked.setCurrentIndex(1)
+        if page == "静默":
+            self.segmented_install_stacked.setCurrentIndex(2)
+        if page == "批量":
+            self.segmented_install_stacked.setCurrentIndex(3)
 
     # 获取python版本
     @staticmethod
@@ -2478,6 +2492,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             Action(FluentIcon.COPY, '复制', shortcut='Ctrl+C', triggered=lambda: self.copy_row(self.python_table)),
             Action(FluentIcon.SYNC, '刷新', triggered=self.update_python),
             Action(FluentIcon.EDIT, '编辑名称', triggered=self.edit_python_name),
+            Action(FluentIcon.FOLDER, '打开环境位置', triggered=self.open_python_path),
             Action(FluentIcon.ADD, '创建环境', triggered=lambda: self.add_jump("python")),
             Action(FluentIcon.DELETE, '删除条目', triggered=self.delete_python)
         ])
@@ -2506,6 +2521,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             Action(FluentIcon.SYNC, '刷新', triggered=self.update_venv),
             Action(FluentIcon.EDIT, '编辑名称', triggered=self.edit_venv_name),
             Action(FluentIcon.EDIT, '编辑启动参数', triggered=self.edit_venv_startup_parameters),
+            Action(FluentIcon.FOLDER, '打开环境位置',triggered=self.open_venv_path),
             Action(FluentIcon.ADD, '创建环境', triggered=lambda: self.add_jump("venv")),
             Action(FluentIcon.DELETE, '卸载', triggered=self.delete_venv_folder),
             Action(FluentIcon.DELETE, '删除条目', triggered=self.delete_venv)
@@ -2776,6 +2792,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             dialog.accept()
             dialog.deleteLater()
 
+        except Exception as a:
+            print(a)
+
+    # 打开基础环境位置
+    def open_python_path(self):
+        try:
+            # 获取当前所在行
+            row = self.python_table.currentRow()
+            item = self.python_table.item(row, 2)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(item.text()))
         except Exception as a:
             print(a)
 
@@ -3313,6 +3339,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             dialog.accept()
             dialog.deleteLater()
 
+        except Exception as a:
+            print(a)
+
+    # 打开虚拟环境位置
+    def open_venv_path(self):
+        try:
+            # 获取当前所在行
+            row = self.venv_table.currentRow()
+            item = self.venv_table.item(row, 2)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(item.text()))
         except Exception as a:
             print(a)
 
@@ -4082,6 +4118,103 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         if self.play_sound and not self.play_sound_download_complete:
             BSP.play("DownloadComplete")
 
+    # 打开快速安装窗口
+    def open_fast_install_window(self):
+        python_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择 Python 安装包",
+            self.downloads_path,
+            "Python Installers (*.exe);;"
+            "All Files (*.*)"
+        )
+        if python_path != '':
+            self.install_dir_line.setText(python_path)
+
+    # 快速安装批处理队列
+    def fast_install_command_batch(self,state,param):
+        try:
+            if state:  # 选中
+                if param not in self.fast_install_batch_list:
+                    self.fast_install_batch_list.append(param)
+            else:  # 取消选中
+                if param in self.fast_install_batch_list:
+                    self.fast_install_batch_list.remove(param)
+
+            # 更新命令
+            self.update_fast_install_venv_command()
+
+        except Exception as a:
+            print(a)
+
+    # 刷新快速安装命令
+    def update_fast_install_venv_command(self):
+        # 文件不为空与exe结尾
+        if self.install_dir_line.text() != "" and self.install_dir_line.text().endswith(".exe"):
+            # 基础命令
+            base = self.install_dir_line.text()
+            # 将列表元素用空格连接
+            params_str = ' '.join(self.fast_install_batch_list)
+            full_cmd = f'"{base}" {params_str}' if params_str else f'"{base}"'
+
+            self.install_comm_line.setText(full_cmd)
+        # 否则清空
+        else:
+            self.install_comm_line.setText("")
+
+    # 重置快速安装
+    def reset_fast_install(self):
+        self.install_dir_line.setText("")
+
+        self.install_all_users_box.setChecked(False)
+        self.add_front_PATH_box.setChecked(False)
+        self.add_after_PATH_box.setChecked(False)
+        self.not_create_start_menu_shortcuts_box.setChecked(False)
+        self.not_install_python_box.setChecked(False)
+        self.not_install_standard_library_box.setChecked(False)
+        self.not_install_pip_box.setChecked(False)
+        self.not_install_dev_file_box.setChecked(False)
+        self.not_install_launcher_box.setChecked(False)
+        self.not_install_Tcl_Tk_IDLE_box.setChecked(False)
+        self.not_install_standard_library_test_suite_box.setChecked(False)
+        self.not_install_doc_box.setChecked(False)
+        self.not_install_tool_scripts_box.setChecked(False)
+        self.customize_install_path_box.setChecked(False)
+
+        self.install_path_line.setText("")
+
+    # 快速手动安装
+    def manual_fast_install(self):
+        if not self.install_dir_line.text().endswith(".exe"):
+            InfoBar.error(title="错误",
+                            content=f"安装包不合法",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+        elif not os.path.exists(self.install_dir_line.text()):
+            InfoBar.error(title="错误",
+                            content=f"安装包不存在",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+        else:
+            tool.run_backend_command(f'"{self.install_dir_line.text()}"')
+            # 重置
+            self.reset_fast_install()
+
+            InfoBar.success(title="成功",
+                            content=f"安装包激活成功",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+
+        # a = NeonGlowIndeterminateProgressRingDialog("111",self)
+        # a.show() #DualRingIndeterminateProgressRingDialog
+
+
+
 
 
 
@@ -4193,8 +4326,6 @@ if __name__ == "__main__":
 
 # 选择配置文件优先 APPDATA还是工作目录的配置
 
-# 是否允许回调时长叠加
-
 # 徽章跟随强调色
 
 # 工作站工作模式 源码/程序/虚拟环境
@@ -4257,3 +4388,7 @@ if __name__ == "__main__":
 # 自动保存
 
 # 外部下载重置
+
+# 工具集
+
+# 配置模式与立即克隆配置到同步文件夹
