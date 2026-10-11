@@ -1000,6 +1000,18 @@ class UiMixin(_MixinBase):
         layout.addLayout(title_layout) # 添加标题布局
         # 标题间隔弹簧
         layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+        # 分段导航栏
+        segmented = SegmentedWidget()
+        segmented.addItem("路径", "路径")
+        segmented.addItem("环境变量", "环境变量")
+        segmented.addItem("搜索", "搜索")
+        segmented.setCurrentItem("路径")  # 默认选中
+        segmented.currentItemChanged.connect(self.segmented_stacked_update)
+        layout.addWidget(segmented, alignment=Qt.AlignHCenter)
+        # 子堆叠窗口
+        self.segmented_python_stacked = PopUpAniStackedWidget()
+        layout.addWidget(self.segmented_python_stacked)
+        # 路径
         add_card = SimpleCardWidget()
         add_card_layout_base = QVBoxLayout()
         add_card_layout = QHBoxLayout()
@@ -1025,8 +1037,62 @@ class UiMixin(_MixinBase):
         button_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中弹簧
         add_card_layout_base.addLayout(button_layout)
         add_card_layout_base.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))  # 底部弹簧
-        layout.addWidget(add_card)
-        self.created_stacked.addWidget(card) # 添页
+        self.segmented_python_stacked.addWidget(add_card)
+        # 环境变量
+        add_card = SimpleCardWidget()
+        add_card_layout_base = QVBoxLayout()
+        add_card_layout = QHBoxLayout()
+        add_card_layout_base.addLayout(add_card_layout)
+        add_card.setLayout(add_card_layout_base)
+        add_card_layout.addWidget(BodyLabel("解释器:"))
+        self.env_python_path_combox = ComboBox()
+        self.env_python_path_combox.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Fixed)
+        self.add_python_path_button = ToolButton(FluentIcon.SEARCH)  # 图标按钮
+        self.add_python_path_button.clicked.connect(self.match_python)
+        add_card_layout.addWidget(self.env_python_path_combox)
+        add_card_layout.addWidget(self.add_python_path_button)
+        button_layout = QHBoxLayout() # 按钮布局
+        self.add_python_button = PrimaryPushButton("添加")
+        self.add_python_button.setFixedSize(100,30)
+        self.add_python_button.clicked.connect(self.add_env_var_python)
+        self.reset_python_button = PushButton("重置")
+        self.reset_python_button.setFixedSize(100,30)
+        self.reset_python_button.clicked.connect(self.env_python_path_combox.clear)
+        button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中间隔弹簧
+        button_layout.addWidget(self.add_python_button)
+        button_layout.addWidget(self.reset_python_button)
+        button_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中弹簧
+        add_card_layout_base.addLayout(button_layout)
+        add_card_layout_base.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))  # 底部弹簧
+        self.segmented_python_stacked.addWidget(add_card)
+        # 搜索
+        add_card = SimpleCardWidget()
+        add_card_layout_base = QVBoxLayout()
+        add_card_layout = QHBoxLayout()
+        add_card_layout_base.addLayout(add_card_layout)
+        add_card.setLayout(add_card_layout_base)
+        add_card_layout.addWidget(BodyLabel("解释器路径:"))
+        self.add_python_path_line = LineEdit()
+        self.add_python_path_line.setPlaceholderText("python.exe")
+        self.add_python_path_button = ToolButton(FluentIcon.FOLDER)  # 图标按钮
+        self.add_python_path_button.clicked.connect(self.open_add_python_window)
+        add_card_layout.addWidget(self.add_python_path_line)
+        add_card_layout.addWidget(self.add_python_path_button)
+        button_layout = QHBoxLayout() # 按钮布局
+        self.add_python_button = PrimaryPushButton("添加")
+        self.add_python_button.setFixedSize(100,30)
+        self.add_python_button.clicked.connect(self.add_python)
+        self.reset_python_button = PushButton("重置")
+        self.reset_python_button.setFixedSize(100,30)
+        self.reset_python_button.clicked.connect(lambda :self.add_python_path_line.setText(""))
+        button_layout.addItem(QSpacerItem(20, 50, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中间隔弹簧
+        button_layout.addWidget(self.add_python_button)
+        button_layout.addWidget(self.reset_python_button)
+        button_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Fixed))  # 居中弹簧
+        add_card_layout_base.addLayout(button_layout)
+        add_card_layout_base.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Expanding))  # 底部弹簧
+        self.segmented_python_stacked.addWidget(add_card)
+        self.created_stacked.addWidget(card) # 主布局添页
 
         # 创建配置文件
         card = SimpleCardWidget()
@@ -1472,7 +1538,7 @@ class UiMixin(_MixinBase):
         self.install_comm_line = LineEdit()  # 行输入框
         card_grid_layout.addWidget(self.install_comm_line,16,1,1,3)
         button_layout = QHBoxLayout()  # 按钮布局
-        self.add_existence_install = PrimaryPushButton("安装")
+        self.add_existence_install = PrimaryPushButton("激活")
         self.add_existence_install.setFixedSize(100, 30)
         self.add_existence_install.clicked.connect(self.fast_install)
         self.manual_install = PushButton("手动安装")

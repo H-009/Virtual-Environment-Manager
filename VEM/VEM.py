@@ -1456,6 +1456,13 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         if page == "配置":
             self.segmented_venv_stacked.setCurrentIndex(2)
 
+        if page == "路径":
+            self.segmented_python_stacked.setCurrentIndex(0)
+        if page == "环境变量":
+            self.segmented_python_stacked.setCurrentIndex(1)
+        if page == "搜索":
+            self.segmented_python_stacked.setCurrentIndex(2)
+
         if page == "快速":
             self.segmented_install_stacked.setCurrentIndex(0)
         if page == "完全":
@@ -1466,8 +1473,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             self.segmented_install_stacked.setCurrentIndex(3)
 
     # 获取python版本
-    @staticmethod
-    def get_python_version_by_cmd(python_exe: str):
+    def get_python_version_by_cmd(self,python_exe: str):
         try:
             out = subprocess.check_output(
                 [python_exe, "--version"],
@@ -1476,7 +1482,13 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 timeout=2
             )
             return out.strip()
-        except Exception:
+        except Exception as a:
+            InfoBar.warning(
+                title="警告",
+                content=a,
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
             return "未知"
 
     # 打开添加基础环境窗口
@@ -1493,40 +1505,113 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
     # 添加基础环境
     def add_python(self):
-        # 判断路径是否存在
-        path = self.add_python_path_line.text()
-        if os.path.exists(path):
-            name = Path(path).name.lower()
-            if "python" in name and name.endswith(".exe"):
+        try:
+            # 判断路径是否存在
+            path = self.add_python_path_line.text()
+            if os.path.exists(path):
+                name = Path(path).name.lower()
+                if "python" in name and name.endswith(".exe"):
 
-                # 获取python版本
-                python_v = self.get_python_version_by_cmd(path)
-                JCP.update(
-                    "config.json",
-                    ["python",os.path.dirname(path)],
-                    {
-                        "name": python_v, # 名称
-                        "path": path, # 解释器路径
-                        "dir": os.path.dirname(path), # 解释器目录
-                        "version": python_v[7:] # 版本
-                    }
-                )
-                self.add_python_path_line.setText("")
-                InfoBar.success(
-                    title="成功",
-                    content=f"基础环境 {python_v} 添加成功",
+                    # 获取python版本
+                    python_v = self.get_python_version_by_cmd(path)
+                    JCP.update(
+                        "config.json",
+                        ["python",os.path.dirname(path)],
+                        {
+                            "name": python_v, # 名称
+                            "path": path, # 解释器路径
+                            "dir": os.path.dirname(path), # 解释器目录
+                            "version": python_v[7:] # 版本
+                        }
+                    )
+                    self.add_python_path_line.setText("")
+                    InfoBar.success(
+                        title="成功",
+                        content=f"基础环境 {python_v} 添加成功",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+                    self.update_python() # 刷新基础环境
+
+            else:
+                InfoBar.error(
+                    title="错误",
+                    content="基础解释器不存在",
                     parent=self,
                     position=InfoBarPosition.TOP
                 )
-                self.update_python() # 刷新基础环境
-
-        else:
+        except Exception as a:
             InfoBar.error(
                 title="错误",
-                content="基础解释器不存在",
+                content=str(a),
                 parent=self,
                 position=InfoBarPosition.TOP
             )
+    # 匹配基础环境
+    def match_python(self):
+        try:
+            env_var = tool.get_env_var_python()
+
+            self.env_python_path_combox.clear()
+
+            for i in env_var:
+                self.env_python_path_combox.addItem(i, SIP.get("Python"))
+
+            self.env_python_path_combox.setCurrentIndex(-1) # 取消选中
+
+            InfoBar.success(
+                title="成功",
+                content=f"匹配到 {len(env_var)} 个解释器",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+        except Exception as a:
+            print(a)
+
+    # 添加环境变量基础环境
+    def add_env_var_python(self):
+        try:
+            # 判断路径是否存在
+            path = self.env_python_path_combox.text()
+            if os.path.exists(path):
+                name = Path(path).name.lower()
+                if "python" in name and name.endswith(".exe"):
+
+                    # 获取python版本
+                    python_v = self.get_python_version_by_cmd(path)
+                    JCP.update(
+                        "config.json",
+                        ["python",os.path.dirname(path)],
+                        {
+                            "name": python_v, # 名称
+                            "path": path, # 解释器路径
+                            "dir": os.path.dirname(path), # 解释器目录
+                            "version": python_v[7:] # 版本
+                        }
+                    )
+                    self.env_python_path_combox.setText("")
+                    InfoBar.success(
+                        title="成功",
+                        content=f"基础环境 {python_v} 添加成功",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+                    self.update_python() # 刷新基础环境
+            else:
+                InfoBar.error(
+                    title="错误",
+                    content="基础解释器不存在",
+                    parent=self,
+                    position=InfoBarPosition.TOP
+                )
+        except Exception as a:
+            InfoBar.error(
+                title="错误",
+                content=str(a),
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+
 
     # 打开添加虚拟环境窗口
     def open_add_venv_window(self):
@@ -1985,7 +2070,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 # 执行两次电源
                 self.power_on_off()
                 self.power_on_off()
-
 
     # 打开添加便携式环境窗口
     def open_add_emb_window(self):
@@ -4009,8 +4093,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
     # 重置下载
     def reset_download(self):
-        self.download_version_combox.setText("")
-        self.download_file_combox.setText("")
+        self.download_version_combox.clear()
+        self.download_file_combox.clear()
         self.direct_link_line.setText("")
 
     # 弹出下载列表
@@ -4260,14 +4344,9 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                             duration=1500
                             )
 
+# a = DotWaveIndeterminateProgressRingDialog("111",self)
+# a.show()
 
-# subprocess.Popen(
-#     f'powershell Start-Process "{self.install_dir_line.text()}" -Verb RunAs',
-#     shell=True
-# ) 自动管理员提权
-
-# a = NeonGlowIndeterminateProgressRingDialog("111",self)
-# a.show() #DualRingIndeterminateProgressRingDialog
 
 
 

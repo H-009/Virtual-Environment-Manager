@@ -1686,7 +1686,7 @@ class UpdateMixin(_MixinBase):
                         JCP.clear()
                     except Exception as a:
                         InfoBar.error(title="错误",
-                                      content=a,
+                                      content=str(a),
                                       parent=self,
                                       position=InfoBarPosition.TOP,
                                       duration=2000
