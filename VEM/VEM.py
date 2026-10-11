@@ -4154,12 +4154,24 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             base = self.install_dir_line.text()
             # 将列表元素用空格连接
             params_str = ' '.join(self.fast_install_batch_list)
-            full_cmd = f'"{base}" {params_str}' if params_str else f'"{base}"'
+            # 固定位置参数
+            if not self.customize_install_path_box.isChecked():
+                full_cmd = f'"{base}" {params_str}' if params_str else f'"{base}"'
+            else:
+                full_cmd = f'"{base}" TargetDir="{self.install_path_line.text()}" {params_str}' if params_str else f'"{base}" TargetDir="{self.install_path_line.text()}"'
 
             self.install_comm_line.setText(full_cmd)
         # 否则清空
         else:
             self.install_comm_line.setText("")
+
+    # 自定义安装路径动态禁用
+    def custom_install_path_dynamic_disabled(self,s):
+
+        if not s:
+            self.install_path_line.setText("")
+
+        self.install_path_line.setEnabled(s)
 
     # 重置快速安装
     def reset_fast_install(self):
@@ -4210,8 +4222,52 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                             duration=1500
                             )
 
-        # a = NeonGlowIndeterminateProgressRingDialog("111",self)
-        # a.show() #DualRingIndeterminateProgressRingDialog
+    # 快速安装
+    def fast_install(self):
+        if not self.install_dir_line.text().endswith(".exe"):
+            InfoBar.error(title="错误",
+                            content=f"安装包不合法",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+        elif not os.path.exists(self.install_dir_line.text()):
+            InfoBar.error(title="错误",
+                            content=f"安装包不存在",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+        elif not self.fast_install_batch_list and self.install_path_line.text()=="":
+            InfoBar.error(title="错误",
+                            content=f"参数为空",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+        else:
+            # 自动自提权 转义路径参数
+            tool.run_backend_self_ext_right_command(f'"{self.install_dir_line.text()}"',
+                                                    f'TargetDir=\"{self.install_path_line.text()}\" '+' '.join(self.fast_install_batch_list),
+                                                    self.install_all_users_box.isChecked())
+            # 重置
+            self.reset_fast_install()
+
+            InfoBar.success(title="成功",
+                            content=f"安装包激活成功",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+
+
+# subprocess.Popen(
+#     f'powershell Start-Process "{self.install_dir_line.text()}" -Verb RunAs',
+#     shell=True
+# ) 自动管理员提权
+
+# a = NeonGlowIndeterminateProgressRingDialog("111",self)
+# a.show() #DualRingIndeterminateProgressRingDialog
 
 
 

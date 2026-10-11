@@ -559,3 +559,25 @@ def run_backend_command(exe_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
+
+# 后台运行自提权cmd
+def run_backend_self_ext_right_command(exe_path, args="", elevate=True, hidden=False):
+    """
+    完全后台启动 exe，不阻塞，不显示控制台窗口（Windows）
+    """
+    # 转义 PowerShell 单引号内的单引号
+    exe_path_ps = exe_path.replace("'", "''")
+
+    if args:
+        args_ps = args.replace("'", "''")
+        cmd = f"powershell -Command Start-Process -FilePath '{exe_path_ps}' -ArgumentList '{args_ps}'"
+    else:
+        cmd = f"powershell -Command Start-Process -FilePath '{exe_path_ps}'"
+
+    if hidden:
+        cmd += ' -WindowStyle Hidden'
+
+    if elevate:
+        cmd += ' -Verb RunAs'
+
+    subprocess.Popen(cmd, shell=True)

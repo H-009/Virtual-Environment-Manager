@@ -1460,8 +1460,10 @@ class UiMixin(_MixinBase):
         self.not_install_tool_scripts_box.stateChanged.connect(lambda s:self.fast_install_command_batch(s,"Include_tools=0"))
         card_grid_layout.addWidget(self.not_install_tool_scripts_box,13,0,1,3)
         self.customize_install_path_box = CheckBox() # 自定义安装位置
+        self.customize_install_path_box.stateChanged.connect(self.custom_install_path_dynamic_disabled)
         self.customize_install_path_box.setText("自定义安装路径")
         self.install_path_line = LineEdit()  # 行输入框
+        self.install_path_line.textChanged.connect(self.update_fast_install_venv_command)
         self.install_path_line.setEnabled(False) # 初始禁用
         card_grid_layout.addWidget(self.customize_install_path_box,14,0,1,3)
         card_grid_layout.addWidget(BodyLabel("安装路径:"), 15,0)
@@ -1472,7 +1474,7 @@ class UiMixin(_MixinBase):
         button_layout = QHBoxLayout()  # 按钮布局
         self.add_existence_install = PrimaryPushButton("安装")
         self.add_existence_install.setFixedSize(100, 30)
-        self.add_existence_install.clicked.connect(self.add_venv)
+        self.add_existence_install.clicked.connect(self.fast_install)
         self.manual_install = PushButton("手动安装")
         self.manual_install.clicked.connect(self.manual_fast_install)
         self.manual_install.setFixedSize(100, 30)
