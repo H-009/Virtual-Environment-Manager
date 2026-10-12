@@ -2371,6 +2371,53 @@ class UiMixin(_MixinBase):
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
 
+        # 备份标题
+        self.setting_view_layout.addWidget(BodyLabel("恢复"))
+        # 恢复默认备份路径卡片
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.Redo,"恢复备份","从备份中恢复","恢复")
+        card.clickedChanged.connect(self.restore_backup)
+        self.setting_view_layout.addWidget(card)
+        # 自动重载池卡片
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.Redo,"自动重载","恢复备份后自动重载池")
+        card.setChecked(self.auto_reload)
+        card.checkedChanged.connect(self.update_auto_reload)
+        self.setting_view_layout.addWidget(card)
+        # 自动退出卡片
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.Redo,"自动退出","恢复备份后自动强制退出")
+        card.setChecked(self.auto_exit)
+        card.checkedChanged.connect(self.update_auto_exit)
+        self.setting_view_layout.addWidget(card)
+
+        # 间隔弹簧
+        self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+        # 同步标题
+        self.setting_view_layout.addWidget(BodyLabel("同步"))
+        # 同步路径卡片
+        card = LayoutSettingCard(MetaverseFluentIcon.DataBaseSync,"同步路径",self.APPDATA_ROAMING)
+        self.setting_view_layout.addWidget(card)
+        # 数据持久化卡片
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.DataBaseSync,"同步本地","从VEM同步到本地","同步")
+        card.clickedChanged.connect(self.sync_loca)
+        self.setting_view_layout.addWidget(card)
+        # 配置同步卡片
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.DataBaseSync,"同步配置","从本地同步到VEM","同步")
+        card.clickedChanged.connect(self.sync_config)
+        self.setting_view_layout.addWidget(card)
+        # 自动备份同步卡片
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.DataBaseSync,"自动备份同步","同步配置时自动备份旧配置")
+        card.setChecked(self.auto_backup_sync)
+        card.checkedChanged.connect(self.update_auto_backup_sync)
+        self.setting_view_layout.addWidget(card)
+        # 同步池卡片
+        card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.DataBaseSync,"同步重载","同步配置时自动同步池")
+        card.setChecked(self.sync_reload)
+        card.checkedChanged.connect(self.update_sync_reload)
+        self.setting_view_layout.addWidget(card)
+
+        # 间隔弹簧
+        self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+
         # 配置标题
         self.setting_view_layout.addWidget(BodyLabel("文件"))
         # 自述文件卡片
@@ -2394,6 +2441,10 @@ class UiMixin(_MixinBase):
         # 落盘池卡片
         card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"落盘池","将配置池保存到配置文件","落盘")
         card.clickedChanged.connect(self.write_disk_pool)
+        self.setting_view_layout.addWidget(card)
+        # 重载池卡片
+        card = LayoutButtonSettingCard(MetaverseFluentIcon.InternalData,"重载池","重新读取配置文件到池","重载")
+        card.clickedChanged.connect(self.overload_disk_pool)
         self.setting_view_layout.addWidget(card)
         # 排序池卡片
         card = LayoutSwitchButtonSettingCard(MetaverseFluentIcon.InternalData,"排序池","打开配置池时排序显示")

@@ -150,6 +150,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.VEM_Version = "v1.17.1"
         self.CMD_Version = "v0.9.0"
 
+        # 配置文件
+        self.config_file = "config.json"
+        # 本地文件夹
+        self.APPDATA_ROAMING = os.getenv('APPDATA')+"\\STD Studio\\Virtual Environment Manager"
+
         # 预制图标
         # 绿色开始
         self.PLAY_SOLID_icon = FluentIcon.PLAY_SOLID.icon(color=QColor("#00ff00"))
@@ -297,6 +302,14 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.demo_mode = JCP.get("config.json", ["setting","demo_mode"], False)
         # 完整备份
         self.full_backup = JCP.get("config.json", ["setting","full_backup"], False)
+        # 自动重载
+        self.auto_reload = JCP.get("config.json", ["setting","auto_reload"], True)
+        # 自动退出
+        self.auto_exit = JCP.get("config.json", ["setting","auto_exit"], False)
+        # 自动备份同步
+        self.auto_backup_sync = JCP.get("config.json", ["setting","auto_backup_sync"], True)
+        # 同步重载
+        self.sync_reload = JCP.get("config.json", ["setting","sync_reload"], True)
         # 排序池
         self.sort_jcp_pool = JCP.get("config.json", ["setting","sort_jcp_pool"], False)
 
@@ -1556,8 +1569,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
             for i in env_var:
                 self.env_python_path_combox.addItem(i, SIP.get("Python"))
-
-            self.env_python_path_combox.setCurrentIndex(-1) # 取消选中
 
             InfoBar.success(
                 title="成功",
@@ -4521,8 +4532,6 @@ if __name__ == "__main__":
 # 配置同步 把配置放到appdata
 
 # 自动保存
-
-# 外部下载重置
 
 # 工具集
 

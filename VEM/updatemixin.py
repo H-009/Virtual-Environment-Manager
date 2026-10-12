@@ -9,6 +9,7 @@ from datetime import datetime
 import psutil
 from MetaverseSDK.MetaverseAPI.Url import UrlBuilder, UrlSynthesizer
 from MetaverseSDK.MetaverseAPI.UrlKey import ContributorKey, RepoKey
+from MetaverseSDK.MetaverseTool.Config import JsonConfigTool
 from MetaverseSDK.MetaverseTool.Config.JsonConfigPool import JCP
 from MetaverseSDK.MetaverseUI.MCore.MAnimation.MWidgetAnimation import MissionBallAnimation
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
@@ -1857,11 +1858,155 @@ class UpdateMixin(_MixinBase):
                           duration=3000
                           )
 
+    # 恢复备份
+    def restore_backup(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择 VEM 备份",
+            self.backup_path,
+            "VEM Backup (*.json.bak);;"
+            "All Files (*.*)"
+        )
+        if path != '':
+            dialog = Dialog("恢复备份","是否立即将当前配置恢复到备份",self)
+            if dialog.exec():
+
+                try:
+                    old = JsonConfigTool.read_json(path)
+                    JsonConfigTool.write_json(self.config_file,old)
+
+                    InfoBar.success(title="成功",
+                                    content=f"备份恢复成功",
+                                    parent=self,
+                                    position=InfoBarPosition.TOP,
+                                    duration=1500
+                                    )
+
+                    if self.auto_reload:
+                        self.overload_disk_pool()
+
+                    if self.auto_exit:
+                        sys.exit()
+                except Exception as a:
+                    InfoBar.error(title="错误",
+                                    content=str(a),
+                                    parent=self,
+                                    position=InfoBarPosition.TOP,
+                                    duration=1500
+                                    )
+
+    # 更新自动重载
+    def update_auto_reload(self,key):
+        self.auto_reload = key
+        JCP.update("config.json", ["setting","auto_reload"], key)
+
+    # 更新自动退出
+    def update_auto_exit(self,key):
+        self.auto_exit = key
+        JCP.update("config.json", ["setting","auto_exit"], key)
+
+    # 同步本地
+    def sync_loca(self):
+
+        if os.path.exists("config.json"):
+            old = JsonConfigTool.read_json("config.json")
+
+            JsonConfigTool.write_json(os.path.join(self.APPDATA_ROAMING,"config.json"),old) # 拼接路径
+
+            InfoBar.success(title="成功",
+                            content=f"配置同步成功",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+        else:
+            InfoBar.error(title="错误",
+                          content="配置不可用",
+                          parent=self,
+                          position=InfoBarPosition.TOP,
+                          duration=2000
+                          )
+
+    # 同步配置
+    def sync_config(self):
+
+        if os.path.exists(os.path.join(self.APPDATA_ROAMING,"config.json")):
+            old = JsonConfigTool.read_json(os.path.join(self.APPDATA_ROAMING,"config.json")) # 拼接路径
+
+            JsonConfigTool.write_json("config.json",old)
+
+            InfoBar.success(title="成功",
+                            content=f"配置同步成功",
+                            parent=self,
+                            position=InfoBarPosition.TOP,
+                            duration=1500
+                            )
+
+            # 备份同步
+            if self.auto_backup_sync:
+                # 自动备份
+                try:
+                    # 获取格式化时间戳
+                    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "-" + datetime.now().strftime("%f")[:3]
+                    file_name = f"config_sync_{timestamp}.json.bak"
+                    file_path = self.backup_path+"\\"+file_name
+
+                    # 目录不存在则创建目录
+                    os.makedirs(self.backup_path, exist_ok=True)
+                    # 复制
+                    shutil.copy("config.json",file_path)
+
+                    InfoBar.success(title="成功",
+                                    content=f"备份保存到 {file_path}",
+                                    parent=self,
+                                    position=InfoBarPosition.BOTTOM_RIGHT,
+                                    duration=1500
+                                    )
+                except Exception as a:
+                    InfoBar.error(title="错误",
+                                  content=str(a),
+                                  parent=self,
+                                  position=InfoBarPosition.BOTTOM_RIGHT,
+                                  duration=3000
+                                  )
+
+            # 同步重载
+            if self.sync_reload:
+                self.overload_disk_pool()
+        else:
+            InfoBar.error(title="错误",
+                          content="没有可用配置",
+                          parent=self,
+                          position=InfoBarPosition.TOP,
+                          duration=2000
+                          )
+
+    # 更新自动备份同步
+    def update_auto_backup_sync(self,key):
+        self.auto_backup_sync = key
+        JCP.update("config.json", ["setting","auto_backup_sync"], key)
+
+    # 更新同步重载
+    def update_sync_reload(self,key):
+        self.sync_reload = key
+        JCP.update("config.json", ["setting","sync_reload"], key)
+
     # 落盘池
     def write_disk_pool(self):
         JCP.save()
         InfoBar.success(title="成功",
                         content=f"配置落盘成功",
+                        parent=self,
+                        position=InfoBarPosition.TOP,
+                        duration=1500
+                        )
+
+    # 重载池
+    def overload_disk_pool(self):
+        JCP.clear() # 清空池
+        JCP.load(self.config_file) # 重载
+        InfoBar.success(title="成功",
+                        content=f"配置重载成功",
                         parent=self,
                         position=InfoBarPosition.TOP,
                         duration=1500

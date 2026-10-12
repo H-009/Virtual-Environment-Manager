@@ -585,16 +585,11 @@ def run_backend_self_ext_right_command(exe_path, args="", elevate=True, hidden=F
 # 获取环境变量的python解释器
 def get_env_var_python():
     result = subprocess.run(
-        [
-            "powershell",
-            "-NoProfile",
-            "-Command",
-            "cmd /c where python"
-        ],
+        ["where", "python"],
         capture_output=True,
         text=True,
-        encoding="gbk"
+        encoding="gbk",
+        creationflags=subprocess.CREATE_NO_WINDOW
     )
-    paths = [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
-    return paths
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
