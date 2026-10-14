@@ -17,7 +17,7 @@ from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QDesktopServices
+from PyQt5.QtGui import QColor, QDesktopServices
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem,QFileDialog
 from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject, QUrl
 from pathvalidate import is_valid_filepath
@@ -26,9 +26,9 @@ from qfluentwidgets import FluentWindow, setTheme, FluentIcon, NavigationItemPos
     FluentTranslator, LineEdit,SplashScreen, Flyout, FlyoutAnimationType, FlyoutView, InfoBadge, InfoBadgePosition
 
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressRingDialog import \
-    CometTailIndeterminateProgressRingDialog, \
-    FixedLengthIndeterminateProgressRingDialog, SegmentedArcIndeterminateProgressRingDialog, \
-    IndeterminateProgressRingDialog, DualRingIndeterminateProgressRingDialog, DotWaveIndeterminateProgressRingDialog, \
+    CometTailIndeterminateProgressRingDialog, FixedLengthIndeterminateProgressRingDialog, \
+    SegmentedArcIndeterminateProgressRingDialog, IndeterminateProgressRingDialog, \
+    DualRingIndeterminateProgressRingDialog, DotWaveIndeterminateProgressRingDialog, \
     NeonGlowIndeterminateProgressRingDialog
 
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MProgressBarDialog import ProgressBarDialog
@@ -220,6 +220,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.enable_manual_update_CMD_switch = JCP.get("config.json", ["setting","manual_CMD"], False)
         # 启用CMD重启
         self.enable_cmd_reload_CMD_switch = JCP.get("config.json", ["setting","reload_CMD"], False)
+        # 启用CMD弹出
+        self.enable_cmd_pop_up_CMD_switch = JCP.get("config.json", ["setting","pop_up"], False)
         # 启用CMD全屏
         self.enable_cmd_full_screen_switch = JCP.get("config.json", ["setting","full_screen_CMD"], False)
         # 关机保护
@@ -560,6 +562,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.preset_scripts_button.setEnabled(False)
                 # 禁用手动更新按钮
                 self.manual_update_button.setEnabled(False)
+                # 禁用弹出按钮
+                self.cmd_pop_up_button.setEnabled(False)
                 # 禁用重启按钮
                 self.cmd_reload_button.setEnabled(False)
                 # 禁用全屏按钮
@@ -579,6 +583,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.preset_scripts_button.setEnabled(False)
                 # 禁用手动更新按钮
                 self.manual_update_button.setEnabled(False)
+                # 禁用弹出按钮
+                self.cmd_pop_up_button.setEnabled(False)
                 # 禁用重启按钮
                 self.cmd_reload_button.setEnabled(False)
                 # 禁用全屏按钮
@@ -599,6 +605,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.preset_scripts_button.setEnabled(False)
                 # 禁用手动更新按钮
                 self.manual_update_button.setEnabled(False)
+                # 禁用弹出按钮
+                self.cmd_pop_up_button.setEnabled(False)
                 # 禁用重启按钮
                 self.cmd_reload_button.setEnabled(False)
                 # 禁用全屏按钮
@@ -616,6 +624,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             if self.enable_manual_update_CMD_switch:
                 # 解禁手动更新按钮
                 self.manual_update_button.setEnabled(True)
+
+            # 启用弹出
+            if self.enable_cmd_pop_up_CMD_switch:
+                # 解禁弹出按钮
+                self.cmd_pop_up_button.setEnabled(True)
 
             # 启用CMD重启
             if self.cmd_reload_button:
@@ -1041,20 +1054,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     self.console_list.addItem(cmd_name)
                     # 选中最后项 也就是新加入项
                     self.console_list.setCurrentRow(self.console_list.count() - 1)
-                    # 手动触发部分选中函数
-                    # 启用手动更新
-                    if self.enable_manual_update_CMD_switch:
-                        # 解禁手动更新按钮
-                        self.console_manual_update_button.setEnabled(True)
-                    # 启用CMD重启
-                    if self.enable_cmd_reload_CMD_switch:
-                        # 解禁重启按钮
-                        self.console_reload_button.setEnabled(True)
-                    # 启用CMD全屏
-                    if self.enable_cmd_full_screen_switch:
-                        # 解禁全屏按钮
-                        self.console_full_screen_button.setEnabled(True)
-
                     # 绑定意外退出信号
                     self.select_console.monitor_thread.running_changed.connect(lambda state: self.console_unexpected_exit(self.console_list.currentItem().text(), state, self.select_console))
 
@@ -1180,21 +1179,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     # 选择控制台列表项目
     def select_console_item(self):
         try:
-            # 启用手动更新
-            if self.enable_manual_update_CMD_switch:
-                # 解禁手动更新按钮
-                self.console_manual_update_button.setEnabled(True)
-
-            # 启用重启
-            if self.enable_cmd_reload_CMD_switch:
-                # 解禁手动更新按钮
-                self.console_reload_button.setEnabled(True)
-
-            # 启用CMD全屏
-            if self.enable_cmd_full_screen_switch:
-                # 解禁全屏按钮
-                self.console_full_screen_button.setEnabled(True)
-
             item = self.console_list.currentItem()
 
             # 存在
@@ -1209,12 +1193,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             # 如果当前CMD不存在
             else:
                 self.console_stackedwidget.setCurrentIndex(0)
-                # 禁用手动更新按钮
-                self.console_manual_update_button.setEnabled(True)
-                # 禁用重启按钮
-                self.console_reload_button.setEnabled(True)
-                # 禁用全屏按钮
-                self.console_full_screen_button.setEnabled(True)
         except Exception as a:
             print(a)
 
@@ -1286,6 +1264,21 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 parent=self,
                 position=InfoBarPosition.TOP
             )
+
+    # 弹出控制台
+    def pop_up_console(self):
+        item = self.venv_tree.currentItem()
+        # 没有控制台存在
+        if not self.console_obj_dict != {}:
+            InfoBar.warning(
+                title="警告",
+                content=f"CMD未开机无法弹出",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+        else:
+            # 弹出
+            self.select_console.pop_up()
 
     # 重启控制台
     def reload_console(self):
@@ -2081,6 +2074,21 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 # 执行两次电源
                 self.power_on_off()
                 self.power_on_off()
+
+    # 弹出CMD
+    def pop_up_CMD(self):
+        item = self.venv_tree.currentItem()
+        # 按钮状态是开机 并且选中不为空
+        if self.switch_power_bool is True and item is not None:
+            InfoBar.warning(
+                title="警告",
+                content=f"CMD未开机无法弹出",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+        elif self.switch_power_bool is False and item is not None:
+            # 弹出
+            self.select_cmd.pop_up()
 
     # 打开添加便携式环境窗口
     def open_add_emb_window(self):
@@ -4017,6 +4025,10 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 if self.enable_manual_update_CMD_switch:
                     # 解禁手动更新按钮
                     self.manual_update_button.setEnabled(True)
+                # 启用弹出
+                if self.enable_cmd_pop_up_CMD_switch:
+                    # 解禁弹出按钮
+                    self.cmd_pop_up_button.setEnabled(True)
                 # 启用CMD全屏
                 if self.enable_cmd_full_screen_switch:
                     # 解禁全屏按钮

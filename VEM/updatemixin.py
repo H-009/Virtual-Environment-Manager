@@ -672,6 +672,34 @@ class UpdateMixin(_MixinBase):
             # 立即禁用
             self.cmd_reload_button.setEnabled(False)
 
+    # 更新CMD弹出
+    def update_pop_up_CMD(self, key):
+        # 开启
+        if key:
+            InfoBar.info(
+                title="已开启",
+                content="CMD弹出已开启",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_cmd_pop_up_CMD_switch = True
+            JCP.update("config.json", ["setting","pop_up"], True)
+            # 如果电源按钮未禁用 则启用
+            if self.cmd_power_button.isEnabled():
+                self.cmd_pop_up_button.setEnabled(True)
+
+        else:
+            InfoBar.info(
+                title="已关闭",
+                content="CMD弹出已关闭",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_cmd_pop_up_CMD_switch = False
+            JCP.update("config.json", ["setting","pop_up"], False)
+            # 立即禁用
+            self.cmd_pop_up_button.setEnabled(False)
+
     # 更新云母效果
     def update_mica_effect(self,key):
         self.setMicaEffectEnabled(key)
