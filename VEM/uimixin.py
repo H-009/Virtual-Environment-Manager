@@ -1953,6 +1953,12 @@ class UiMixin(_MixinBase):
         card.setChecked(self.enable_double_power_switch)
         card.checkedChanged.connect(self.update_double_power)
         self.setting_view_layout.addWidget(card)
+        # CMD弹出坐标
+        card = LayoutComboBoxSettingCard(FluentIcon.COMMAND_PROMPT,"CMD弹出坐标","CMD弹出时的坐标位置")
+        card.addItems(["默认坐标","屏幕坐标"])
+        card.setCurrentText(self.CMD_pop_up_pos)
+        card.activated.connect(self.update_CMD_pop_up_pos)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))

@@ -931,6 +931,15 @@ class UpdateMixin(_MixinBase):
             self.enable_double_power_switch = False
             JCP.update("config.json", ["setting","enable_double_power_switch"], False)
 
+    # 更新CMD弹出坐标
+    def update_CMD_pop_up_pos(self,index):
+        if index == 0:
+            self.CMD_pop_up_pos = "默认坐标"
+        elif index == 1:
+            self.CMD_pop_up_pos = "屏幕坐标"
+        JCP.update("config.json", ["setting","CMD_pop_up_pos"], self.CMD_pop_up_pos)
+
+
     # 更新最大上限
     def update_maximum_limit(self,text):
         if len(text) < 4000:

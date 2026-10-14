@@ -254,6 +254,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.allow_overlay_callback_duration = JCP.get("config.json", ["setting","allow_overlay_callback_duration"], False)
         # 双击执行电源
         self.enable_double_power_switch = JCP.get("config.json", ["setting","enable_double_power_switch"], True)
+        # 弹出坐标
+        self.CMD_pop_up_pos = JCP.get("config.json", ["setting","CMD_pop_up_pos"], "默认坐标")
         # 启动动画时长
         self.startup_animation_duration = JCP.get("config.json", ["setting","startup_animation_duration"], "常规-1000ms")
         # 启动图标大小
@@ -1277,8 +1279,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 position=InfoBarPosition.TOP
             )
         else:
-            # 弹出
-            self.select_console.pop_up()
+            if self.CMD_pop_up_pos == "屏幕坐标":
+                # 弹出
+                self.select_console.pop_up(True)
+            else:
+                self.select_console.pop_up()
 
     # 重启控制台
     def reload_console(self):
@@ -2087,8 +2092,11 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 position=InfoBarPosition.TOP
             )
         elif self.switch_power_bool is False and item is not None:
-            # 弹出
-            self.select_cmd.pop_up()
+            if self.CMD_pop_up_pos == "屏幕坐标":
+                # 弹出
+                self.select_cmd.pop_up(True)
+            else:
+                self.select_cmd.pop_up()
 
     # 打开添加便携式环境窗口
     def open_add_emb_window(self):
