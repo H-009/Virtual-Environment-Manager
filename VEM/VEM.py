@@ -148,7 +148,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         # 版本
         self.VEM_Version = "v1.17.1"
-        self.CMD_Version = "v0.9.0"
+        self.CMD_Version = "v0.9.5"
 
         # 配置文件
         self.config_file = "config.json"
@@ -633,7 +633,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 self.cmd_pop_up_button.setEnabled(True)
 
             # 启用CMD重启
-            if self.cmd_reload_button:
+            if self.enable_cmd_reload_CMD_switch:
                 # 解禁重启按钮
                 self.cmd_reload_button.setEnabled(True)
 
@@ -1486,17 +1486,26 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     # 获取python版本
     def get_python_version_by_cmd(self,python_exe: str):
         try:
-            out = subprocess.check_output(
+            proc = subprocess.run(
                 [python_exe, "--version"],
-                stderr=subprocess.STDOUT,
+                capture_output=True,
                 text=True,
-                timeout=2
+                timeout=2,
+                check=True,
             )
-            return out.strip()
-        except Exception as a:
+            return (proc.stdout or proc.stderr).strip()
+        except subprocess.TimeoutExpired as e:
+            InfoBar.warning(
+                title="超时",
+                content=str(e),
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            return "超时"
+        except Exception as e:
             InfoBar.warning(
                 title="警告",
-                content=a,
+                content=str(e),
                 parent=self,
                 position=InfoBarPosition.TOP
             )
@@ -1558,6 +1567,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 parent=self,
                 position=InfoBarPosition.TOP
             )
+
     # 匹配基础环境
     def match_python(self):
         try:
@@ -4556,3 +4566,5 @@ if __name__ == "__main__":
 # 工具集
 
 # 配置模式与立即克隆配置到同步文件夹
+
+# 安装成功 匹配成功视为异步操作
