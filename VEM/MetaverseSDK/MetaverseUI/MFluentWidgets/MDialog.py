@@ -2,7 +2,7 @@ import webbrowser
 from qtpy.QtCore import Signal, Qt, QTimer
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QSizePolicy, QHBoxLayout, QFileDialog,QHeaderView, QTableWidgetItem
 from qfluentwidgets import BodyLabel, SingleDirectionScrollArea, SimpleCardWidget, FluentStyleSheet, LineEdit, TextEdit, \
-    ToolButton, FluentIcon, Dialog, TextBrowser, TableWidget, HyperlinkButton
+    ToolButton, FluentIcon, Dialog, TextBrowser, TableWidget, HyperlinkButton, ComboBox
 from qfluentwidgets.components.dialog_box.dialog import Ui_MessageBox
 from qframelesswindow import FramelessDialog
 

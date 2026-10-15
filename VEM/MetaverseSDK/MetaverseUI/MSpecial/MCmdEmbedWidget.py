@@ -222,6 +222,71 @@ class CmdEmbedWidget(QWidget):
 
         self._cmd_full_screen = True
 
+    def pop_up(self, use_saved_pos=False):
+        """
+        将嵌入的 CMD 弹出
+
+        :param use_saved_pos: True=显示到记录的屏幕位置, False=显示到默认位置(0,0)
+        """
+        if not self.cmd_hwnd:
+            return
+
+        hwnd = self.cmd_hwnd
+
+        if use_saved_pos:
+            # 用弹出前记录的屏幕位置
+            rect = win32gui.GetWindowRect(hwnd)
+            screen_x, screen_y = rect[0], rect[1]
+            width = rect[2] - rect[0]
+            height = rect[3] - rect[1]
+        else:
+            # 默认位置 (0,0) + 默认尺寸
+            screen_x, screen_y = 0, 0
+            width, height = 800, 600
+
+        # ★ 关键：先移到屏幕外不可见区域
+        win32gui.SetWindowPos(
+            hwnd, None,
+            -32000, -32000, 0, 0,
+            win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_HIDEWINDOW
+        )
+
+        # 锁重绘
+        win32gui.SendMessage(hwnd, win32con.WM_SETREDRAW, 0, 0)
+
+        # 脱离父窗口
+        win32gui.SetParent(hwnd, None)
+
+        # 恢复样式
+        normal_style = (
+                win32con.WS_OVERLAPPEDWINDOW
+                | win32con.WS_VISIBLE
+                | win32con.WS_CLIPCHILDREN
+        )
+        win32gui.SetWindowLong(hwnd, win32con.GWL_STYLE, normal_style)
+
+        normal_ex_style = (
+                win32con.WS_EX_WINDOWEDGE
+                | win32con.WS_EX_LEFT
+        )
+        win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, normal_ex_style)
+
+        # 移回正确位置 + 显示（一次性）
+        win32gui.SetWindowPos(
+            hwnd,
+            win32con.HWND_TOP,
+            screen_x,
+            screen_y,
+            width,
+            height,
+            win32con.SWP_SHOWWINDOW | win32con.SWP_FRAMECHANGED
+        )
+
+        # 解锁
+        win32gui.SendMessage(hwnd, win32con.WM_SETREDRAW, 1, 0)
+        win32gui.InvalidateRect(hwnd, None, True)
+        win32gui.UpdateWindow(hwnd)
+
     def resize_cmd(self):
         if self.cmd_hwnd:
             win32gui.MoveWindow(

@@ -5,7 +5,8 @@ from qfluentwidgets.components.dialog_box.dialog import Ui_MessageBox
 from qframelesswindow import FramelessDialog
 
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressRing import FixedLengthIndeterminateProgressRing, \
-    CometTailIndeterminateProgressRing, MultipleArcsIndeterminateProgressRing, SegmentedArcIndeterminateProgressRing
+    CometTailIndeterminateProgressRing, MultipleArcsIndeterminateProgressRing, SegmentedArcIndeterminateProgressRing, \
+    DualRingIndeterminateProgressRing, DotWaveIndeterminateProgressRing, NeonGlowIndeterminateProgressRing
 
 
 # 不确定进度环对话框
@@ -189,6 +190,120 @@ class SegmentedArcIndeterminateProgressRingDialog(FramelessDialog, Ui_MessageBox
         v_layout.addLayout(h)
         h2 = QHBoxLayout()
         spinner = SegmentedArcIndeterminateProgressRing()
+        h2.addWidget(spinner)
+        spinner.setFixedSize(150, 150)
+
+        v_layout.addLayout(h2)
+        self.textLayout.addLayout(v_layout)
+
+        FluentStyleSheet.DIALOG.apply(self)
+
+    def keyPressEvent(self, event):
+        event.accept()  # 屏蔽按键
+        return
+
+# 双环不确定进度环对话框
+class DualRingIndeterminateProgressRingDialog(FramelessDialog, Ui_MessageBox):
+    yesSignal = Signal()
+    cancelSignal = Signal()
+
+    def __init__(self, title: str, parent=None):
+        super().__init__(parent=parent)
+        self._setUpUi(title, title, self)
+        self.setModal(True)
+        self.setResizeEnabled(False)
+        self.resize(500, 400)
+        self.titleBar.hide()
+
+        self.buttonGroup.deleteLater()
+        self.titleLabel.hide()
+        self.contentLabel.hide()
+
+        v_layout = QVBoxLayout()
+        v_layout.setSpacing(50)
+        h = QHBoxLayout()
+        self.label = TitleLabel(title)
+        self.label.setFixedHeight(40)
+        h.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        v_layout.addLayout(h)
+        h2 = QHBoxLayout()
+        spinner = DualRingIndeterminateProgressRing()
+        h2.addWidget(spinner)
+        spinner.setFixedSize(150, 150)
+
+        v_layout.addLayout(h2)
+        self.textLayout.addLayout(v_layout)
+
+        FluentStyleSheet.DIALOG.apply(self)
+
+    def keyPressEvent(self, event):
+        event.accept()  # 屏蔽按键
+        return
+
+# 等距点阵波浪不确定进度环对话框
+class DotWaveIndeterminateProgressRingDialog(FramelessDialog, Ui_MessageBox):
+    yesSignal = Signal()
+    cancelSignal = Signal()
+
+    def __init__(self, title: str, parent=None):
+        super().__init__(parent=parent)
+        self._setUpUi(title, title, self)
+        self.setModal(True)
+        self.setResizeEnabled(False)
+        self.resize(500, 400)
+        self.titleBar.hide()
+
+        self.buttonGroup.deleteLater()
+        self.titleLabel.hide()
+        self.contentLabel.hide()
+
+        v_layout = QVBoxLayout()
+        v_layout.setSpacing(50)
+        h = QHBoxLayout()
+        self.label = TitleLabel(title)
+        self.label.setFixedHeight(40)
+        h.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        v_layout.addLayout(h)
+        h2 = QHBoxLayout()
+        spinner = DotWaveIndeterminateProgressRing()
+        h2.addWidget(spinner)
+        spinner.setFixedSize(150, 150)
+
+        v_layout.addLayout(h2)
+        self.textLayout.addLayout(v_layout)
+
+        FluentStyleSheet.DIALOG.apply(self)
+
+    def keyPressEvent(self, event):
+        event.accept()  # 屏蔽按键
+        return
+
+# 霓虹脉冲发光不确定进度环对话框
+class NeonGlowIndeterminateProgressRingDialog(FramelessDialog, Ui_MessageBox):
+    yesSignal = Signal()
+    cancelSignal = Signal()
+
+    def __init__(self, title: str, parent=None):
+        super().__init__(parent=parent)
+        self._setUpUi(title, title, self)
+        self.setModal(True)
+        self.setResizeEnabled(False)
+        self.resize(500, 400)
+        self.titleBar.hide()
+
+        self.buttonGroup.deleteLater()
+        self.titleLabel.hide()
+        self.contentLabel.hide()
+
+        v_layout = QVBoxLayout()
+        v_layout.setSpacing(50)
+        h = QHBoxLayout()
+        self.label = TitleLabel(title)
+        self.label.setFixedHeight(40)
+        h.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        v_layout.addLayout(h)
+        h2 = QHBoxLayout()
+        spinner = NeonGlowIndeterminateProgressRing()
         h2.addWidget(spinner)
         spinner.setFixedSize(150, 150)
 

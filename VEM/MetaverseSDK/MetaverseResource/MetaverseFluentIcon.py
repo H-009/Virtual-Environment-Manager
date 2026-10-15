@@ -17,6 +17,11 @@ class MetaverseFluentIcon(FluentIconBase, Enum):
     Down = "Down"
     Left = "Left"
     Right = "Right"
+    Undo = "Undo"
+    Redo = "Redo"
+    DataBaseSync = "DataBaseSync"
+    NewAfferent = "NewAfferent"
+    NewEfferent = "NewEfferent"
 
     def path(self, theme=Theme.AUTO):
         return f":/MetaverseFluentIcon/{self.value}_{getIconColor(theme)}.svg"

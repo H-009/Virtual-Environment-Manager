@@ -538,3 +538,35 @@ def read_json(file_path: str, default: Any = None) -> Any:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
         return default
+
+
+def write_json(file_path: str, data: Any, default: Any = None) -> Any:
+    """
+    将数据写入 JSON 文件。
+
+    示例：
+        write_json("config.json", {"key": "value"})
+        write_json("config.json", data, default=False)
+
+    参数：
+        file_path: JSON 文件路径
+        data:      要写入的数据（dict / list 等可序列化对象）
+        default:   写入失败时的返回值
+
+    返回：
+        成功返回 True，失败返回 default
+    """
+    if not isinstance(file_path, str) or not file_path:
+        return default
+
+    try:
+        # 确保父目录存在（仅当有目录部分时）
+        dir_name = os.path.dirname(file_path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except (TypeError, OSError) as e:
+        return default

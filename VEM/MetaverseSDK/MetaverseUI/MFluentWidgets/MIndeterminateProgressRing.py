@@ -652,23 +652,36 @@ class DualRingIndeterminateProgressRing(QProgressBar):
         self.darkBackgroundColor = QColor(255, 255, 255, 0)
         self._lightBarColor = QColor()
         self._darkBarColor = QColor()
+
         self._strokeWidth = 5
         self._outerRadius = 68
         self._innerRadius = 44
+
+        # 角度
         self._outerAngle = 0
         self._innerAngle = 0
-        self._outerSpeed = 4
-        self._innerSpeed = -5  # 反向
 
-        self._timer = QTimer(self)
-        self._timer.timeout.connect(self._tick)
-        self._timer.setInterval(16)
+        # 速度
+        self._outerSpeed = 4
+        self._innerSpeed = -5
+
+        # ===== 两个独立计时器 =====
+        self._timerOuter = QTimer(self)
+        self._timerInner = QTimer(self)
+
+        self._timerOuter.timeout.connect(self._tickOuter)
+        self._timerInner.timeout.connect(self._tickInner)
+
+        self._timerOuter.setInterval(12)
+        self._timerInner.setInterval(10)
 
         outer = self._outerRadius + self._strokeWidth / 2 + 2
         self.setFixedSize(int(outer * 2), int(outer * 2))
 
         if start:
             self.start()
+
+    # ---------- 属性 ----------
 
     @Property(int)
     def outerAngle(self):
@@ -697,16 +710,30 @@ class DualRingIndeterminateProgressRing(QProgressBar):
 
     strokeWidth = Property(int, getStrokeWidth, setStrokeWidth)
 
+    # ---------- 控制 ----------
+
     def start(self):
         self._outerAngle = 0
         self._innerAngle = 0
-        self._timer.start()
+        self._timerOuter.start()
+        self._timerInner.start()
 
     def stop(self):
-        self._timer.stop()
+        self._timerOuter.stop()
+        self._timerInner.stop()
         self._outerAngle = 0
         self._innerAngle = 0
         self.update()
+
+    def startOuterOnly(self):
+        """只启动外环（示例）"""
+        self._timerOuter.start()
+
+    def startInnerOnly(self):
+        """只启动内环（示例）"""
+        self._timerInner.start()
+
+    # ---------- 颜色 ----------
 
     def lightBarColor(self):
         return self._lightBarColor if self._lightBarColor.isValid() else themeColor()
@@ -724,10 +751,17 @@ class DualRingIndeterminateProgressRing(QProgressBar):
         self.darkBackgroundColor = QColor(dark)
         self.update()
 
-    def _tick(self):
+    # ---------- tick ----------
+
+    def _tickOuter(self):
         self._outerAngle = (self._outerAngle + self._outerSpeed) % 360
+        self.update()
+
+    def _tickInner(self):
         self._innerAngle = (self._innerAngle + self._innerSpeed) % 360
         self.update()
+
+    # ---------- 绘制 ----------
 
     def paintEvent(self, e):
         painter = QPainter(self)
@@ -746,7 +780,7 @@ class DualRingIndeterminateProgressRing(QProgressBar):
                 painter.setPen(pen)
                 painter.drawArc(rc, 0, 360 * 16)
 
-        # 外环：顺时针
+        # 外环
         c_outer = QColor(base)
         c_outer.setAlpha(220)
         rc_outer = QRectF(cx - self._outerRadius, cy - self._outerRadius,
@@ -756,7 +790,7 @@ class DualRingIndeterminateProgressRing(QProgressBar):
         painter.setPen(pen)
         painter.drawArc(rc_outer, (-self._outerAngle + 180) * 16, -90 * 16)
 
-        # 内环：逆时针，略细
+        # 内环
         c_inner = QColor(base)
         c_inner.setAlpha(160)
         pen_inner = QPen(c_inner, max(2, self._strokeWidth - 2))
