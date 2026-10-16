@@ -18,7 +18,7 @@ from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
 from PyQt5.QtGui import QColor, QDesktopServices
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem,QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QFileDialog, QCompleter
 from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject, QUrl
 from pathvalidate import is_valid_filepath
 from qfluentwidgets import FluentWindow, setTheme, FluentIcon, NavigationItemPosition, setThemeColor, SimpleCardWidget,\
@@ -274,6 +274,10 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.resource_site = JCP.get("config.json", ["setting","resource_site"], UrlBuilder.PythonAllVersions())
         # 站点同步
         self.site_sync = JCP.get("config.json", ["setting","site_sync"], False)
+        # 补全器
+        self.completor = JCP.get("config.json", ["setting","completor"], True)
+        # 最大补全项
+        self.max_completor_item = JCP.get("config.json", ["setting","max_completor_item"], "默认")
         # 播放音效
         self.play_sound = JCP.get("config.json", ["setting","play_sound"], False)
         # 警告音效
@@ -1634,7 +1638,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 parent=self,
                 position=InfoBarPosition.TOP
             )
-
 
     # 打开添加虚拟环境窗口
     def open_add_venv_window(self):
@@ -4547,14 +4550,7 @@ if __name__ == "__main__":
 # Window Style Extended Window Edge
 # 立体边框（你已去掉）
 
-# items = ['shoko', '西宫硝子', '宝多六花', '小鸟游六花']
-# completer = QCompleter(items, self.download_version_combox)
-#
-# # 设置显示的选项数
-# completer.setMaxVisibleItems(10)
-#
-# # 设置补全器
-# self.download_version_combox.setCompleter(completer)
+
 # # 补全
 
 # 更换编辑下拉框 默认回车添加新控件
@@ -4572,3 +4568,5 @@ if __name__ == "__main__":
 # 配置模式与立即克隆配置到同步文件夹
 
 # 安装成功 匹配成功视为异步操作
+
+# 克隆虚拟环境 备份虚拟环境

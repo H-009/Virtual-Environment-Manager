@@ -589,7 +589,8 @@ def get_env_var_python():
         capture_output=True,
         text=True,
         encoding="gbk",
-        creationflags=subprocess.CREATE_NO_WINDOW
+        creationflags=subprocess.CREATE_NO_WINDOW,
+        env=os.environ
     )
 
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]

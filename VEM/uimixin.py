@@ -1316,6 +1316,7 @@ class UiMixin(_MixinBase):
         download_version_layout.addWidget(BodyLabel("版本:"))
         self.download_version_combox = EditableComboBox()  # 可编辑下拉框
         self.download_version_combox.setPlaceholderText("3.10.1")
+        self.download_version_combox.textChanged.connect(self.update_download_direct_link)
         download_version_layout.addWidget(self.download_version_combox,QSizePolicy.Expanding) # 吃掉剩下
         self.download_version_update_button = ToolButton()
         self.download_version_update_button.setIcon(FluentIcon.SYNC)
@@ -2137,6 +2138,17 @@ class UiMixin(_MixinBase):
         card.setChecked(self.site_sync)
         card.checkedChanged.connect(self.update_site_sync)
         self.setting_view_layout.addWidget(card)
+        # 补全器卡片
+        card = LayoutSwitchButtonSettingCard(FluentIcon.DOWNLOAD, "补全器", "输入时显示可用补全")
+        card.setChecked(self.completor)
+        card.checkedChanged.connect(self.update_completor)
+        self.setting_view_layout.addWidget(card)
+        # 最大补全项卡片
+        self.max_completor_item_card = LayoutComboBoxSettingCard(FluentIcon.DOWNLOAD,"最大补全项","显示补全时最大显示项数目")
+        self.max_completor_item_card.addItems(["默认","10","15","20","25","30"])
+        self.max_completor_item_card.setCurrentText(self.max_completor_item)
+        self.max_completor_item_card.activated.connect(self.update_max_completor_item)
+        self.setting_view_layout.addWidget(self.max_completor_item_card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))

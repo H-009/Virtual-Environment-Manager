@@ -20,7 +20,7 @@ from MetaverseSDK.MetaverseUI.MCore.MThread.MNetWorker import GetPythonVersions,
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressBarDialog import IndeterminateProgressBarDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QHBoxLayout, QTreeWidgetItem, QListWidgetItem, QFileDialog
+from PyQt5.QtWidgets import QHBoxLayout, QTreeWidgetItem, QListWidgetItem, QFileDialog, QCompleter
 from packaging.version import Version
 from qfluentwidgets import InfoBarPosition, InfoBar, FluentIcon, Dialog, BodyLabel, SimpleCardWidget, EditableComboBox, \
     StateToolTip
@@ -1601,6 +1601,24 @@ class UpdateMixin(_MixinBase):
         self.site_sync = key
         JCP.update("config.json", ["setting","site_sync"], key)
 
+    # 更新补全器
+    def update_completor(self,key):
+        self.completor = key
+        JCP.update("config.json", ["setting","completor"], key)
+
+    # 更新最大补全项
+    def update_max_completor_item(self,index):
+        self.max_completor_item = self.max_completor_item_card.itemText(index)
+        JCP.update("config.json", ["setting","max_completor_item"], self.max_completor_item)
+
+        InfoBar.info(
+            title="通知",
+            content=f"最大补全项更新完成 刷新生效",
+            parent=self,
+            position=InfoBarPosition.TOP,
+            duration=1500
+        )
+
     # 更新下载版本
     def update_download_version(self):
         dialog = IndeterminateProgressBarDialog("获取Python全部版本...", self)
@@ -1624,6 +1642,17 @@ class UpdateMixin(_MixinBase):
 
         self.download_version_combox.clear()
         self.download_version_combox.addItems(v)
+
+        # 补全器
+        if self.completor:
+            completer = QCompleter(v, self.download_version_combox)
+
+            if self.max_completor_item != "默认":
+                # 最大选项数
+                completer.setMaxVisibleItems(int(self.max_completor_item))
+
+            # 设置补全器
+            self.download_version_combox.setCompleter(completer)
 
         InfoBar.success(title="成功",
                       content="版本信息获取成功",
@@ -1670,6 +1699,17 @@ class UpdateMixin(_MixinBase):
         self.download_file_combox.clear()
         self.download_file_combox.addItems(v)
 
+        # 补全器
+        if self.completor:
+            completer = QCompleter(v, self.download_file_combox)
+
+            if self.max_completor_item != "默认":
+                # 最大选项数
+                completer.setMaxVisibleItems(int(self.max_completor_item))
+
+            # 设置补全器
+            self.download_file_combox.setCompleter(completer)
+
         InfoBar.success(title="成功",
                       content="文件信息获取成功",
                       parent=self,
@@ -1678,7 +1718,6 @@ class UpdateMixin(_MixinBase):
                       )
 
         # 播放音效 操作完成音效未禁用
-
         try:
             if self.play_sound and not self.play_sound_operation_completed:
                 BSP.play("OperationCompleted")
@@ -1695,6 +1734,10 @@ class UpdateMixin(_MixinBase):
         # 两个参数不为空时刷新
         if text != "" and text2 != "":
             self.direct_link_line.setText(f"{self.resource_site}{text}/{text2}")
+        elif text != "" and text2 == "":
+            self.direct_link_line.setText(f"{self.resource_site}{text}/")
+        else:
+            self.direct_link_line.setText(f"{self.resource_site}")
 
     # 强制退出
     def force_quit(self):
