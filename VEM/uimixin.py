@@ -57,7 +57,7 @@ class UiMixin(_MixinBase):
         # 顶部弹簧
         vlayout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
 
-        vlayout.addWidget(ImageLabel(BPP.get("VEM"),180,180),alignment=Qt.AlignCenter)
+        vlayout.addWidget(ImageLabel(BPP.get("VEM"),165,180),alignment=Qt.AlignCenter)
         vlayout.addWidget(TitleLabel("Virtual Environment Manager"),alignment=Qt.AlignCenter)
 
         vlayout.addWidget(BodyLabel(f"VEM | 版本 {self.VEM_Version}"),alignment=Qt.AlignCenter)
@@ -1958,6 +1958,11 @@ class UiMixin(_MixinBase):
         card.addItems(["默认坐标","屏幕坐标"])
         card.setCurrentText(self.CMD_pop_up_pos)
         card.activated.connect(self.update_CMD_pop_up_pos)
+        self.setting_view_layout.addWidget(card)
+        # CMD沉底
+        card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT, "CMD沉底", "CMD置于窗口底层")
+        card.setChecked(self.CMD_sink_bottom)
+        card.checkedChanged.connect(self.update_sink_bottom)
         self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧

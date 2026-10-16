@@ -939,6 +939,27 @@ class UpdateMixin(_MixinBase):
             self.CMD_pop_up_pos = "屏幕坐标"
         JCP.update("config.json", ["setting","CMD_pop_up_pos"], self.CMD_pop_up_pos)
 
+    # 更新CMD沉底
+    def update_sink_bottom(self,key):
+        if key:
+            InfoBar.info(
+                title="已开启",
+                content="开启CMD沉底 重启生效",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.CMD_sink_bottom = True
+            JCP.update("config.json", ["setting","CMD_sink_bottom"], True)
+        else:
+            InfoBar.info(
+                title="已关闭",
+                content="禁用CMD沉底 重启生效",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.CMD_sink_bottom = False
+            JCP.update("config.json", ["setting","CMD_sink_bottom"], False)
+
 
     # 更新最大上限
     def update_maximum_limit(self,text):
@@ -1702,38 +1723,47 @@ class UpdateMixin(_MixinBase):
             # 确认
             if w.exec():
 
-                data = JCP.read("config.json")
-                w2 = DangerCountdownDialog(
-                    title='数据安全警告⚠️',
-                    content=f"""是否继续删除配置文件并清空配置池 会丢失全部配置数据!\n当前配置中包含:\n
-                    {len(data["setting"])} 项设置
-                    {len(data["python"])} 个基础环境
-                    {len(data["venv"])} 个虚拟环境
-                    {len(data["emb"])} 个便携式环境
-                    {len(data["pin"])} 个图钉
-                    {len(data["preset_scripts"])} 个预设脚本
-                    {len(data["config"])} 个配置文件""",
-                    parent=self,
-                    countdown_seconds=15,
-                    text="继续删除"
-                )
+                if os.path.exists("config.json"):
+                    data = JCP.read("config.json")
+                    w2 = DangerCountdownDialog(
+                        title='数据安全警告⚠️',
+                        content=f"""是否继续删除配置文件并清空配置池 会丢失全部配置数据!\n当前配置中包含:\n
+                        {len(data["setting"])} 项设置
+                        {len(data["python"])} 个基础环境
+                        {len(data["venv"])} 个虚拟环境
+                        {len(data["emb"])} 个便携式环境
+                        {len(data["pin"])} 个图钉
+                        {len(data["preset_scripts"])} 个预设脚本
+                        {len(data["config"])} 个配置文件""",
+                        parent=self,
+                        countdown_seconds=15,
+                        text="继续删除"
+                    )
 
-                if w2.exec():
-                    try:
-                        os.remove("config.json")
-                        JCP.clear()
-                    except Exception as a:
-                        InfoBar.error(title="错误",
-                                      content=str(a),
-                                      parent=self,
-                                      position=InfoBarPosition.TOP,
-                                      duration=2000
-                                      )
+                    if w2.exec():
+                        try:
+                            os.remove("config.json")
+                            JCP.clear()
+                        except Exception as a:
+                            InfoBar.error(title="错误",
+                                          content=str(a),
+                                          parent=self,
+                                          position=InfoBarPosition.TOP,
+                                          duration=2000
+                                          )
 
-                    dialog = NotificationDialog("通知","配置文件与配置池删除完成\nVEM需要强制退出程序完成新配置更新",self)
-                    dialog.exec()
+                        dialog = NotificationDialog("通知","配置文件与配置池删除完成\nVEM需要强制退出程序完成新配置更新",self)
+                        dialog.exec()
 
-                    sys.exit()
+                        sys.exit()
+
+                else:
+                    InfoBar.warning(title="警告",
+                                  content="配置不存在",
+                                  parent=self,
+                                  position=InfoBarPosition.TOP
+                                  )
+
         else:
             w = NotificationDialog("操作被阻止❌","为了保护配置文件 当前删除操作被配置文件保护阻止\n如果需要删除配置文件\n\n前往👉设置-配置-配置文件保护",self)
             w.exec()

@@ -256,6 +256,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.enable_double_power_switch = JCP.get("config.json", ["setting","enable_double_power_switch"], True)
         # 弹出坐标
         self.CMD_pop_up_pos = JCP.get("config.json", ["setting","CMD_pop_up_pos"], "默认坐标")
+        # CMD沉底
+        self.CMD_sink_bottom = JCP.get("config.json", ["setting","CMD_sink_bottom"], True)
         # 启动动画时长
         self.startup_animation_duration = JCP.get("config.json", ["setting","startup_animation_duration"], "常规-1000ms")
         # 启动图标大小
@@ -727,7 +729,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 cmd = CmdEmbedWidget(
                     self,workdir=pt[0], mode="timer", delay=delay, frequency=frequency,
                     physical_pixels=coordinate_space,
-                    message_delivery=message_delivery
+                    message_delivery=message_delivery,
+                    sink_bottom=self.CMD_sink_bottom,
                 )
                 cmd_card_vlayout.addWidget(cmd)
 
@@ -1044,7 +1047,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                     cmd = CmdEmbedWidget(
                         self,workdir=dir_name, mode="timer", delay=delay, frequency=frequency,
                         physical_pixels=coordinate_space,
-                        message_delivery=message_delivery
+                        message_delivery=message_delivery,
+                        sink_bottom=self.CMD_sink_bottom,
                     )
                     cmd_card_vlayout.addWidget(cmd)
 
