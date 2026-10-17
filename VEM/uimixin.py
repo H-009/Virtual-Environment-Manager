@@ -2280,7 +2280,7 @@ class UiMixin(_MixinBase):
         # 修复标题
         self.setting_view_layout.addWidget(BodyLabel("紧急修复"))
         # 禁止创建原生控件同级窗口卡片
-        self.prohibit_creating_native_control_windows_same_level_card = LayoutSwitchButtonSettingCard(FluentIcon.VPN,"禁止创建原生控件同级窗口","紧急修复FluentWindow窗口拉伸与Dialog和MessageBox焦点统一")
+        self.prohibit_creating_native_control_windows_same_level_card = LayoutSwitchButtonSettingCard(FluentIcon.VPN,"禁止创建原生控件同级窗口","紧急修复FluentWindow窗口拉伸与Dialog焦点统一")
         self.prohibit_creating_native_control_windows_same_level_card.setChecked(self.prohibit_creating_native_control_windows_same_level)
         self.prohibit_creating_native_control_windows_same_level_card.checkedChanged.connect(self.update_prohibit_creating_native_control_windows_same_level)
         self.setting_view_layout.addWidget(self.prohibit_creating_native_control_windows_same_level_card)
