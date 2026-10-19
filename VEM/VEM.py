@@ -34,8 +34,9 @@ from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressRingDialog im
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MProgressBarDialog import ProgressBarDialog
 from MetaverseSDK.MetaverseUI.MFluentWidgets.MProgressRingDialog import ByteProgressRingDialog,ProgressRingDialog
 
-from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import LineDialog,WorkingDirectorySelectLineDialog,LineDictDialog,\
-    NotificationDialog,QuickCommandDialog,TextEditDialog
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MDialog import LineDialog, WorkingDirectorySelectLineDialog, \
+    LineDictDialog, \
+    NotificationDialog, QuickCommandDialog, TextEditDialog, DownloadDialog
 
 from MetaverseSDK.MetaverseUI.MSpecial.MCmdEmbedWidget import CmdEmbedWidget
 
@@ -45,7 +46,7 @@ from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG, Metaverse
 
 import Threads
 import tool
-import objgraph
+# import objgraph
 
 from MetaverseSDK.MetaverseResource.MetaverseFluentIcon import MetaverseFluentIcon
 
@@ -4191,7 +4192,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
         else:
             try:
-                dialog = ProgressBarDialog("下载中...",self)
+                dialog = DownloadDialog("下载中...",self)
+                dialog.cancelSignal.connect(lambda :self.cancel_download(self.download_python_thread))
                 dialog.show()
 
                 url = self.direct_link_line.text()
@@ -4226,6 +4228,17 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         # 播放音效 下载完成音效未禁用
         if self.play_sound and not self.play_sound_download_complete:
             BSP.play("DownloadComplete")
+
+    # 取消下载
+    def cancel_download(self,thread):
+        thread.stop()
+
+        InfoBar.info(title="中断",
+                      content=f"下载被中断",
+                      parent=self,
+                      position=InfoBarPosition.TOP,
+                      duration=1500
+                      )
 
     # 初始化下载器
     def init_download_manager(self):
