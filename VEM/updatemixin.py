@@ -1904,6 +1904,42 @@ class UpdateMixin(_MixinBase):
             self.demo_mode = key
             JCP.update("config.json", ["setting", "demo_mode"], key)
 
+    # 更新自动保存
+    def update_auto_save(self,key):
+        self.auto_save = key
+        JCP.update("config.json", ["setting","auto_save"], key)
+
+        InfoBar.info(
+            title="已关闭",
+            content="更新自动保存完成 重启生效",
+            parent=self,
+            position=InfoBarPosition.TOP,
+            duration=1500
+        )
+
+    # 更新自动保存间隔
+    def update_auto_save_interval(self,index):
+        if index == 0:
+            self.auto_save_interval = "30s"
+        elif index == 1:
+            self.auto_save_interval = "1min"
+        elif index == 2:
+            self.auto_save_interval = "5min"
+        elif index == 3:
+            self.auto_save_interval = "10min"
+        elif index == 4:
+            self.auto_save_interval = "30min"
+        elif index == 5:
+            self.auto_save_interval = "1h"
+        JCP.update("config.json", ["setting","auto_save_interval"],self.auto_save_interval)
+        InfoBar.info(
+            title="通知",
+            content=f"时长以设为 {self.auto_save_interval} 重启生效",
+            parent=self,
+            position=InfoBarPosition.TOP,
+            duration=1500
+        )
+
     # 更新备份路径
     def update_backup_path(self):
         path = QFileDialog.getExistingDirectory(

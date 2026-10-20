@@ -1,9 +1,8 @@
-import shutil
 import time
 from pathlib import Path
 
 import requests
-from PyQt5.QtCore import QThread, pyqtSignal, QObject, Qt, QElapsedTimer
+from PyQt5.QtCore import QThread, pyqtSignal, QObject, Qt, QElapsedTimer, QTimer
 from typing import List, Tuple, Dict
 
 import tool
@@ -325,8 +324,7 @@ class DownloadThread(QThread):
             save_path = Path(self.save_dir) / self.filename
             save_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with requests.get(
-                self.url, stream=True, timeout=30) as r:
+            with requests.get(self.url, stream=True, timeout=30) as r:
                 if r.status_code in (403, 404, 429):
                     raise requests.HTTPError(
                         f"{r.status_code} {r.reason} for url: {self.url}"
@@ -549,3 +547,77 @@ class DownloadManager(QObject):
 
         # 再调度下一个
         self._try_start()
+
+class TickTimerThread(QThread):
+    elapsed = pyqtSignal(int)
+    timeout = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._threshold_ms = 0
+        self._accumulated_ms = 0
+        self._running = False
+        self._timer = None  # ⭐ 不在主线程构造
+
+    def start_timer(self, threshold_ms: int):
+        if threshold_ms <= 0:
+            return
+        self._threshold_ms = threshold_ms
+        self._accumulated_ms = 0
+        self._running = True
+        if not self.isRunning():
+            self.start()
+
+    def restart(self, threshold_ms: int = None):
+        if threshold_ms is not None:
+            self._threshold_ms = threshold_ms
+        self._accumulated_ms = 0
+
+    def pause(self):
+        self._running = False
+
+    def resume(self):
+        self._running = True
+
+    def stop(self):
+        self._running = False
+        self.quit()
+
+    def quit_and_delete(self):
+        if self.isRunning():
+            self.stop()
+            self.wait(2000)
+        try:
+            self.elapsed.disconnect()
+            self.timeout.disconnect()
+        except TypeError:
+            pass
+        self.deleteLater()
+
+    # ---------- 关键修复在这里 ----------
+
+    def run(self):
+        # ⭐ timer 必须在子线程内部创建，才会归属当前线程
+        self._timer = QTimer()
+        self._timer.setInterval(50)
+        self._timer.timeout.connect(self._tick)
+        self._timer.start()
+
+        self.exec()  # 启动子线程事件循环
+
+        # 线程退出后清理 timer
+        self._timer.stop()
+        self._timer.deleteLater()
+        self._timer = None
+
+    def _tick(self):
+        if not self._running or self._threshold_ms <= 0:
+            return
+
+        self._accumulated_ms += 50
+        self.elapsed.emit(self._accumulated_ms)
+
+        if self._accumulated_ms >= self._threshold_ms:
+            self.timeout.emit()
+            # 消除漂移
+            self._accumulated_ms %= self._threshold_ms

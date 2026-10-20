@@ -2377,6 +2377,17 @@ class UiMixin(_MixinBase):
         card.setChecked(self.demo_mode)
         card.checkedChanged.connect(self.update_demo_mode)
         self.setting_view_layout.addWidget(card)
+        # 自动保存卡片
+        card = LayoutSwitchButtonSettingCard(FluentIcon.SETTING,"自动保存","一段时间过后自动将池落盘")
+        card.setChecked(self.auto_save)
+        card.checkedChanged.connect(self.update_auto_save)
+        self.setting_view_layout.addWidget(card)
+        # 自动保存间隔卡片
+        card = LayoutComboBoxSettingCard(FluentIcon.SETTING,"自动保存间隔","自动将池落盘间隔时长")
+        card.addItems(["30s","1min","5min","10min","30min","1h"])
+        card.setCurrentText(self.auto_save_interval)
+        card.activated.connect(self.update_auto_save_interval)
+        self.setting_view_layout.addWidget(card)
         # 强制退出卡片
         card = LayoutDangerButtonSettingCard(FluentIcon.SETTING,"强制退出","放弃本次保存强制退出程序","强制退出")
         card.clickedChanged.connect(self.force_quit)

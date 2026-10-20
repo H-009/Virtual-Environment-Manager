@@ -311,6 +311,10 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.config_file_protect = JCP.get("config.json", ["setting","config_file_protect"], True)
         # 演示模式
         self.demo_mode = JCP.get("config.json", ["setting","demo_mode"], False)
+        # 自动保存
+        self.auto_save = JCP.get("config.json", ["setting","auto_save"], True)
+        # 自动保存间隔
+        self.auto_save_interval = JCP.get("config.json", ["setting","auto_save_interval"], "30min")
         # 完整备份
         self.full_backup = JCP.get("config.json", ["setting","full_backup"], False)
         # 自动重载
@@ -337,7 +341,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.init_navigationInterface()  # 初始化导航栏
         self.init_download_badge() # 初始化导航栏下载徽章
         self.init_menu() # 初始化菜单
-        self.init_download_manager() # 初始化下载管理器
+        self.init_download_manager() # 初始化后台线程
 
     # 初始化窗口
     def init_window(self):
@@ -4108,6 +4112,16 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             dialog.accept()
             dialog.deleteLater()
 
+    # 自动保存落盘池
+    def auto_save_write_disk_pool(self):
+        JCP.save()
+        InfoBar.info(title="自动保存",
+                        content=f"配置自动落盘成功",
+                        parent=self,
+                        position=InfoBarPosition.TOP_RIGHT,
+                        duration=1500
+                        )
+
 
 
 
@@ -4245,6 +4259,15 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.download_manager_thread = Threads.DownloadManager(self.downloads_path,int(self.max_parallel_download)) # 多任务下载管理器 最大并行下载数
         self.download_manager_thread.error.connect(lambda i,s: InfoBar.error(title="错误",content=f"任务{i}错误 {s}",parent=self,position=InfoBarPosition.TOP,duration=1500))
         self.download_manager_thread.finished.connect(lambda i,s:self.download_manager_python_complete(i,s))
+
+        # 开启自动保存
+        if self.auto_save:
+            # 自动保存
+            self.auto_save_thread = Threads.TickTimerThread()
+            # 转换间隔
+            interval = {"30s":30_000, "1min":60_000, "5min":300_000, "10min":600_000, "30min":1_800_000, "1h":3_600_000}.get(self.auto_save_interval, 1_800_000)
+            self.auto_save_thread.start_timer(interval)
+            self.auto_save_thread.timeout.connect(self.auto_save_write_disk_pool)
 
     # 下载器下载完成
     def download_manager_python_complete(self,i,s):
@@ -4563,18 +4586,9 @@ if __name__ == "__main__":
 # Window Style Extended Window Edge
 # 立体边框（你已去掉）
 
-
-# # 补全
-
-# 更换编辑下拉框 默认回车添加新控件
-
 # 强制退出关闭计时
 
 # 下载列表快导致徽章计时多2
-
-# 配置同步 把配置放到appdata
-
-# 自动保存
 
 # 工具集
 
