@@ -85,7 +85,8 @@ class CmdMonitorThread(QThread):
 # CmdEmbed（嵌入 + 自动输入）
 # ===================================================
 class CmdEmbedWidget(QWidget):
-    def __init__(self, parent=None, workdir="C:\\", mode="finder",delay=500,frequency=0.5,physical_pixels=False,message_delivery=False):
+    def __init__(self, parent=None, workdir="C:\\", mode="finder",delay=500,frequency=0.5,
+                 physical_pixels=False,message_delivery=False,sink_bottom=False):
         super().__init__(parent)
         self.mode = mode
         self.time = delay
@@ -100,6 +101,7 @@ class CmdEmbedWidget(QWidget):
 
         self.physical_pixels = physical_pixels
         self.message_delivery = message_delivery
+        self.sink_bottom = sink_bottom
 
         self.start_cmd()
 
@@ -156,36 +158,44 @@ class CmdEmbedWidget(QWidget):
 
     def finalize_embed(self):
         hwnd = self.cmd_hwnd
-        # 去标题栏 去边框 防止抢焦点 防F11最大化最小化
 
-        # ---------- GWL_STYLE ----------
         style = win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
         style &= ~(
-            win32con.WS_CAPTION |
-            win32con.WS_THICKFRAME |
-            win32con.WS_MAXIMIZEBOX |
-            win32con.WS_MINIMIZEBOX |
-            win32con.WS_SYSMENU
+                win32con.WS_CAPTION |
+                win32con.WS_THICKFRAME |
+                win32con.WS_MAXIMIZEBOX |
+                win32con.WS_MINIMIZEBOX |
+                win32con.WS_SYSMENU
         )
         win32gui.SetWindowLong(hwnd, win32con.GWL_STYLE, style)
 
-        # ---------- GWL_EXSTYLE ----------
-        # 去焦点
         ex_style = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
-        ex_style |= (
-            win32con.WS_EX_TOOLWINDOW
-        )
+        ex_style |= win32con.WS_EX_TOOLWINDOW
         ex_style &= ~win32con.WS_EX_WINDOWEDGE
         win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, ex_style)
 
         win32gui.SetParent(hwnd, int(self.winId()))
         win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
 
+        # 置于底层
+        if self.sink_bottom:
+            win32gui.SetWindowPos(
+                hwnd,
+                win32con.HWND_BOTTOM,
+                0, 0, 0, 0,
+                win32con.SWP_NOMOVE |
+                win32con.SWP_NOSIZE |
+                win32con.SWP_NOACTIVATE |
+                win32con.SWP_FRAMECHANGED
+            )
+
+        # 让 Qt 容器重新拿回焦点/顶层
+        self.activateWindow()
+        self.setFocus()
+
         if not self.physical_pixels:
-            # 使用逻辑像素
             self.resize_cmd()
         else:
-            # 使用物理像素
             self.resize_cmd_physical_pixels()
 
     # ================= 全屏 =================

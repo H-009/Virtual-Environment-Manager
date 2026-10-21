@@ -10,6 +10,8 @@ class ContributorKey(Enum):
 # 仓库
 class RepoKey(Enum):
     VEM = "Virtual-Environment-Manager"
+    STM = "Super-Toolset-Manager"
+    GRM = "Git-Repository-Manager"
 
     def __str__(self):
         return self.value

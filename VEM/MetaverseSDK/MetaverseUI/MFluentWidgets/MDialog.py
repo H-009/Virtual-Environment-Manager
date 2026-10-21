@@ -2,7 +2,8 @@ import webbrowser
 from qtpy.QtCore import Signal, Qt, QTimer
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QSizePolicy, QHBoxLayout, QFileDialog,QHeaderView, QTableWidgetItem
 from qfluentwidgets import BodyLabel, SingleDirectionScrollArea, SimpleCardWidget, FluentStyleSheet, LineEdit, TextEdit, \
-    ToolButton, FluentIcon, Dialog, TextBrowser, TableWidget, HyperlinkButton, ComboBox
+    ToolButton, FluentIcon, Dialog, TextBrowser, TableWidget, HyperlinkButton, ComboBox, TitleLabel, ProgressBar, \
+    PushButton
 from qfluentwidgets.components.dialog_box.dialog import Ui_MessageBox
 from qframelesswindow import FramelessDialog
 
@@ -351,3 +352,65 @@ class ReleaseDialog(Dialog):
 
     def setTitleBarVisible(self, isVisible: bool):
         super().setTitleBarVisible(isVisible)
+
+# 下载对话框
+class DownloadDialog(FramelessDialog, Ui_MessageBox):
+    yesSignal = Signal()
+    cancelSignal = Signal()
+
+    def __init__(self, title: str, parent=None):
+        super().__init__(parent=parent)
+        self._setUpUi(title, title, self)
+        self.setModal(True)
+        self.setResizeEnabled(False)
+        self.resize(500, 200)
+        self.titleBar.hide()
+
+        self.buttonGroup.deleteLater()
+        self.titleLabel.hide()
+        self.contentLabel.hide()
+
+        v_layout = QVBoxLayout()
+        v_layout.setSpacing(24)
+
+        # 标题
+        h_title = QHBoxLayout()
+        self.label = TitleLabel(title)
+        self.label.setFixedHeight(40)
+        h_title.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        v_layout.addLayout(h_title)
+
+        # 进度条
+        h_progress = QHBoxLayout()
+        self.progress_bar = ProgressBar()
+        self.progress_bar.setMaximum(100)
+        h_progress.addWidget(self.progress_bar)
+        v_layout.addLayout(h_progress)
+
+        # 状态文本
+        self.label_R = BodyLabel("")
+        self.label_R.setFixedHeight(30)
+        v_layout.addWidget(self.label_R, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        # 取消按钮
+        h_btn = QHBoxLayout()
+        self.cancel_btn = PushButton("取消")
+        self.cancel_btn.setFixedWidth(100)
+        self.cancel_btn.clicked.connect(self._on_cancel)
+        h_btn.addStretch()
+        h_btn.addWidget(self.cancel_btn)
+        h_btn.addStretch()
+        v_layout.addLayout(h_btn)
+
+        self.textLayout.addLayout(v_layout)
+
+        FluentStyleSheet.DIALOG.apply(self)
+
+    def _on_cancel(self):
+        """取消按钮回调"""
+        self.cancelSignal.emit()
+        self.close()
+
+    def keyPressEvent(self, event):
+        # 屏蔽所有按键（包括 Esc）
+        event.accept()

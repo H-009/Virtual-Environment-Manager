@@ -17,13 +17,7 @@ class GetPythonVersions(QThread):
         self.url = url
 
     def run(self):
-        try:
-            self.finished.emit(self.get_python_all_versions())
-        except Exception as e:
-            self.error.emit(f"获取版本超时")
-            print(e)
 
-    def get_python_all_versions(self):
         try:
             resp = requests.get(self.url, timeout=10)
             resp.raise_for_status()
@@ -39,11 +33,10 @@ class GetPythonVersions(QThread):
             # 只保留合法 x.y.z 版本号
             versions = [v for v in versions if v.count('.') >= 1 and all(p.isdigit() for p in v.split('.'))]
             versions.sort(key=lambda x: list(map(int, x.split('.'))), reverse=True)
-            return versions
+            self.finished.emit(versions)
 
         except Exception as e:
-            print(e)
-            return []
+            self.error.emit(str(e))
 
 # 获取Python版本全部文件
 class GetPythonFile(QThread):
@@ -58,13 +51,6 @@ class GetPythonFile(QThread):
         self.url = url
 
     def run(self):
-        try:
-            self.finished.emit(self.get_python_versions_all_file())
-        except Exception as e:
-            self.error.emit(f"获取文件超时")
-            print(e)
-
-    def get_python_versions_all_file(self):
         try:
             resp = requests.get(self.url, timeout=10)
             resp.raise_for_status()
@@ -82,11 +68,10 @@ class GetPythonFile(QThread):
                    and a['href'] != '../'
             ]
 
-            return file_list
+            self.finished.emit(file_list)
 
         except Exception as e:
-            print(e)
-            return []
+            self.error.emit(str(e))
 
 # 获取Github发布
 class GetGitHubReleaseThread(QThread):
