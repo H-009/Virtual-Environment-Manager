@@ -1,3 +1,5 @@
+import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -25,8 +27,6 @@ class EmbBatchProcessing(QThread):
         self.emb_batch_set = emb_batch_set
         self.url = url
         self.pip = pip
-        # 中断标记
-        self.interrupt_marker = True
 
     def run(self):
         try:
@@ -53,11 +53,11 @@ class EmbBatchProcessing(QThread):
             if "自定义安装pip" in self.emb_batch_set and "使用外部CMD创建" in self.emb_batch_set and "CMD创建后保持打开" in self.emb_batch_set:
                 self.InstallPIPOpen()  # 安装pip 打开cmd 保持打开
 
-            if self.interrupt_marker:
-                self.finished.emit()
+            # 全部执行完成后发射
+            self.finished.emit()
 
         except Exception as e:
-            self.error.emit(f"发生错误 {e}")
+            self.error.emit(f"{e}")
 
     def UnlockPTH(self):
         """解锁PTH"""
@@ -147,17 +147,9 @@ if exist "%PYTHON_EXE%" (
 
         self.update_title.emit("正在下载get-pip.py...")
         put = tool.run_command(self.url) # 下载get-pip.py
-        # 如果返回值不为1 则返回报错
-        if put != 1:
-            self.error.emit(f"发生错误 {put}")
-            self.interrupt_marker = False # 中断
 
         self.update_title.emit("正在安装pip...")
         put2 = tool.run_command(f'{self.file_path_pth}/python.exe "{pip_path}"') # 安装pip
-        # 如果返回值不为1 则返回报错
-        if put2 != 1:
-            self.error.emit(f"发生错误 {put2}")
-            self.interrupt_marker = False # 中断
 
     def AutoGetPIPInstallCMD(self):
         """自动获取并安装pip"""
@@ -165,10 +157,6 @@ if exist "%PYTHON_EXE%" (
 
         self.update_title.emit("执行自动化命令...")
         put = tool.run_command(f'{self.url} && {self.file_path_pth}/python "{pip_path}"',True) # 组合命令
-        # 如果返回值不为1 则返回报错
-        if put != 1:
-            self.error.emit(f"发生错误 {put}")
-            self.interrupt_marker = False # 中断
 
     def AutoGetPIPInstallOpenCMD(self):
         """自动获取并安装pip保持CMD打开"""
@@ -176,46 +164,26 @@ if exist "%PYTHON_EXE%" (
 
         self.update_title.emit("等待CMD关闭...")
         put = tool.run_command(f'{self.url} && {self.file_path_pth}/python "{pip_path}"',True,"/k") # 组合命令
-        # 如果返回值不为1 则返回报错
-        if put != 1:
-            self.error.emit(f"发生错误 {put}")
-            self.interrupt_marker = False # 中断
 
     def GetPIP(self,visible=False):
         """获取pip"""
         self.update_title.emit("正在下载get-pip.py...")
         put = tool.run_command(self.url,visible) # 下载get-pip.py
-        # 如果返回值不为1 则返回报错
-        if put != 1:
-            self.error.emit(f"发生错误 {put}")
-            self.interrupt_marker = False # 中断
 
     def GetPIPOpen(self):
         """获取pip"""
         self.update_title.emit("等待CMD关闭...")
         put = tool.run_command(self.url,True,"/k") # 下载get-pip.py
-        # 如果返回值不为1 则返回报错
-        if put != 1:
-            self.error.emit(f"发生错误 {put}")
-            self.interrupt_marker = False # 中断
 
     def InstallPIP(self,visible=False):
         """安装pip"""
         self.update_title.emit("正在安装pip...")
         put2 = tool.run_command(f'{self.file_path_pth}/python.exe "{self.pip}"',visible) # 安装pip
-        # 如果返回值不为1 则返回报错
-        if put2 != 1:
-            self.error.emit(f"发生错误 {put2}")
-            self.interrupt_marker = False # 中断
 
     def InstallPIPOpen(self):
         """安装pip"""
         self.update_title.emit("等待CMD关闭...")
         put2 = tool.run_command(f'{self.file_path_pth}/python.exe "{self.pip}"',True,"/k") # 安装pip
-        # 如果返回值不为1 则返回报错
-        if put2 != 1:
-            self.error.emit(f"发生错误 {put2}")
-            self.interrupt_marker = False # 中断
 
 class VenvBatchProcessing(QThread):
     """
@@ -621,3 +589,32 @@ class TickTimerThread(QThread):
             self.timeout.emit()
             # 消除漂移
             self._accumulated_ms %= self._threshold_ms
+
+class PythonFinderThread(QThread):
+    # 返回找到的 python 路径列表
+    result_ready = pyqtSignal(list)
+    error = pyqtSignal(str)
+
+    def run(self):
+        try:
+            result = subprocess.run(
+                ["where", "python"],
+                capture_output=True,
+                text=True,
+                encoding="gbk",
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                env=os.environ
+            )
+
+            paths = [
+                line.strip()
+                for line in result.stdout.splitlines()
+                if line.strip()
+            ]
+
+            self.result_ready.emit(paths)
+
+
+        except Exception as e:
+            print(e)
+            self.error.emit(str(e))

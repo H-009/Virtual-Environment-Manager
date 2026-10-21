@@ -581,16 +581,3 @@ def run_backend_self_ext_right_command(exe_path, args="", elevate=True, hidden=F
         cmd += ' -Verb RunAs'
 
     subprocess.Popen(cmd, shell=True)
-
-# 获取环境变量的python解释器
-def get_env_var_python():
-    result = subprocess.run(
-        ["where", "python"],
-        capture_output=True,
-        text=True,
-        encoding="gbk",
-        creationflags=subprocess.CREATE_NO_WINDOW,
-        env=os.environ
-    )
-
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]

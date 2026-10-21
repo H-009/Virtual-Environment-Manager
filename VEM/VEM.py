@@ -1590,6 +1590,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
             self.python_finder_thread = Threads.PythonFinderThread()
             self.python_finder_thread.result_ready.connect(lambda env:self.match_python_success(dialog,self.python_finder_thread,env))
+            self.python_finder_thread.error.connect(lambda err:self.batch_error(err,dialog,self.python_finder_thread))
             self.python_finder_thread.start()
 
         except Exception as a:
@@ -2146,7 +2147,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         python_path, _ = QFileDialog.getOpenFileName(
             self,
             "选择 EMB 嵌入包",
-            "C:/",
+            self.downloads_path,
             "Python Embeddable (*.zip);;"
             "All Files (*.*)"
         )
@@ -2501,7 +2502,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             self.emb_thread_batch_processing.finished.connect(lambda :self.emb_batch_processing_end(Indeterminate_dialog))
             self.emb_thread_batch_processing.emb_dir.connect(lambda emb:self.update_emb_notification(emb))
             self.emb_thread_batch_processing.update_title.connect(lambda title:Indeterminate_dialog.label.setText(title))
-            self.emb_thread_batch_processing.error.connect(lambda err:InfoBar.success(title="错误",content=err,parent=self,position=InfoBarPosition.TOP))
+            self.emb_thread_batch_processing.error.connect(lambda err:InfoBar.error(title="错误",content=err,parent=self,position=InfoBarPosition.TOP))
             self.emb_thread_batch_processing.start()
         # 空集合 解包完成
         else:
@@ -4620,8 +4621,6 @@ if __name__ == "__main__":
 # 工具集
 
 # 配置模式与立即克隆配置到同步文件夹
-
-# 安装成功 匹配成功视为异步操作
 
 # 克隆虚拟环境 备份虚拟环境
 
