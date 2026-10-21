@@ -17,6 +17,7 @@ from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
 from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
+from MetaverseSDK.MetaverseUI.MWidgets.MApplication import SingleApplication
 from PyQt5.QtGui import QColor, QDesktopServices
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QFileDialog, QCompleter
 from PyQt5.QtCore import Qt, QLocale, QTimer, QSize, QEventLoop, QEvent, QObject, QUrl
@@ -148,7 +149,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.17.1"
+        self.VEM_Version = "v1.17.2"
         self.CMD_Version = "v0.9.5"
 
         # 配置文件
@@ -4474,7 +4475,11 @@ if __name__ == "__main__":
     if JCP.get("config.json", ["setting","high_DPI_pixel_mapping"], False):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
-    app = QApplication([])
+    app = SingleApplication("VEM",sys.argv)
+
+    # 静默退出
+    if app.isAlreadyRunning():
+        sys.exit(0)
 
     # 安装翻译器
     app.installTranslator(translator)
@@ -4499,6 +4504,8 @@ if __name__ == "__main__":
         timer.singleShot(duration, lambda: mainWin.showMaximized()) # 启动后最大化
     else:
         timer.singleShot(duration, lambda: mainWin.show()) # 常规
+
+    app.main_window = mainWin
 
     sys.exit(app.exec_())
 
