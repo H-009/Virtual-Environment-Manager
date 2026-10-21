@@ -1585,7 +1585,22 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     # 匹配基础环境
     def match_python(self):
         try:
-            env_var = tool.get_env_var_python()
+            dialog = DotWaveIndeterminateProgressRingDialog("匹配基础环境...",self)
+            dialog.show()
+
+            self.python_finder_thread = Threads.PythonFinderThread()
+            self.python_finder_thread.result_ready.connect(lambda env:self.match_python_success(dialog,self.python_finder_thread,env))
+            self.python_finder_thread.start()
+
+        except Exception as a:
+            print(a)
+
+    # 匹配基础环境成功
+    def match_python_success(self,dialog,thread,env_var):
+        try:
+            dialog.accept()
+            dialog.deleteLater()
+            thread.deleteLater()
 
             self.env_python_path_combox.clear()
 
@@ -1598,8 +1613,13 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                 parent=self,
                 position=InfoBarPosition.TOP
             )
+
+            # 播放音效 操作完成音效未禁用
+            if self.play_sound and not self.play_sound_operation_completed:
+                BSP.play("OperationCompleted")
         except Exception as a:
             print(a)
+
 
     # 添加环境变量基础环境
     def add_env_var_python(self):
@@ -4604,3 +4624,5 @@ if __name__ == "__main__":
 # 安装成功 匹配成功视为异步操作
 
 # 克隆虚拟环境 备份虚拟环境
+
+# 安装-批量
