@@ -47,50 +47,11 @@ from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG, Metaverse
 
 import Threads
 import tool
-# import objgraph
 
 from MetaverseSDK.MetaverseResource.MetaverseFluentIcon import MetaverseFluentIcon
 
 from uimixin import UiMixin
 from updatemixin import UpdateMixin
-
-def install_click_debug(widget):
-    """
-    给任意 QWidget 安装点击调试：
-    鼠标按下时打印被点中的 Qt 控件
-    """
-    class ClickDebug(QObject):
-        def eventFilter(self, obj, event):
-            if event.type() == QEvent.MouseButtonPress:
-                pos = event.globalPos()
-                app = QApplication.instance()
-
-                # Qt 视角：鼠标下是哪个控件
-                under = app.widgetAt(pos)
-
-                if under:
-                    print("=" * 60)
-                    print(f"🖱️  鼠标点击 @ {pos.x()}, {pos.y()}")
-                    print(f"🎯 Qt 控件:")
-                    print(f"   • 类型 : {type(under).__name__}")
-                    print(f"   • 对象名: {under.objectName() or '(未命名)'}")
-                    print(f"   • 地址 : 0x{id(under):X}")
-                    print(f"   • 父链:")
-                    p = under
-                    while p:
-                        print(f"     ↳ {type(p).__name__}  name={p.objectName()}")
-                        p = p.parent()
-                    print("=" * 60)
-                else:
-                    print("🖱️  点击位置没有 Qt widget（可能是原生窗口/桌面）")
-
-            return super().eventFilter(obj, event)
-
-    d = ClickDebug()
-    widget.installEventFilter(d)
-    widget._click_debug = d   # 防 GC
-
-# install_click_debug(self) # 安装gui控件调试器
 
 class MainUI(UiMixin,UpdateMixin,FluentWindow):
     def __init__(self):
@@ -149,8 +110,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.emb_notification_text = ''
 
         # 版本
-        self.VEM_Version = "v1.17.2"
-        self.CMD_Version = "v0.9.5"
+        self.VEM_Version = "v1.17.3"
+        self.CMD_Version = "v0.9.7"
 
         # 配置文件
         self.config_file = "config.json"
@@ -507,17 +468,6 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             self.Download,
             FluentIcon.DOWNLOAD,
             "下载",
-            position=NavigationItemPosition.BOTTOM
-        )
-
-        # 链接
-        self.Link = QWidget(self)
-        self.Link.setObjectName("Link")
-        self.init_link()  # 初始化链接
-        self.addSubInterface(
-            self.Link,
-            MetaverseFluentIcon.Link,
-            "链接",
             position=NavigationItemPosition.BOTTOM
         )
 
