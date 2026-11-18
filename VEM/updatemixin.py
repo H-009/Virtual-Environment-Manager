@@ -960,6 +960,11 @@ class UpdateMixin(_MixinBase):
             self.CMD_sink_bottom = False
             JCP.update("config.json", ["setting","CMD_sink_bottom"], False)
 
+    # 更新控制台自动配置名称
+    def update_console_auto_config_name(self,key):
+        self.console_auto_config_name = key
+        JCP.update("config.json", ["setting","console_auto_config_name"], key)
+
 
     # 更新最大上限
     def update_maximum_limit(self,text):

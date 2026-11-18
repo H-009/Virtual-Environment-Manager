@@ -260,6 +260,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.CMD_pop_up_pos = JCP.get("config.json", ["setting","CMD_pop_up_pos"], "默认坐标")
         # CMD沉底
         self.CMD_sink_bottom = JCP.get("config.json", ["setting","CMD_sink_bottom"], True)
+        # 控制台自动配置名称
+        self.console_auto_config_name = JCP.get("config.json", ["setting","console_auto_config_name"], False)
         # 启动动画时长
         self.startup_animation_duration = JCP.get("config.json", ["setting","startup_animation_duration"], "常规-1000ms")
         # 启动图标大小
@@ -1018,8 +1020,18 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
     # 开关控制台按钮 开
     def console_on(self):
         try:
+            console_name = "Console"
+
+            # 自动配置名称
+            if self.console_auto_config_name:
+                index = 0
+                while console_name in self.console_obj_dict:
+                    index += 1
+                    console_name = f"Console {index}"
+
             # 新建
-            dialog = WorkingDirectorySelectLineDialog("激活控制台","输入控制台名称 工作目录","Console",self)
+            dialog = WorkingDirectorySelectLineDialog("激活控制台","输入控制台名称 工作目录",console_name,self)
+
             if dialog.exec():
                 cmd_name = dialog.line.text()
                 dir_name = dialog.line_dir.text()
@@ -4615,8 +4627,6 @@ if __name__ == "__main__":
 # WS_EX_WINDOWEDGE
 # Window Style Extended Window Edge
 # 立体边框（你已去掉）
-
-# 强制退出关闭计时
 
 # 下载列表快导致徽章计时多2
 

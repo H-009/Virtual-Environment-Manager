@@ -1965,6 +1965,11 @@ class UiMixin(_MixinBase):
         card.setChecked(self.CMD_sink_bottom)
         card.checkedChanged.connect(self.update_sink_bottom)
         self.setting_view_layout.addWidget(card)
+        # 控制台自动配置名称
+        card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT, "控制台自动配置名称", "激活控制台时自动配置名称")
+        card.setChecked(self.console_auto_config_name)
+        card.checkedChanged.connect(self.update_console_auto_config_name)
+        self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧
         self.setting_view_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
