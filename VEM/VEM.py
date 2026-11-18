@@ -262,6 +262,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.CMD_sink_bottom = JCP.get("config.json", ["setting","CMD_sink_bottom"], True)
         # 控制台自动配置名称
         self.console_auto_config_name = JCP.get("config.json", ["setting","console_auto_config_name"], False)
+        # 启用自动激活控制台
+        self.enable_auto_activation_console = JCP.get("config.json", ["setting","enable_auto_activation_console"], False)
         # 启动动画时长
         self.startup_animation_duration = JCP.get("config.json", ["setting","startup_animation_duration"], "常规-1000ms")
         # 启动图标大小
@@ -1157,6 +1159,78 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             InfoBar.error(
                 title="错误",
                 content=str(e.strerror), # 转为字符串 防止类型二次崩溃
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+        except Exception as a:
+            print(a)
+            InfoBar.error(
+                title="错误",
+                content=str(a),
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+
+    # 自动激活控制台
+    def auto_console(self):
+        try:
+            console_name = "Console"
+
+            # 自动配置名称
+            if self.console_auto_config_name:
+                index = 0
+                while console_name in self.console_obj_dict:
+                    index += 1
+                    console_name = f"Console {index}"
+
+
+                # 构建新CMD
+                cmd_card = SimpleCardWidget()
+                cmd_card_vlayout = QVBoxLayout()
+                cmd_card.setLayout(cmd_card_vlayout)
+                self.console_stackedwidget.addWidget(cmd_card)
+                self.console_stackedwidget.setCurrentWidget(cmd_card)
+
+                # 防崩溃式硬转换
+                delay = {"0ms": 0, "50ms": 50, "100ms": 100, "250ms": 250, "500ms": 500}.get(self.delay_cmd, 0)
+                frequency = {"0.5s": 0.5, "1.0s": 1, "2.0s": 2, "5.0s": 5}.get(self.frequency_cmd, 0.5) # 最低0.5s 防止阻塞
+                coordinate_space = {"逻辑像素模式":False,"物理像素模式":True}.get(self.CMD_coordinate_space_mode,False)
+                message_delivery = {"虚拟键消息模式": False, "字符消息模式": True}.get(self.CMD_message_delivery_mode, True)
+
+                # 添加CMD
+                cmd = CmdEmbedWidget(
+                    self,workdir="C:\\", mode="timer", delay=delay, frequency=frequency,
+                    physical_pixels=coordinate_space,
+                    message_delivery=message_delivery,
+                    sink_bottom=self.CMD_sink_bottom,
+                )
+                cmd_card_vlayout.addWidget(cmd)
+
+                # 添加CMD对象字典
+                self.console_obj_dict[console_name] = [cmd, cmd_card]
+                # 更新当前选择的控制台
+                self.select_console = cmd
+                # 添加项
+                self.console_list.addItem(console_name)
+                # 选中最后项 也就是新加入项
+                self.console_list.setCurrentRow(self.console_list.count() - 1)
+                # 绑定意外退出信号
+                self.select_console.monitor_thread.running_changed.connect(lambda state: self.console_unexpected_exit(self.console_list.currentItem().text(), state, self.select_console))
+
+                # 关闭控制台激活通知
+                if not self.close_console_activation_tip_switch:
+                    InfoBar.success(
+                        title="已激活",
+                        content=f"控制台 {console_name} 已激活",
+                        parent=self,
+                        position=InfoBarPosition.TOP
+                    )
+
+        except OSError as e:
+            print(e)
+            InfoBar.error(
+                title="错误",
+                content=str(e.strerror),
                 parent=self,
                 position=InfoBarPosition.TOP
             )
@@ -4637,3 +4711,4 @@ if __name__ == "__main__":
 # 克隆虚拟环境 备份虚拟环境
 
 # 安装-批量
+# MF 图标不支持修改颜色

@@ -303,6 +303,14 @@ class UiMixin(_MixinBase):
         self.destroy_console_button.setIcon(self.BROOM_icon)
         self.destroy_console_button.clicked.connect(self.console_off)
         cmd_console_card_vlayout.addWidget(self.destroy_console_button)
+        # 自动创建控制台按钮
+        self.auto_create_console_button = ToolButton()
+        self.auto_create_console_button.setToolTip("自动激活")
+        self.auto_create_console_button.installEventFilter(ToolTipFilter(self.auto_create_console_button))
+        self.auto_create_console_button.setIcon(MetaverseFluentIcon.Send)
+        self.auto_create_console_button.clicked.connect(self.auto_console)
+        cmd_console_card_vlayout.addWidget(self.auto_create_console_button)
+        self.auto_create_console_button.setEnabled(self.enable_auto_activation_console)
         # 控制台列表按钮
         self.console_list_button = ToolButton()
         self.console_list_button.setToolTip("控制台列表")
@@ -317,6 +325,7 @@ class UiMixin(_MixinBase):
         self.console_manual_update_button.setIcon(FluentIcon.SYNC)
         self.console_manual_update_button.clicked.connect(self.manual_update_console)
         cmd_console_card_vlayout.addWidget(self.console_manual_update_button)
+        self.console_manual_update_button.setEnabled(self.enable_manual_update_CMD_switch)
 
         # 弹出按钮
         self.console_pop_up_button = ToolButton()
@@ -325,6 +334,7 @@ class UiMixin(_MixinBase):
         self.console_pop_up_button.setIcon(MetaverseFluentIcon.NewEfferent)
         self.console_pop_up_button.clicked.connect(self.pop_up_console)
         cmd_console_card_vlayout.addWidget(self.console_pop_up_button)
+        self.console_pop_up_button.setEnabled(self.enable_cmd_pop_up_CMD_switch)
 
         # 控制栏弹簧
         cmd_console_card_vlayout.addItem(QSpacerItem(20, 40, QSizePolicy.Expanding, QSizePolicy.Expanding))
@@ -354,6 +364,7 @@ class UiMixin(_MixinBase):
         self.console_reload_button.setIcon(MetaverseFluentIcon.Reload)
         self.console_reload_button.clicked.connect(self.reload_console)
         cmd_console_card_vlayout.addWidget(self.console_reload_button)
+        self.console_reload_button.setEnabled(self.enable_cmd_reload_CMD_switch)
 
         # 全屏按钮
         self.console_full_screen_button = ToolButton()
@@ -362,6 +373,7 @@ class UiMixin(_MixinBase):
         self.console_full_screen_button.setIcon(FluentIcon.FIT_PAGE)
         self.console_full_screen_button.clicked.connect(self.full_screen_console)
         cmd_console_card_vlayout.addWidget(self.console_full_screen_button)
+        self.console_full_screen_button.setEnabled(self.enable_cmd_full_screen_switch)
 
         # 控制台堆叠窗口
         # 上下翻页堆叠控件
@@ -1969,6 +1981,11 @@ class UiMixin(_MixinBase):
         card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT, "控制台自动配置名称", "激活控制台时自动配置名称")
         card.setChecked(self.console_auto_config_name)
         card.checkedChanged.connect(self.update_console_auto_config_name)
+        self.setting_view_layout.addWidget(card)
+        # 启用自动激活控制台
+        card = LayoutSwitchButtonSettingCard(FluentIcon.COMMAND_PROMPT, "启用自动激活控制台", "允许自动激活控制台")
+        card.setChecked(self.enable_auto_activation_console)
+        card.checkedChanged.connect(self.update_auto_activation_console)
         self.setting_view_layout.addWidget(card)
 
         # 间隔弹簧

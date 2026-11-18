@@ -603,6 +603,7 @@ class UpdateMixin(_MixinBase):
             # 如果电源按钮未禁用 则启用
             if self.cmd_power_button.isEnabled():
                 self.manual_update_button.setEnabled(True)
+            self.console_manual_update_button.setEnabled(True)
 
         else:
             InfoBar.info(
@@ -615,6 +616,7 @@ class UpdateMixin(_MixinBase):
             JCP.update("config.json", ["setting","manual_CMD"], False)
             # 立即禁用
             self.manual_update_button.setEnabled(False)
+            self.console_manual_update_button.setEnabled(False)
 
     # 更新CMD全屏
     def update_full_screen_CMD(self, key):
@@ -631,6 +633,7 @@ class UpdateMixin(_MixinBase):
             # 如果电源按钮未禁用 则启用
             if self.cmd_power_button.isEnabled():
                 self.cmd_full_screen_button.setEnabled(True)
+            self.console_full_screen_button.setEnabled(True)
 
         else:
             InfoBar.info(
@@ -643,6 +646,7 @@ class UpdateMixin(_MixinBase):
             JCP.update("config.json", ["setting","full_screen_CMD"], False)
             # 立即禁用
             self.cmd_full_screen_button.setEnabled(False)
+            self.console_full_screen_button.setEnabled(False)
 
     # 更新CMD重启
     def update_reload_CMD(self, key):
@@ -659,6 +663,7 @@ class UpdateMixin(_MixinBase):
             # 如果电源按钮未禁用 则启用
             if self.cmd_power_button.isEnabled():
                 self.cmd_reload_button.setEnabled(True)
+            self.console_reload_button.setEnabled(True)
 
         else:
             InfoBar.info(
@@ -671,6 +676,7 @@ class UpdateMixin(_MixinBase):
             JCP.update("config.json", ["setting","reload_CMD"], False)
             # 立即禁用
             self.cmd_reload_button.setEnabled(False)
+            self.console_reload_button.setEnabled(False)
 
     # 更新CMD弹出
     def update_pop_up_CMD(self, key):
@@ -687,6 +693,7 @@ class UpdateMixin(_MixinBase):
             # 如果电源按钮未禁用 则启用
             if self.cmd_power_button.isEnabled():
                 self.cmd_pop_up_button.setEnabled(True)
+            self.console_pop_up_button.setEnabled(True)
 
         else:
             InfoBar.info(
@@ -699,6 +706,34 @@ class UpdateMixin(_MixinBase):
             JCP.update("config.json", ["setting","pop_up"], False)
             # 立即禁用
             self.cmd_pop_up_button.setEnabled(False)
+            self.console_pop_up_button.setEnabled(False)
+
+    # 更新自动激活控制台
+    def update_auto_activation_console(self, key):
+        # 开启
+        if key:
+            InfoBar.info(
+                title="已开启",
+                content="控制台自动激活已开启",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_auto_activation_console = True
+            JCP.update("config.json", ["setting","enable_auto_activation_console"], True)
+            # 立即启用
+            self.auto_create_console_button.setEnabled(True)
+
+        else:
+            InfoBar.info(
+                title="已关闭",
+                content="控制台自动激活已关闭",
+                parent=self,
+                position=InfoBarPosition.TOP
+            )
+            self.enable_auto_activation_console = False
+            JCP.update("config.json", ["setting","enable_auto_activation_console"], False)
+            # 立即禁用
+            self.auto_create_console_button.setEnabled(False)
 
     # 更新云母效果
     def update_mica_effect(self,key):
@@ -964,7 +999,6 @@ class UpdateMixin(_MixinBase):
     def update_console_auto_config_name(self,key):
         self.console_auto_config_name = key
         JCP.update("config.json", ["setting","console_auto_config_name"], key)
-
 
     # 更新最大上限
     def update_maximum_limit(self,text):
