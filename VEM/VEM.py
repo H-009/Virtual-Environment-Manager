@@ -47,11 +47,50 @@ from MetaverseSDK.MetaverseResource import MetaverseSVG, MetaverseOGG, Metaverse
 
 import Threads
 import tool
+# import objgraph
 
 from MetaverseSDK.MetaverseResource.MetaverseFluentIcon import MetaverseFluentIcon
 
 from uimixin import UiMixin
 from updatemixin import UpdateMixin
+
+def install_click_debug(widget):
+    """
+    给任意 QWidget 安装点击调试：
+    鼠标按下时打印被点中的 Qt 控件
+    """
+    class ClickDebug(QObject):
+        def eventFilter(self, obj, event):
+            if event.type() == QEvent.MouseButtonPress:
+                pos = event.globalPos()
+                app = QApplication.instance()
+
+                # Qt 视角：鼠标下是哪个控件
+                under = app.widgetAt(pos)
+
+                if under:
+                    print("=" * 60)
+                    print(f"🖱️  鼠标点击 @ {pos.x()}, {pos.y()}")
+                    print(f"🎯 Qt 控件:")
+                    print(f"   • 类型 : {type(under).__name__}")
+                    print(f"   • 对象名: {under.objectName() or '(未命名)'}")
+                    print(f"   • 地址 : 0x{id(under):X}")
+                    print(f"   • 父链:")
+                    p = under
+                    while p:
+                        print(f"     ↳ {type(p).__name__}  name={p.objectName()}")
+                        p = p.parent()
+                    print("=" * 60)
+                else:
+                    print("🖱️  点击位置没有 Qt widget（可能是原生窗口/桌面）")
+
+            return super().eventFilter(obj, event)
+
+    d = ClickDebug()
+    widget.installEventFilter(d)
+    widget._click_debug = d   # 防 GC
+
+# install_click_debug(self) # 安装gui控件调试器
 
 class MainUI(UiMixin,UpdateMixin,FluentWindow):
     def __init__(self):
@@ -277,6 +316,8 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.auto_save = JCP.get("config.json", ["setting","auto_save"], True)
         # 自动保存间隔
         self.auto_save_interval = JCP.get("config.json", ["setting","auto_save_interval"], "30min")
+        # 关闭退出计时
+        self.close_exit_time = JCP.get("config.json", ["setting","close_exit_time"], False)
         # 完整备份
         self.full_backup = JCP.get("config.json", ["setting","full_backup"], False)
         # 自动重载
@@ -303,7 +344,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
         self.init_navigationInterface()  # 初始化导航栏
         self.init_download_badge() # 初始化导航栏下载徽章
         self.init_menu() # 初始化菜单
-        self.init_download_manager() # 初始化后台线程
+        self.init_background_thread() # 初始化后台线程
 
     # 初始化窗口
     def init_window(self):
@@ -468,6 +509,17 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             self.Download,
             FluentIcon.DOWNLOAD,
             "下载",
+            position=NavigationItemPosition.BOTTOM
+        )
+
+        # 链接
+        self.Link = QWidget(self)
+        self.Link.setObjectName("Link")
+        self.init_link()  # 初始化链接
+        self.addSubInterface(
+            self.Link,
+            MetaverseFluentIcon.Link,
+            "链接",
             position=NavigationItemPosition.BOTTOM
         )
 
@@ -4227,7 +4279,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
                       )
 
     # 初始化下载器
-    def init_download_manager(self):
+    def init_background_thread(self):
         self.download_manager_thread = Threads.DownloadManager(self.downloads_path,int(self.max_parallel_download)) # 多任务下载管理器 最大并行下载数
         self.download_manager_thread.error.connect(lambda i,s: InfoBar.error(title="错误",content=f"任务{i}错误 {s}",parent=self,position=InfoBarPosition.TOP,duration=1500))
         self.download_manager_thread.finished.connect(lambda i,s:self.download_manager_python_complete(i,s))

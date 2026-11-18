@@ -1741,15 +1741,18 @@ class UpdateMixin(_MixinBase):
 
     # 强制退出
     def force_quit(self):
-        w = DangerCountdownDialog(
-            title='强制退出⚠️',
-            content="""是否放弃保存本次配置并强制退出VEM""",
-            parent=self,
-            countdown_seconds=3,
-            text="退出"
-        )
-        # 确认
-        if w.exec():
+        if not self.close_exit_time:
+            w = DangerCountdownDialog(
+                title='强制退出⚠️',
+                content="""是否放弃保存本次配置并强制退出VEM""",
+                parent=self,
+                countdown_seconds=3,
+                text="退出"
+            )
+            # 确认
+            if w.exec():
+                sys.exit()
+        else:
             sys.exit()
 
     # 删除配置
@@ -1939,6 +1942,11 @@ class UpdateMixin(_MixinBase):
             position=InfoBarPosition.TOP,
             duration=1500
         )
+
+    # 更新关闭退出计时
+    def update_close_exit_time(self,key):
+        self.close_exit_time = key
+        JCP.update("config.json", ["setting","close_exit_time"], key)
 
     # 更新备份路径
     def update_backup_path(self):
