@@ -14,8 +14,9 @@ from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseIconPool import BIP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBasePixmapPool import BPP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MBaseSoundPool import BSP
 from MetaverseSDK.MetaverseUI.MCore.MPool.MSvgIconPool import SIP
-from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder
+from MetaverseSDK.MetaverseUI.MCore.MThread.MFileWorker import DeleteFolder, CutFolderThread
 from MetaverseSDK.MetaverseUI.MCore.MThread.MUnzipWorker import UnzipWorker, UnzipWorkerByte
+from MetaverseSDK.MetaverseUI.MFluentWidgets.MIndeterminateProgressBarDialog import IndeterminateProgressBarDialog
 from MetaverseSDK.MetaverseUI.MReviseWidgets.MLabel import BodyLabel
 from MetaverseSDK.MetaverseUI.MWidgets.MApplication import SingleApplication
 from PyQt5.QtGui import QColor, QDesktopServices
@@ -2765,6 +2766,7 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             Action(FluentIcon.EDIT, '编辑名称', triggered=self.edit_venv_name),
             Action(FluentIcon.EDIT, '编辑启动参数', triggered=self.edit_venv_startup_parameters),
             Action(FluentIcon.FOLDER, '打开环境位置',triggered=self.open_venv_path),
+            Action(FluentIcon.CUT, '迁移环境', triggered=self.migration_venv),
             Action(FluentIcon.ADD, '创建环境', triggered=lambda: self.add_jump("venv")),
             Action(FluentIcon.DELETE, '卸载', triggered=self.delete_venv_folder),
             Action(FluentIcon.DELETE, '删除条目', triggered=self.delete_venv)
@@ -3594,6 +3596,76 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
             QDesktopServices.openUrl(QUrl.fromLocalFile(item.text()))
         except Exception as a:
             print(a)
+
+    # 迁移虚拟环境
+    def migration_venv(self):
+        # cmd未全部关机
+        if self.cmd_obj_dict == {}:
+            dialog = Dialog("是否迁移所选环境?", "迁移后需保证环境指向的解释器存在", self)
+            if dialog.exec():
+                path = QFileDialog.getExistingDirectory(
+                    self,
+                    "选择 迁移位置",
+                    "C:/"
+                )
+
+                if path != '':
+                    # 获取当前所在行
+                    row = self.venv_table.currentRow()
+                    dir_path = JCP.get("config.json",["venv",self.venv_table.item(row, 0).data(Qt.UserRole),"dir"])
+
+                    dialog = IndeterminateProgressBarDialog("正在迁移环境...",self)
+                    dialog.show()
+
+                    self.cut_venv_thread = CutFolderThread(dir_path,path)
+                    self.cut_venv_thread.finished.connect(lambda :self.migration_completed(dir_path,path,dialog,self.cut_venv_thread))
+                    self.cut_venv_thread.error.connect(lambda s:self.uninstall_venv_error(s,dialog,self.cut_venv_thread))
+                    self.cut_venv_thread.start()
+        else:
+            InfoBar.error(
+                title="错误",
+                content="仍有虚拟环境未关机 迁移被拒绝",
+                parent=self,
+                position=InfoBarPosition.TOP,
+                duration=1500
+            )
+
+    # 迁移完成
+    def migration_completed(self,dir_path,path,dialog,thread):
+        dialog.accept()
+        dialog.deleteLater()
+        thread.deleteLater()
+
+        InfoBar.success(
+            title="成功",
+            content="选中环境迁移完成",
+            parent=self,
+            position=InfoBarPosition.TOP
+        )
+
+        # 处理双斜杠
+        path = os.path.normpath(path)
+
+        # 旧文件夹名称
+        dir_path = os.path.basename(dir_path)
+
+        # 获取当前所在行
+        row = self.venv_table.currentRow()
+        key = self.venv_table.item(row, 0).data(Qt.UserRole)
+
+        # 改为新位置
+        JCP.update("config.json",["venv",key,"cfg_file"],os.path.join(path,dir_path,"pyvenv.cfg"))
+        JCP.update("config.json",["venv",key,"dir"],os.path.join(path,dir_path))
+        JCP.update("config.json",["venv",key,"start_parameter"],os.path.join(path,dir_path,"Scripts","activate"))
+        # 改为新键
+        JCP.rename("config.json", ["venv",key],os.path.join(path,dir_path))
+
+        # 更新环境
+        self.update_venv()
+
+        # 播放音效 操作完成音效未禁用
+        if self.play_sound and not self.play_sound_operation_completed:
+            BSP.play("OperationCompleted")
 
     # 删除虚拟环境条目
     def delete_venv(self):
@@ -4551,6 +4623,13 @@ class MainUI(UiMixin,UpdateMixin,FluentWindow):
 
 
 
+
+
+
+
+
+
+
 if __name__ == "__main__":
     # 加入池
     JCP.load("config.json")
@@ -4712,3 +4791,5 @@ if __name__ == "__main__":
 
 # 安装-批量
 # MF 图标不支持修改颜色
+
+# 迁移venv
